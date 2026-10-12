@@ -23,7 +23,11 @@ the `getAppInfo` call to its own hook. NEO Enabler chains onto that hook:
    ps-patch-system `get_ps5_attr`) and whether the app info is the third or fourth argument (fourth from 9.00).
 4. Every write happens with `SceShellCore` stopped (SIGSTOP) and is read back. Disabling points the call back to
    the ps-patch-system hook.
-5. On first run it installs the `NEOE00001` ("NEO Enabler") shortcut in the Media tab, which opens the panel.
+5. Disabling also removes the hook of NEO Enabler v4 when it is still in `SceShellCore` (fw 13.20). v4 overwrote
+   124 bytes of ps-patch-system code (`eh_frame + 0x5cf`) and redirected the call at `eh_frame + 0x6bc` to them, so
+   games kept launching in Pro mode while the panel showed "disabled". The original bytes are restored only when
+   the exact v4 bytes are found (`src/legacy_v4.h`).
+6. On first run it installs the `NEOE00001` ("NEO Enabler") shortcut in the Media tab, which opens the panel.
 
 The shim overwrites unwind data at the end of `eh_frame`, as ps-patch-system does at its start. Rebooting the
 console restores it.
@@ -50,11 +54,29 @@ python3 tools/make_icon.py  # optional: regenerates assets/icon0.png (needs Pill
 | --- | --- |
 | `src/manager.c` | Payload: web panel, notification, Media tab shortcut |
 | `src/shellcore_hook.h` | Call site scan, cave, install and removal of the hook |
+| `src/legacy_v4.h` | Detection and removal of the NEO Enabler v4 hook |
 | `src/shim.S`, `src/shim.ld` | Hook code, linked at 0 and copied to the cave |
 | `src/dynlib.h`, `src/proc.h` | Headers from ps-patch-system (`shared/`) |
 | `tools/gen_shim.py` | Generates `build/shim_data.h` (shim bytes and data field offsets) |
 | `tools/make_icon.py` | Draws `assets/icon0.png` |
 | `xml/` | Game patches |
+
+### Releases
+
+GitHub Actions (`.github/workflows/build.yml`) builds every push and pull request with the PS5 Payload SDK
+release set in `SDK_VERSION`, and keeps `neo-enabler-manager.elf` as a build artifact.
+
+To publish a release:
+
+1. Set the new version in `src/manager.c` (`#define VERSION "NEO Enabler manager X.Y.Z"`) and commit it.
+2. Tag the commit and push the tag:
+   ```sh
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   ```
+
+The workflow checks that the tag matches `VERSION`, builds the payload and creates the GitHub release with
+`neo-enabler-manager.elf` and its SHA-256 checksum attached.
 
 ## Usage
 
@@ -69,10 +91,11 @@ python3 tools/make_icon.py  # optional: regenerates assets/icon0.png (needs Pill
 | Route | Effect |
 | --- | --- |
 | `GET /` | Hook state, open PS4 games (NEO or base), Enable, Disable and Quit buttons |
-| `POST /enable`, `POST /disable` | Installs or removes the hook and notifies on the PS5 |
+| `POST /enable`, `POST /disable` | Installs or removes the hook (disable also removes the v4 hook) and notifies on the PS5 |
 | `POST /quit` | Stops the panel and keeps the hook state |
-| `GET /status` | Plain text: hook state, firmware, call site, cave and open games |
+| `GET /status` | Plain text: hook state, v4 hook (`present` or `absent`), firmware, call site, cave and open games |
 
+- Starting the manager enables the hook. The panel shows "enabled" while the v4 hook is present.
 - Changes apply to games launched afterwards. Rebooting the console removes the hook and the panel.
 - Sending the payload again while the panel runs reinstalls the hook if needed and reports that the panel is
   already running.

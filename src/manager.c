@@ -16,10 +16,11 @@
 #include <netinet/in.h>
 #include <ps5/kernel.h>
 #include "shellcore_hook.h"
+#include "legacy_v4.h"
 #include "icon_data.h"
 
 #define PORT 8765
-#define VERSION "NEO Enabler manager 2.0"
+#define VERSION "NEO Enabler manager 0.1.0"
 
 typedef struct { uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[0x36]; } app_info_t;
 typedef struct { char useless[45]; char message[3075]; } notify_request_t;
@@ -175,8 +176,12 @@ static const char page_head[] =
     "button:hover{filter:brightness(1.25)}ul{margin:8px 0 0;padding-left:20px}small{color:var(--muted)}"
     "</style></head><body><main><h1>NEO Enabler</h1>";
 
+/* v4 hook still in ShellCore (forces NEO regardless of this manager's hook). */
+static int v4_active(const shell_t *s) { return s->pid > 0 && s->frame && v4_state(s->pid, s->frame) == V4_PRESENT; }
+
 static void serve_page(int fd, const char *msg) {
     shell_t s; int st = hook_state(&s);
+    if (st == HOOK_OFF && v4_active(&s)) st = HOOK_ON;
     char games[1024]; games_text(games, sizeof(games), 1);
     static char body[8192];
     snprintf(body, sizeof(body),
@@ -195,6 +200,7 @@ static void serve_page(int fd, const char *msg) {
 static int do_set(int enable, char *msg, size_t cap, int show) {
     int rc = hook_set(enable);
     shell_t s; int st = hook_state(&s);
+    if (!enable && !rc && (s.pid <= 0 || !s.frame || v4_remove(s.pid, s.frame))) rc = 9;
     if (!rc) snprintf(msg, cap, "NEO Enabler %s", enable ? "enabled" : "disabled");
     else snprintf(msg, cap, "NEO Enabler: failed to %s (rc=%d, state: %s)", enable ? "enable" : "disable", rc, state_text(st));
     if (show) notify(msg);
@@ -244,8 +250,9 @@ int main(void) {
             shell_t s; int st = hook_state(&s);
             char games[1024]; games_text(games, sizeof(games), 0);
             char body[1600];
-            snprintf(body, sizeof(body), "hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
-                     state_text(st), fw_major(), s.site, s.target, s.cave, s.frame, s.frame_end, s.attr_off, s.four_args, games);
+            snprintf(body, sizeof(body), "hook: %s\nv4 hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
+                     state_text(st), v4_active(&s) ? "present" : "absent", fw_major(), s.site, s.target, s.cave, s.frame, s.frame_end,
+                     s.attr_off, s.four_args, games);
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/")) {
             serve_page(fd, NULL);
