@@ -5,12 +5,6 @@
     <ID>CUSA02747</ID>
     <ID>CUSA02748</ID>
   </TitleID>
-  <Metadata Title="Just Cause 3" Name="60 FPS" Author="illusion" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x00a1f817" Value="4831c9" />
-      <Line Type="bytes" Address="0x01ddd118" Value="41c7c403000000" />
-    </PatchList>
-  </Metadata>
   <Metadata Title="Just Cause 3" Name="1080p (PS4 Pro mode)" Author="Local experiment" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin" Note="Full PS4 Pro (NEO) mode: no HTILE and no fast clear, flipMode 1, 1920x1080 render, linear display buffers. Enable only one resolution entry. Requires NEO Enabler and Offline mode.">
     <PatchList>
       <Line Type="mask" Address="00 45 31 c0 8b 75 b0 8b 55 b4 8b 4d 38 45 89 e9 e8 c3 05 bc fe 48 89 c1 48 c1 e9 20 45 85 f6 74 0a 44 89 f2 48" Offset="16" Value="e8c3bb7400" />

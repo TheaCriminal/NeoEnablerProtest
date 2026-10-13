@@ -3,18 +3,6 @@
   <TitleID>
     <ID>CUSA00168</ID>
   </TitleID>
-  <Metadata Title="Need for Speed: Rivals" Name="60 FPS Unlock (Proof of Concept)" Note="Game can now be run at any FPS without slow down or speedups, although logics are still borked." Author="illusion" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x00890b83" Value="48b201" />
-      <Line Type="bytes" Address="0x009f2906" Value="48e8940d9101" />
-      <Line Type="bytes" Address="0x023036a0" Value="41c7462800007042c4817a104628c3" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Need for Speed: Rivals" Name="Resolution Patch" Author="illusion" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes32" Address="0x009cb1cd" Value="0x3f2b851f" />
-    </PatchList>
-  </Metadata>
   <Metadata Title="Need for Speed: Rivals" Name="1440p (PS4 Pro mode)" Note="2560x1440 output and render in PS4 Pro (NEO) mode, same fixes as 4K. Enable only one resolution entry. Requires NEO Enabler and &quot;Resolution Patch&quot; disabled." Author="Local experiment" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
     <PatchList>
       <Line Type="mask" Address="18 48 83 c4 18 5b 41 5c 41 5d 41 5e 41 5f 5d c3 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 49 89 fe 48 8d" Offset="16" Value="ba01000000e9d48a530190909090" />

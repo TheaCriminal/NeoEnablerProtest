@@ -48,15 +48,14 @@ a game that is not in the table below.
 
 | Game (version) | Resolutions | Notes |
 | --- | --- | --- |
-| Need for Speed Rivals (01.04) | 1440p, 4K | Keep "Resolution Patch" off. "60 FPS Unlock" makes the car flicker for a few seconds when accelerating. |
+| Need for Speed Rivals (01.04) | 1440p, 4K | If your existing patch file for the game has "Resolution Patch", keep it off. |
 | Resident Evil 6 (01.01) | 1080p, 1440p, 4K | Small Capcom logo in 4K. |
 | Bloodborne (01.09) | 1440p, 1620p, 1800p | 4K is not possible: the game runs out of memory. |
-| Just Cause 3 (01.05) | 1080p, 1440p, 4K | Also enable "Offline mode", or the game keeps trying to log in. "60 FPS" is optional. |
+| Just Cause 3 (01.05) | 1080p, 1440p, 4K | Also enable "Offline mode", or the game keeps trying to log in. |
 | Battlefield 4 (01.24) | 1080p, 1440p, 1620p, 1800p, 4K | 1800p holds 60 fps. 4K runs around 49 fps. |
 | Killzone Shadow Fall (01.81) | 1440p, 1620p, 1800p, 4K | Some surfaces are slightly darker from 1440p to 1800p. 4K is clean but below 60 fps. |
 | The Order: 1886 (01.02) | 1080p, 4K | Small sparkles may appear on edges while moving. |
 
-The files also keep the community patches that already existed for each game, such as 60 FPS and debug camera.
 Patch IDs, how the hook works and how to build from source: [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 ## Credits
@@ -76,10 +75,7 @@ Patch IDs, how the hook works and how to build from source: [docs/TECHNICAL.md](
 
 | Patch | Author | Source |
 | --- | --- | --- |
-| Rivals: Resolution Patch, 60 FPS Unlock. Bloodborne: Skip Intro, Disable Motion Blur/Chromatic Aberration/vsync, Draw Color Border, 30 FPS Fix (with Lance McDonald). JC3: 60 FPS | [illusion](https://github.com/illusionyy) | [console-game-patches](https://github.com/illusionyy/console-game-patches) |
 | Bloodborne: Resolution Patch WxH, base of the NEO 1440p/1620p/1800p entries | [Kyo](https://github.com/Kyoskii) | [shadps4-emu/ps4_cheats](https://github.com/shadps4-emu/ps4_cheats/blob/main/PATCHES/Bloodborne.xml) |
-| Bloodborne: 60 FPS (With Deltatime), Resolution Patch (720p), Restore Debug Camera | Lance McDonald ([manfightdragon](https://github.com/manfightdragon)) | [shadps4-emu/ps4_cheats](https://github.com/shadps4-emu/ps4_cheats/blob/main/PATCHES/Bloodborne.xml) |
-| Bloodborne: Restore Debug Dash | stagvant (no GitHub profile found) | [shadps4-emu/ps4_cheats](https://github.com/shadps4-emu/ps4_cheats/blob/main/PATCHES/Bloodborne.xml) |
 
 Entries with author "Local experiment" (Pro mode, resolutions, JC3 offline mode) and the NEO fixes inside the
 Bloodborne resolution entries were made in this project.
@@ -92,6 +88,5 @@ the binary must be distributed under GPL-3.0.
 Third-party files keep their own licenses:
 
 - `src/dynlib.h`, `src/proc.h`: Apache-2.0 (ps-patch-system), compatible with GPL-3.0.
-- Patch entries from console-game-patches: MIT.
-- Patch entries from shadps4-emu/ps4_cheats: the repository declares no license. They are included with
-  attribution to their authors.
+- The Bloodborne resolution code from shadps4-emu/ps4_cheats: the repository declares no license. It is included
+  with attribution to its author.
