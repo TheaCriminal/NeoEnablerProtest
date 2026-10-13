@@ -1,10 +1,11 @@
 # NEO Enabler
 
-Play PS4 games on your PS5 in **PS4 Pro mode**, and with the included game patches, at higher resolutions up to
-native 4K.
+Play PS4 games on your PS5 in **PS4 Pro mode** at higher resolutions, up to native 4K.
 
-The PS5 normally runs PS4 games as a regular PS4. NEO Enabler makes them start as if they were on a PS4 Pro. The
-patches in `xml/` then fix each game for Pro mode and raise its resolution.
+The PS5 normally runs PS4 games as a regular PS4. NEO Enabler makes them start as if they were on a PS4 Pro. This
+alone does not make any game work: every game tested so far broke in Pro mode without its patch (black or
+corrupted image, or the game closing). The patches in `xml/` fix each game for Pro mode and raise its resolution,
+so NEO Enabler is only useful for the games listed below.
 
 ## What you need
 
@@ -31,7 +32,8 @@ Anyone on your local network can open the panel.
 
 ## Game patches
 
-PS4 Pro mode alone is usually not enough: most games need their patch from `xml/`.
+Every game needs its patch from `xml/` to work in PS4 Pro mode. Turn PS4 Pro mode off in the panel before playing
+a game that is not in the table below.
 
 1. Copy the game's file to `/data/user/patches/xml_orbis/` on the PS5 and rename it to the title ID only, for
    example `Bloodborne_CUSA00900.xml` becomes `CUSA00900.xml`.

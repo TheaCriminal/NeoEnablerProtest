@@ -27,7 +27,8 @@ the `getAppInfo` call to its own hook. NEO Enabler chains onto that hook:
 The shim overwrites unwind data at the end of `eh_frame`, as ps-patch-system does at its start. Rebooting the
 console restores it.
 
-Pro mode alone is not enough: most games need the game-specific fixes in `xml/`.
+Pro mode alone does not make any game work: every game tested broke without its fixes in `xml/` (display buffer
+too small, corrupted layout, GPU hangs).
 
 ## Build
 
