@@ -128,6 +128,39 @@ static int install_launcher(void) {
     return err ? -3 : 1;
 }
 
+/* Game name from the TITLE key of /system_data/priv/appmeta/<title id>/param.sfo; empty when not found. */
+static void game_name(const char *title_id, char *out, size_t cap) {
+    char path[64]; unsigned char sfo[8192]; size_t n;
+    out[0] = 0;
+    snprintf(path, sizeof(path), "/system_data/priv/appmeta/%.9s/param.sfo", title_id);
+    FILE *f = fopen(path, "rb");
+    if (!f) return;
+    n = fread(sfo, 1, sizeof(sfo), f); fclose(f);
+    if (n < 20 || memcmp(sfo, "\0PSF", 4)) return;
+    uint32_t keys, data, count;
+    memcpy(&keys, sfo + 8, 4); memcpy(&data, sfo + 12, 4); memcpy(&count, sfo + 16, 4);
+    for (uint32_t i = 0; i < count && 20 + (i + 1) * 16 <= n; i++) {
+        const unsigned char *e = sfo + 20 + i * 16;
+        uint16_t key_off; uint32_t len, data_off;
+        memcpy(&key_off, e, 2); memcpy(&len, e + 4, 4); memcpy(&data_off, e + 12, 4);
+        if (keys + key_off + 6 > n || memcmp(sfo + keys + key_off, "TITLE", 6)) continue;
+        if (data + data_off + len > n) return;
+        size_t m = len < cap ? len : cap - 1;
+        memcpy(out, sfo + data + data_off, m); out[m] = 0;
+        return;
+    }
+}
+
+/* Copies s into out with the HTML special characters escaped. */
+static void html_escape(const char *s, char *out, size_t cap) {
+    size_t o = 0;
+    for (; *s && o + 7 < cap; s++) {
+        const char *r = *s == '&' ? "&amp;" : *s == '<' ? "&lt;" : *s == '>' ? "&gt;" : *s == '"' ? "&quot;" : NULL;
+        if (r) { size_t l = strlen(r); memcpy(out + o, r, l); o += l; } else out[o++] = *s;
+    }
+    out[o] = 0;
+}
+
 /* Open PS4 games and whether they run in PS4 Pro mode. */
 static int games_text(char *out, size_t cap, int html) {
     int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC, 0}; size_t n = 0; int len = 0, games = 0;
@@ -146,10 +179,13 @@ static int games_text(char *out, size_t cap, int html) {
                           !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverForNeoMode.sprx", &h) ||
                           !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriver.sprx", &h);
                 int neo = (info.attribute & ATTR_PS4_PRO) != 0;
-                if (ps4 && len < (int)cap - 160) {
+                if (ps4 && len < (int)cap - 400) {
+                    char name[128], esc[384];
+                    game_name(info.title_id, name, sizeof(name));
+                    if (html) html_escape(name, esc, sizeof(esc)); else snprintf(esc, sizeof(esc), "%s", name);
                     games++;
-                    len += snprintf(out + len, cap - len, html ? "<li><b>%.9s</b>: %s</li>" : "%.9s: %s\n",
-                                    info.title_id, neo ? "PS4 Pro (NEO)" : "PS4 base");
+                    len += snprintf(out + len, cap - len, html ? "<li><b>%s</b> (%.9s): %s</li>" : "%s (%.9s): %s\n",
+                                    esc[0] ? esc : "Unknown game", info.title_id, neo ? "PS4 Pro (NEO)" : "PS4 base");
                 }
             }
         }
