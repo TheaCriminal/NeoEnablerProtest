@@ -35,6 +35,12 @@ PS4 Pro mode alone is usually not enough: most games need their patch from `xml/
 
 1. Copy the game's file to `/data/user/patches/xml_orbis/` on the PS5 and rename it to the title ID only, for
    example `Bloodborne_CUSA00900.xml` becomes `CUSA00900.xml`.
+
+   If ps-patch-system already has a file for that game (`/data/user/patches/xml_orbis/<TITLE ID>.xml`, for example
+   `/data/user/patches/xml_orbis/CUSA00900.xml`), don't replace it. Open the game's file from `xml/`, copy every
+   `<Metadata ...>` block (each one holds its own `<PatchList>`), and paste them into the existing file, before
+   the closing `</Patch>` line. Each `<PatchList>` must stay inside its `<Metadata>` block, or the patch system
+   won't load it.
 2. In the Patch Manager, enable **one** resolution entry for the game, for example "Native 4K (PS4 Pro mode)".
 3. For 4K entries, set the PS5 video output to 2160p.
 
