@@ -116,7 +116,7 @@ name, entry name, title, ELF and app version, so renaming an entry changes its h
 | Just Cause 3 01.05 | `JustCause3_CUSA01493.xml` | one resolution: `184cc682` 1080p, `1575f9b2` 1440p or `9644fb2b` 4K, + `fd9434a8` Offline mode + `66794a5c` 60 FPS | 1080p, 1440p or native 4K |
 | Battlefield 4 01.24 | `Battlefield4_CUSA00049.xml` | one resolution: `f4d53c61` 1080p, `f9ec0351` 1440p, `079ce771` 1620p, `3ad0f441` 1800p or `7add01c8` 4K | 1080p (900p render), 1440p, 1620p, 1800p (stable 60 fps) or native 4K (~49 fps) |
 | Killzone Shadow Fall 01.81 | `KillzoneShadowFall_CUSA00190.xml` | one resolution: `8c299cea` 1440p, `725978ca` 1620p, `4f156bfa` 1800p or `0f189e73` Native 4K | 1440p, 1620p, 1800p (slight darkening on some surfaces) or native 4K (clean, below 60 fps) |
-| The Order: 1886 01.02 | `TheOrder1886_CUSA00785.xml` | `ed70c1da` 1080p | 1080p (small one-frame edge sparkles may remain while moving) |
+| The Order: 1886 01.02 | `TheOrder1886_CUSA00785.xml` | one resolution: `ed70c1da` 1080p or `6378fc73` Native 4K | 1080p or native 4K (small one-frame edge sparkles may remain while moving) |
 
 - Each resolution entry already includes the Pro mode fixes. Enable only one per game.
 - Rivals: keep "Resolution Patch" disabled. "60 FPS Unlock" makes the car flicker during the first seconds of
