@@ -35,7 +35,7 @@ Dependencies: [ps5-payload-sdk](https://github.com/ps5-payload-dev/sdk) (default
 `PS5_PAYLOAD_SDK`), `python3`, `xxd`.
 
 ```sh
-./build.sh                  # builds build/neo-enabler-manager.elf
+./build.sh                  # builds build/neo-manager.elf
 python3 tools/make_icon.py  # optional: regenerates assets/icon0.png (needs Pillow and the DejaVu Sans Bold font)
 ```
 
@@ -53,7 +53,7 @@ python3 tools/make_icon.py  # optional: regenerates assets/icon0.png (needs Pill
 ## Releases
 
 GitHub Actions (`.github/workflows/build.yml`) builds every push and pull request with the PS5 Payload SDK
-release set in `SDK_VERSION`, and keeps `neo-enabler-manager.elf` as a build artifact.
+release set in `SDK_VERSION`, and keeps `neo-manager.elf` as a build artifact.
 
 To publish a release:
 
@@ -65,7 +65,7 @@ To publish a release:
    ```
 
 The workflow checks that the tag matches `VERSION`, builds the payload and creates the GitHub release with
-`neo-enabler-manager.elf` and its SHA-256 checksum attached.
+`neo-manager.elf` and its SHA-256 checksum attached.
 
 ## Web panel
 

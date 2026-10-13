@@ -13,8 +13,8 @@ patches in `xml/` then fix each game for Pro mode and raise its resolution.
 
 ## Install
 
-1. Download `neo-enabler-manager.elf` from the [latest release](https://github.com/gasb07/NeoEnabler/releases/latest).
-2. After every console boot, load ps-patch-system, then send `neo-enabler-manager.elf` with your payload sender
+1. Download `neo-manager.elf` from the [latest release](https://github.com/gasb07/NeoEnabler/releases/latest).
+2. After every console boot, load ps-patch-system, then send `neo-manager.elf` with your payload sender
    (port 9021).
 3. A notification on the PS5 confirms that NEO Enabler is enabled.
 
