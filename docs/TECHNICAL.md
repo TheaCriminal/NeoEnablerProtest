@@ -102,7 +102,7 @@ name, entry name, title, ELF and app version, so renaming an entry changes its h
 | --- | --- | --- | --- |
 | Need for Speed Rivals 01.04 | `NeedForSpeedRivals_CUSA00168.xml` | one resolution: `7f4ee42f` 4K or `fc7fe6b6` 1440p | native 4K or 1440p |
 | Resident Evil 6 01.01 | `ResidentEvil6_CUSA03856.xml` | one resolution: `8b70a2e1` 1080p, `86499dd1` 1440p or `05789f48` 4K | 1080p, 1440p or native 4K (small Capcom logo in 4K) |
-| Bloodborne 01.09 | `Bloodborne_CUSA00900.xml` | one resolution: `bc972b87` 1800p, `89b0ba88` 1620p or `673a9e3d` 1440p | up to 1800p (native 4K blocked by memory) |
+| Bloodborne 01.09 | `Bloodborne_CUSA00900.xml` | one resolution: `cda543da` 1800p, `f0e950ea` 1620p or `0e99b4ca` 1440p | up to 1800p (native 4K blocked by memory) |
 | Just Cause 3 01.05 | `JustCause3_CUSA01493.xml` | one resolution: `184cc682` 1080p, `1575f9b2` 1440p or `9644fb2b` 4K, + `fd9434a8` Offline mode | 1080p, 1440p or native 4K |
 | Battlefield 4 01.24 | `Battlefield4_CUSA00049.xml` | one resolution: `f4d53c61` 1080p, `f9ec0351` 1440p, `079ce771` 1620p, `3ad0f441` 1800p or `7add01c8` 4K | 1080p (900p render), 1440p, 1620p, 1800p (stable 60 fps) or native 4K (~49 fps) |
 | Killzone Shadow Fall 01.81 | `KillzoneShadowFall_CUSA00190.xml` | one resolution: `8c299cea` 1440p, `725978ca` 1620p, `4f156bfa` 1800p or `0f189e73` Native 4K | 1440p, 1620p, 1800p (slight darkening on some surfaces) or native 4K (clean, below 60 fps) |

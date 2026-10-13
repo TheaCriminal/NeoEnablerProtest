@@ -5,6 +5,9 @@
 - The payload file is now named `neo-manager.elf`.
 - The game patch files only carry patches made in this project. Community patches (60 FPS, debug camera and
   others) were removed and stay available from their original authors.
+- Bloodborne patches renamed to the same pattern as the other games ("1440p (PS4 Pro mode)" and so on). If you
+  had one enabled, enable it again after updating the file.
+- Patch descriptions in Bloodborne, Just Cause 3 and Resident Evil 6 rewritten in plain language.
 - README: explains how to add the patches to a patch file the game already has, and that every game needs its
   patch to work in PS4 Pro mode.
 

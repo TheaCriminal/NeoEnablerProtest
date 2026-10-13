@@ -5,7 +5,7 @@
     <ID>CUSA02747</ID>
     <ID>CUSA02748</ID>
   </TitleID>
-  <Metadata Title="Just Cause 3" Name="1080p (PS4 Pro mode)" Author="Local experiment" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin" Note="Full PS4 Pro (NEO) mode: no HTILE and no fast clear, flipMode 1, 1920x1080 render, linear display buffers. Enable only one resolution entry. Requires NEO Enabler and Offline mode.">
+  <Metadata Title="Just Cause 3" Name="1080p (PS4 Pro mode)" Author="Local experiment" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin" Note="1920x1080 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler and Offline mode.">
     <PatchList>
       <Line Type="mask" Address="00 45 31 c0 8b 75 b0 8b 55 b4 8b 4d 38 45 89 e9 e8 c3 05 bc fe 48 89 c1 48 c1 e9 20 45 85 f6 74 0a 44 89 f2 48" Offset="16" Value="e8c3bb7400" />
       <Line Type="bytes" Address="0x2523800" Value="4883c408e8f74947feb9000087003d00807f007420b90000f0003d0000e100723139c87210b90000fe013d0000f001722139c8731d4889c248c1ea2081fa000001007305ba0000010048c1e22089c84809d0e9e6438bff" />
@@ -20,7 +20,7 @@
       <Line Type="mask" Address="4c 8d 7d a8 be 00 00 00 80 31 d2 31 c9 4c 89 ff e8 17 9d 28 00 48 83 c4 10 8b bb f8 01 00 00 41 8b 0e 31 f6 4c" Offset="16" Value="e84fb37400" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Just Cause 3" Name="1440p (PS4 Pro mode)" Author="Local experiment" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin" Note="Full PS4 Pro (NEO) mode: no HTILE and no fast clear, flipMode 1, 2560x1440 render, tiled ALT display buffers. Enable only one resolution entry. Requires NEO Enabler and Offline mode.">
+  <Metadata Title="Just Cause 3" Name="1440p (PS4 Pro mode)" Author="Local experiment" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler and Offline mode.">
     <PatchList>
       <Line Type="mask" Address="00 45 31 c0 8b 75 b0 8b 55 b4 8b 4d 38 45 89 e9 e8 c3 05 bc fe 48 89 c1 48 c1 e9 20 45 85 f6 74 0a 44 89 f2 48" Offset="16" Value="e8c3bb7400" />
       <Line Type="bytes" Address="0x2523800" Value="4883c408e8f74947feb9000087003d00807f007420b90000f0003d0000e100723139c87210b90000fe013d0000f001722139c8731d4889c248c1ea2081fa000001007305ba0000010048c1e22089c84809d0e9e6438bff" />
@@ -35,7 +35,7 @@
       <Line Type="mask" Address="00 00 00 81 c9 00 00 00 01 c7 84 24 c0 01 00 00 80 07 00 00 c7 84 24 c4 01 00 00 38 04 00 00 89 8c 24 e4" Offset="16" Value="000a0000c78424c4010000a0050000898c24e4" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Just Cause 3" Name="Native 4K (PS4 Pro mode)" Author="Local experiment" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin" Note="Full PS4 Pro (NEO) mode: no HTILE and no fast clear, flipMode 1, 3840x2160 render, tiled ALT display buffers. Enable only one resolution entry. Requires NEO Enabler and Offline mode.">
+  <Metadata Title="Just Cause 3" Name="Native 4K (PS4 Pro mode)" Author="Local experiment" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler, Offline mode and the PS5 set to 2160p.">
     <PatchList>
       <Line Type="mask" Address="00 45 31 c0 8b 75 b0 8b 55 b4 8b 4d 38 45 89 e9 e8 c3 05 bc fe 48 89 c1 48 c1 e9 20 45 85 f6 74 0a 44 89 f2 48" Offset="16" Value="e8c3bb7400" />
       <Line Type="bytes" Address="0x2523800" Value="4883c408e8f74947feb9000087003d00807f007420b90000f0003d0000e100723139c87210b90000fe013d0000f001722139c8731d4889c248c1ea2081fa000001007305ba0000010048c1e22089c84809d0e9e6438bff" />
@@ -50,7 +50,7 @@
       <Line Type="mask" Address="00 00 00 81 c9 00 00 00 01 c7 84 24 c0 01 00 00 80 07 00 00 c7 84 24 c4 01 00 00 38 04 00 00 89 8c 24 e4" Offset="16" Value="000f0000c78424c401000070080000898c24e4" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Just Cause 3" Name="Offline mode (skips online login)" Author="Local experiment" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin" Note="sceNetCtlGetState reports disconnected and sceNpGetState reports signed out of PSN, as with internet off: the title screen does not try the online login. Works in Base and NEO.">
+  <Metadata Title="Just Cause 3" Name="Offline mode (skips online login)" Author="Local experiment" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin" Note="The title screen no longer tries the online login. Required by the resolution entries. Works with PS4 Pro mode on or off.">
     <PatchList>
       <Line Type="bytes" Address="0x2523900" Value="c7070000000031c0c300000000000000c7060100000031c0c3" />
       <Line Type="mask" Address="ff 25 92 a8 5f 00 68 7c 00 00 00 e9 20 f8 ff ff ff 25 8a a8 5f 00 68 7d 00 00 00 e9 10 f8 ff ff ff 25 82 a8 5f 00" Offset="16" Value="e913204c0090" />
