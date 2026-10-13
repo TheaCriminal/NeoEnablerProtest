@@ -47,6 +47,16 @@ jobs:
             exit 1
           fi
 
+      - name: Release notes from CHANGELOG.md
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          mkdir -p build
+          awk -v v="## ${GITHUB_REF_NAME#v}" '$0 == v {f = 1; next} /^## / {f = 0} f' CHANGELOG.md > build/release-notes.md
+          if ! grep -q '[^[:space:]]' build/release-notes.md; then
+            echo "::error::CHANGELOG.md has no \"## ${GITHUB_REF_NAME#v}\" section describing the release"
+            exit 1
+          fi
+
       - name: Build
         run: PS5_PAYLOAD_SDK="$HOME/ps5-payload-sdk" bash build.sh
 
@@ -59,6 +69,7 @@ jobs:
           path: |
             build/neo-manager.elf
             build/neo-manager.elf.sha256
+            build/release-notes.md
           if-no-files-found: error
 
   release:
@@ -79,4 +90,4 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" neo-manager.elf neo-manager.elf.sha256 \
             --repo "${GITHUB_REPOSITORY}" \
             --title "NEO Enabler ${GITHUB_REF_NAME#v}" \
-            --generate-notes
+            --notes-file release-notes.md

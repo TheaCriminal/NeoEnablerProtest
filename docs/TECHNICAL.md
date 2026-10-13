@@ -58,15 +58,18 @@ release set in `SDK_VERSION`, and keeps `neo-manager.elf` as a build artifact.
 
 To publish a release:
 
-1. Set the new version in `src/manager.c` (`#define VERSION "NEO Enabler manager X.Y.Z"`) and commit it.
-2. Tag the commit and push the tag:
+1. Set the new version in `src/manager.c` (`#define VERSION "NEO Enabler manager X.Y.Z"`).
+2. Rename the `## Unreleased` section of `CHANGELOG.md` to `## X.Y.Z` (plain description of the changes for users)
+   and commit both.
+3. Tag the commit and push the tag:
    ```sh
    git tag vX.Y.Z
    git push origin vX.Y.Z
    ```
 
-The workflow checks that the tag matches `VERSION`, builds the payload and creates the GitHub release with
-`neo-manager.elf` and its SHA-256 checksum attached.
+The workflow checks that the tag matches `VERSION` and that `CHANGELOG.md` has a section for it, builds the payload
+and creates the GitHub release with that section as the description and `neo-manager.elf` and its SHA-256
+checksum attached.
 
 ## Web panel
 
