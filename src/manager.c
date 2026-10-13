@@ -20,7 +20,7 @@
 #include "icon_data.h"
 
 #define PORT 8765
-#define VERSION "NEO Enabler manager 0.1.0"
+#define VERSION "NEO Enabler manager 0.1.1"
 
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
@@ -174,11 +174,14 @@ static int games_text(char *out, size_t cap, int html) {
         if (!strcmp(ki->ki_comm, "eboot.bin")) {
             app_info_t info = {0}; uint32_t h = 0;
             if (!sceKernelGetAppInfo(ki->ki_pid, &info) && info.title_id[0]) {
-                /* Recent firmwares load libSceGnmDriverCompat1 in both modes, so the mode comes from the attribute. */
-                int ps4 = !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverCompat1.sprx", &h) ||
-                          !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverForNeoMode.sprx", &h) ||
-                          !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriver.sprx", &h);
-                int neo = (info.attribute & ATTR_PS4_PRO) != 0;
+                /* The driver name gives the mode when the game loads a mode-specific driver. Recent firmwares load
+                   libSceGnmDriverCompat1 in both modes, so then the mode comes from the attribute. */
+                int neo = !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverForNeoMode.sprx", &h);
+                int ps4 = neo || !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriver.sprx", &h);
+                if (!ps4 && !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverCompat1.sprx", &h)) {
+                    ps4 = 1;
+                    neo = (info.attribute & ATTR_PS4_PRO) != 0;
+                }
                 if (ps4 && len < (int)cap - 400) {
                     char name[128], esc[384];
                     game_name(info.title_id, name, sizeof(name));
