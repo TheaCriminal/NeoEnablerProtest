@@ -174,7 +174,7 @@ static int games_text(char *out, size_t cap, int html) {
         if (!strcmp(ki->ki_comm, "eboot.bin")) {
             app_info_t info = {0}; uint32_t h = 0;
             if (!sceKernelGetAppInfo(ki->ki_pid, &info) && info.title_id[0]) {
-                /* The driver name gives the mode when the game loads a mode-specific driver. Recent firmwares load
+                /* The driver name gives the mode when the game loads a mode-specific driver. Some games (The Order: 1886 on 13.20) load
                    libSceGnmDriverCompat1 in both modes, so then the mode comes from the attribute. */
                 int neo = !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverForNeoMode.sprx", &h);
                 int ps4 = neo || !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriver.sprx", &h);

@@ -82,7 +82,8 @@ The workflow checks that the tag matches `VERSION`, builds the payload and creat
   already running.
 - Open games: `eboot.bin` processes that load a PS4 graphics driver, named from the `TITLE` in
   `/system_data/priv/appmeta/<title ID>/param.sfo`. `libSceGnmDriverForNeoMode` means Pro mode and `libSceGnmDriver`
-  means base mode. Recent firmwares load `libSceGnmDriverCompat1` in both modes, and then the mode comes from the
+  means base mode. Some games load `libSceGnmDriverCompat1` instead (The Order: 1886 on 13.20, while Battlefield 4
+  loads the Pro driver on the same firmware), with the same name in both modes, and then the mode comes from the
   `kPS4Pro` bit of the launch attribute (offset 0x28 of `sceKernelGetAppInfo`, checked on 13.20).
 - The panel has no authentication: any device on the local network can use it.
 
