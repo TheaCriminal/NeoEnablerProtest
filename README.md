@@ -2,7 +2,8 @@
 
 Play PS4 games on your PS5 in **PS4 Pro mode** at higher resolutions, up to native 4K.
 
-The PS5 normally runs PS4 games as a regular PS4. NEO Enabler makes them start as if they were on a PS4 Pro. This
+The PS5 already runs PS4 games that have PS4 Pro support in Pro mode. Games without it run as on a regular PS4.
+NEO Enabler makes those games start as if they were on a PS4 Pro (games with Pro support are left as they are). This
 alone does not make any game work: every game tested so far broke in Pro mode without its patch (black or
 corrupted image, or the game closing). The patches in `xml/` fix each game for Pro mode and raise its resolution,
 so NEO Enabler is only useful for the games listed below.
