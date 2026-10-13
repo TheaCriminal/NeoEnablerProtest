@@ -22,7 +22,12 @@
 #define PORT 8765
 #define VERSION "NEO Enabler manager 0.1.0"
 
-typedef struct { uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[0x36]; } app_info_t;
+typedef struct {
+    uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
+    uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
+    char unknown3[0x2a];
+} app_info_t;
+#define ATTR_PS4_PRO 0x00800000
 typedef struct { char useless[45]; char message[3075]; } notify_request_t;
 int sceKernelGetAppInfo(pid_t pid, app_info_t *info);
 int sceKernelSendNotificationRequest(int, notify_request_t *, size_t, int);
@@ -123,7 +128,7 @@ static int install_launcher(void) {
     return err ? -3 : 1;
 }
 
-/* Open PS4 games and their graphics driver, as status.c. */
+/* Open PS4 games and whether they run in PS4 Pro mode. */
 static int games_text(char *out, size_t cap, int html) {
     int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC, 0}; size_t n = 0; int len = 0, games = 0;
     out[0] = 0;
@@ -136,9 +141,12 @@ static int games_text(char *out, size_t cap, int html) {
         if (!strcmp(ki->ki_comm, "eboot.bin")) {
             app_info_t info = {0}; uint32_t h = 0;
             if (!sceKernelGetAppInfo(ki->ki_pid, &info) && info.title_id[0]) {
-                int neo = !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverForNeoMode.sprx", &h);
-                int base = !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriver.sprx", &h);
-                if ((neo || base) && len < (int)cap - 160) {
+                /* Recent firmwares load libSceGnmDriverCompat1 in both modes, so the mode comes from the attribute. */
+                int ps4 = !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverCompat1.sprx", &h) ||
+                          !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverForNeoMode.sprx", &h) ||
+                          !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriver.sprx", &h);
+                int neo = (info.attribute & ATTR_PS4_PRO) != 0;
+                if (ps4 && len < (int)cap - 160) {
                     games++;
                     len += snprintf(out + len, cap - len, html ? "<li><b>%.9s</b>: %s</li>" : "%.9s: %s\n",
                                     info.title_id, neo ? "PS4 Pro (NEO)" : "PS4 base");
