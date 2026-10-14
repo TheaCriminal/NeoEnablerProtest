@@ -9,6 +9,8 @@
   had one enabled, enable it again after updating the file.
 - Patch descriptions in Bloodborne, Just Cause 3 and Resident Evil 6 rewritten in plain language.
 - The Order: 1886, Native 4K: fixed faint vertical stripes on characters under strong light.
+- The Order: 1886, Native 4K: on-screen text, objectives and button prompts are no longer cut in the middle of the
+  screen.
 - README: explains how to add the patches to a patch file the game already has, and that every game needs its
   patch to work in PS4 Pro mode.
 
