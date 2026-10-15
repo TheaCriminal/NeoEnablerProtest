@@ -20,6 +20,12 @@ so NEO Enabler is only useful for the games listed below.
    (port 9021).
 3. A notification on the PS5 confirms that NEO Enabler is enabled.
 
+Version **0.2.0** also automatically enables an **8 GiB PS4 Pro memory budget** when the required kernel
+access is available. This memory adjustment currently supports **firmware 13.20**. The hypervisor must already
+be unlocked by Byepervisor or another method that allows reading and writing the kernel code page; NEO Enabler
+checks that access without relying on exploit-specific markers and does not unlock the hypervisor itself.
+Without that access, the normal NEO feature remains available.
+
 Pro mode stays on until you turn it off or reboot the console. It applies to games you open afterwards.
 
 ## Control panel
@@ -27,7 +33,25 @@ Pro mode stays on until you turn it off or reboot the console. It applies to gam
 Open `http://<PS5 IP>:8765` in a browser on your network, or the **NEO Enabler** shortcut in the PS5 Media tab.
 
 - Turn PS4 Pro mode on or off.
+- See whether the 8 GiB budget is enabled, disabled, or unavailable, and turn it on or off independently of NEO.
 - See which PS4 game is open and whether it is running in PS4 Pro mode.
+- See the DMEM budget reported for each running PS4 game (8192 MiB means 8 GiB).
+
+The manager enables NEO on startup and automatically tries to select 8 GiB. If games are open or kernel access
+is unavailable, it waits and checks again. **Close every game before changing the memory budget.** A memory
+change requested while a game is open is applied after games close. Disabling 8 GiB stops automatic enabling
+for this manager session; enabling it resumes that behavior. Disabling NEO leaves the memory setting as it is,
+and disabling 8 GiB leaves NEO as it is. Quitting the manager keeps both patches but stops automatic checks.
+Starting the manager again restores its startup behavior. Rebooting removes both patches.
+
+The 8 GiB setting changes the budget for new PS4 Pro launches. Existing games keep their launch budget, and
+each game decides how much to allocate. It does not change resolution or force a game's internal memory pools
+to grow. Driveclub gameplay with a memory-using patch was reported working in the local 13.20 test; this is not
+a compatibility guarantee for other games. Restoring the original budget selects the captured 5.25 GiB NEO
+configuration. A failed kernel-write recovery requires a console reboot before launching games.
+
+Use one manager at a time. If you used the experimental panel on port 8766, quit it with **Quit the manager**
+before loading this version. Version 0.2.0 uses the regular panel and Media shortcut on port **8765**.
 
 Anyone on your local network can open the panel.
 
@@ -51,7 +75,7 @@ a game that is not in the table below.
 | --- | --- | --- |
 | Need for Speed Rivals (01.04) | 1440p, 4K | If your existing patch file for the game has "Resolution Patch", keep it off. |
 | Resident Evil 6 (01.01) | 1080p, 1440p, 4K | Small Capcom logo in 4K. |
-| Bloodborne (01.09) | 1440p, 1620p, 1800p | 4K is not possible: the game runs out of memory. |
+| Bloodborne (01.09) | 1440p, 1620p, 1800p | 4K previously ran out of memory; it has not been validated with the 8 GiB option. |
 | Just Cause 3 (01.05) | 1080p, 1440p, 4K | Also enable "Offline mode", or the game keeps trying to log in. |
 | Battlefield 4 (01.24) | 1080p, 1440p, 1620p, 1800p, 4K | 1800p holds 60 fps. 4K runs around 49 fps. |
 | Killzone Shadow Fall (01.81) | 1440p, 1620p, 1800p, 4K | Some surfaces are slightly darker from 1440p to 1800p. 4K is clean but below 60 fps. |

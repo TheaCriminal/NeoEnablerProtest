@@ -1,16 +1,19 @@
 /* GPL-3.0-only. NEO Enabler manager: installs the generic NEO launch hook in SceShellCore,
    shows a PS5 notification and stays resident with a web page on port 8765 to enable/disable the hook
-   and show the mode of open PS4 games. Also installs the Media tab shortcut (NEOE00001) when missing. Hook logic in shellcore_hook.h. */
+   and show the mode of open PS4 games. Independently manages a guarded 8GiB NEO budget when kernel access allows.
+   Also installs the Media tab shortcut (NEOE00001) when missing. Hook logic in shellcore_hook.h. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <sys/sysctl.h>
 #include <sys/user.h>
 #include <netinet/in.h>
@@ -18,9 +21,10 @@
 #include "shellcore_hook.h"
 #include "legacy_v4.h"
 #include "icon_data.h"
+#include "memory_control.h"
 
 #define PORT 8765
-#define VERSION "NEO Enabler manager 0.1.1"
+#define VERSION "NEO Enabler manager 0.2.0"
 
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
@@ -187,8 +191,14 @@ static int games_text(char *out, size_t cap, int html) {
                     game_name(info.title_id, name, sizeof(name));
                     if (html) html_escape(name, esc, sizeof(esc)); else snprintf(esc, sizeof(esc), "%s", name);
                     games++;
-                    len += snprintf(out + len, cap - len, html ? "<li><b>%s</b> (%.9s): %s</li>" : "%s (%.9s): %s\n",
-                                    esc[0] ? esc : "Unknown game", info.title_id, neo ? "PS4 Pro (NEO)" : "PS4 base");
+                    char memory[80]="DMEM query unavailable";int dmib[24];size_t dc=23,bytes=8;uint64_t dmem=0;
+                    if(!sysctlnametomib("kern.app.dmem_size_pid",dmib,&dc)&&dc<=23){
+                        dmib[dc++]=ki->ki_pid;
+                        if(!sysctl(dmib,(unsigned)dc,&dmem,&bytes,NULL,0)&&bytes==8)
+                            snprintf(memory,sizeof memory,"DMEM: %llu MiB",(unsigned long long)(dmem>>20));
+                    }
+                    len += snprintf(out + len, cap - len, html ? "<li><b>%s</b> (%.9s): %s; %s</li>" : "%s (%.9s): %s; %s\n",
+                                    esc[0] ? esc : "Unknown game", info.title_id, neo ? "PS4 Pro (NEO)" : "PS4 base",memory);
                 }
             }
         }
@@ -230,17 +240,26 @@ static void serve_page(int fd, const char *msg) {
     shell_t s; int st = hook_state(&s);
     if (st == HOOK_OFF && v4_active(&s)) st = HOOK_ON;
     char games[1024]; games_text(games, sizeof(games), 1);
+    mb_snapshot memory;mb_check(&memory);
+    const char*memory_state=memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled";
+    char memory_escaped[768];html_escape(memory_message,memory_escaped,sizeof memory_escaped);
     static char body[8192];
     snprintf(body, sizeof(body),
-             "%s<div class=card>PS4 Pro mode: <span class='state %s'>%s</span>"
-             "<form method=post><button formaction=/enable>Enable</button><button formaction=/disable>Disable</button></form>"
+             "%s<div class=card>PS4 Pro (NEO) mode: <span class='state %s'>%s</span>"
+             "<form method=post><button formaction=/enable>Enable NEO</button><button formaction=/disable>Disable NEO</button></form>"
              "%s%s%s</div>"
+             "<div class=card>8 GiB memory: <span class='state %s'>%s</span>"
+             "<form method=post><button formaction=/memory/enable>Enable 8 GiB</button><button formaction=/memory/disable>Disable 8 GiB</button></form>"
+             "<p><small>Automatic 8 GiB: %s. %s<br>%s</small></p>"
+             "<small>Close every game to change the memory budget. Changes apply to new Pro-mode launches.</small></div>"
              "<div class=card>Running games<ul>%s</ul></div>"
              "<div class=card><small>Applies to games launched after the change. With the hook enabled, every PS4 game without "
              "native Pro support launches in Pro mode. Rebooting the console disables it.<br>" VERSION "</small>"
              "<form method=post><button formaction=/quit>Quit the manager</button></form></div></main></body></html>",
              page_head, st == 1 ? "on" : st == 0 ? "off" : "unk", state_text(st),
-             msg ? "<p>" : "", msg ? msg : "", msg ? "</p>" : "", games);
+             msg ? "<p>" : "", msg ? msg : "", msg ? "</p>" : "",
+             memory.state==MB_8GIB?"on":memory.state==MB_UNKNOWN?"unk":"off",memory_state,
+             memory_target?"on":"off",memory.detail,memory_escaped,games);
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
 }
 
@@ -262,18 +281,30 @@ int main(void) {
     addr.sin_family = AF_INET; addr.sin_port = htons(PORT); addr.sin_addr.s_addr = htonl(INADDR_ANY);
     setsockopt(srv, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
     char msg[256];
-    int rc = do_set(1, msg, sizeof(msg), 0);
     if (srv < 0 || bind(srv, (struct sockaddr *)&addr, sizeof(addr)) || listen(srv, 4)) {
-        /* Another manager already owns the port: the hook was still installed above. */
-        snprintf(msg + strlen(msg), sizeof(msg) - strlen(msg), "\nWeb panel already running on port %d", PORT);
+        snprintf(msg, sizeof(msg), "Web panel port %d unavailable; nothing changed", PORT);
         notify(msg); puts(msg);
-        return rc;
+        if(srv>=0)close(srv);
+        return 1;
     }
+    do_set(1, msg, sizeof(msg), 0);
+    int memory_previous_result=memory_poll();
+    printf("8 GiB: %s\n",memory_message);
     int li = install_launcher();
     snprintf(msg + strlen(msg), sizeof(msg) - strlen(msg), "\nWeb panel: port %d%s", PORT,
              li == 1 ? "\nShortcut installed in the Media tab" : li < 0 ? "\nFailed to install the Media tab shortcut" : "");
     notify(msg); puts(msg);
+    time_t last_memory_poll=time(NULL);
     for (;;) {
+        time_t now=time(NULL);
+        if(now<last_memory_poll||now-last_memory_poll>=2){
+            int memory_result=memory_poll();
+            if(memory_result!=memory_previous_result&&(memory_result==0||memory_result==5||memory_result==6))notify(memory_message);
+            memory_previous_result=memory_result;last_memory_poll=now;
+        }
+        fd_set ready;FD_ZERO(&ready);FD_SET(srv,&ready);struct timeval wait={1,0};
+        int selected=select(srv+1,&ready,NULL,NULL,&wait);
+        if(selected<=0)continue;
         int fd = accept(srv, NULL, NULL);
         if (fd < 0) continue;
         struct timeval tv = {5, 0};
@@ -287,17 +318,22 @@ int main(void) {
         if (post && (!strcmp(path, "/enable") || !strcmp(path, "/disable"))) {
             do_set(!strcmp(path, "/enable"), msg, sizeof(msg), 1);
             serve_page(fd, msg);
+        } else if(post&&(!strcmp(path,"/memory/enable")||!strcmp(path,"/memory/disable"))){
+            memory_request(!strcmp(path,"/memory/enable"));
+            notify(memory_message);serve_page(fd,memory_message);
         } else if (post && !strcmp(path, "/quit")) {
             reply(fd, "200 OK", "text/html; charset=utf-8", "<!doctype html><meta charset=utf-8><title>NEO Enabler</title>"
-                  "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. The hook state was kept.</body>");
+                  "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. NEO and memory settings were kept.</body>");
             close(fd);
-            notify("NEO Enabler: panel stopped (hook kept)");
+            notify("NEO Enabler: panel stopped (NEO and memory settings kept)");
             break;
         } else if (!strcmp(path, "/status")) {
             shell_t s; int st = hook_state(&s);
             char games[1024]; games_text(games, sizeof(games), 0);
-            char body[1600];
-            snprintf(body, sizeof(body), "hook: %s\nv4 hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
+            char body[2600];mb_snapshot memory;mb_check(&memory);
+            snprintf(body, sizeof(body), "build: " VERSION "\nmemory_8gib: %s\nmemory_auto: %s\nmemory_detail: %s\nmemory_last_result: %s\nhook: %s\nv4 hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
+                     memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled",
+                     memory_target?"enabled":"disabled",memory.detail,memory_message,
                      state_text(st), v4_active(&s) ? "present" : "absent", fw_major(), s.site, s.target, s.cave, s.frame, s.frame_end,
                      s.attr_off, s.four_args, games);
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);

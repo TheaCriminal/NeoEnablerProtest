@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-build = Path(__file__).resolve().parent.parent / 'build'
+build = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(__file__).resolve().parent.parent / 'build'
 code = (build / 'shim.bin').read_bytes()
 syms = {}
 for line in subprocess.check_output([sys.argv[1] if len(sys.argv) > 1 else 'nm', str(build / 'shim.out')], text=True).splitlines():

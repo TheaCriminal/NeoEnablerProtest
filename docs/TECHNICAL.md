@@ -75,21 +75,70 @@ checksum attached.
 
 | Route | Effect |
 | --- | --- |
-| `GET /` | Hook state, open PS4 games (NEO or base), Enable, Disable and Quit buttons |
+| `GET /` | Independent NEO and 8 GiB states/controls, open PS4 games and reported DMEM |
 | `POST /enable`, `POST /disable` | Installs or removes the hook (disable also removes the v4 hook) and notifies on the PS5 |
+| `POST /memory/enable`, `POST /memory/disable` | Selects 8 GiB or restores the original budget, independently of the hook; defers actual writes while a game is open |
 | `POST /quit` | Stops the panel and keeps the hook state |
-| `GET /status` | Plain text: hook state, v4 hook (`present` or `absent`), firmware, call site, cave and open games |
+| `GET /status` | Plain text: version, 8 GiB state/automatic policy/result, hook state, firmware and open games with reported DMEM |
 
 - Starting the manager enables the hook. The panel shows "enabled" while the v4 hook is present.
 - Changes apply to games launched afterwards. Rebooting the console removes the hook and the panel.
-- Sending the payload again while the panel runs reinstalls the hook if needed and reports that the panel is
-  already running.
+- The panel port is bound before changing either setting. Sending another manager while that port is occupied
+  reports the conflict and exits without changing the hook or budget.
 - Open games: `eboot.bin` processes that load a PS4 graphics driver, named from the `TITLE` in
   `/system_data/priv/appmeta/<title ID>/param.sfo`. `libSceGnmDriverForNeoMode` means Pro mode and `libSceGnmDriver`
   means base mode. Some games load `libSceGnmDriverCompat1` instead (The Order: 1886 on 13.20, while Battlefield 4
   loads the Pro driver on the same firmware), with the same name in both modes, and then the mode comes from the
   `kPS4Pro` bit of the launch attribute (offset 0x28 of `sceKernelGetAppInfo`, checked on 13.20).
 - The panel has no authentication: any device on the local network can use it.
+
+## 8 GiB memory budget (0.2.0)
+
+`src/neo_budget.h` supports only the captured firmware13.20 budget constructor. Other supported NEO firmwares
+keep normal launch-hook functionality and report the memory adjustment unavailable. The actual firmware is
+read from `machdep.upd_version`, not the process SDK version.
+
+Detection is capability-based and does not read a Byepervisor cookie or try to execute a hypervisor exploit.
+Before reading kernel instructions, it reads ordinary DATA globals for the direct-map indices and kernel pmap,
+then walks the target page's guest page tables. All levels must be present, writable and free of XOTEXT. A
+missing/unreadable mapping blocks the code read. Page-table discovery uses the13.20 layout documented in
+the local Byepervisor-Reborn sources; the traversal does not change any PTE or disable protections.
+
+Guest permission bits alone **do not attest that nested-page protections or the entire hypervisor are disabled**.
+The subsequent bounded instruction reads and verified patch write establish the actual capability required here.
+Methods must expose the relevant kernel page for read/write through the SDK primitives; merely having arbitrary
+kernel DATA read/write is insufficient. Read/write failure leaves the feature unavailable or failed, rather than
+claiming that an exploit succeeded. The new detection path still requires live testing on a locked console and
+with other unlock methods; only local simulated protection/error cases have been tested for0.2.0.
+
+The patch replaces12bytes at TEXT+0x9f9076 with `movabs r15,0x200000000; jmp short TEXT+0x9f90b8`.
+The existing relay jumps to the original continuation at+0x9f92b6. Guards verify the baseline at+0x9f9044,
+relay, continuation and exact original/known5.5GiB/8GiB selection. Application and restoration require no
+`eboot.bin` processes and empty application memory areas1..3. These checks are conservative snapshots, not a
+lock against an external launch racing the operation; close games and avoid launching during a change.
+Writes are read back; failures attempt rollback, and an unverified rollback blocks all further memory actions
+for that manager instance and instructs reboot. The manager never patches an unknown sequence or a live budget.
+Restoration selects the captured original5.25GiB NEO configuration.
+
+`src/memory_control.h` defaults to automatic8GiB at manager startup. It rechecks prerequisites roughly every
+two seconds while the panel runs, in the same HTTP thread: the SDK's shared kernel pipe state must not be used
+concurrently by a new worker thread. No game is paused or remotely called. A requested change waits for games
+to close. Manual disable changes the target to the original budget and keeps it there; it does not touch the
+launch hook. Manual enable resumes automatic8GiB. NEO Enable/Disable do not touch the memory target or patch.
+These preferences last for the manager session; a new manager starts with the startup defaults. Quit stops
+polling without restoring either patch. Reboot removes both patches.
+
+The web status distinguishes `memory_8gib` (observed constructor selection) from `memory_auto` (requested
+policy). Running games show `kern.app.dmem_size_pid`;8192MiB is their reported launch budget, not memory use
+or an allocation/access test. The pre-release8GiB experiment was measured on Driveclub13.20; the user also
+reported successful gameplay with a patch that uses memory. This is distinct from a completed instrumented GPU
+probe: the separate native-allocation probes were refused by mmap in the game, including CPU-only mapping.
+
+Run host tests with `cc -O2 -Wall -Wextra -Werror tests/budget_test.c -o /tmp/neo-budget-test`, then execute
+`/tmp/neo-budget-test`. They use simulated kernel memory, never a console. Tests cover page access before code
+reads,1GiB/2MiB/4KiB mappings, unknown layouts, games/areas, readback errors, rollback, automatic/deferred/manual
+policy and permanent blocking after failed recovery. CI runs them before building. They do not validate a live
+hypervisor, the new detector on hardware, allocation capacity or GPU behavior.
 
 ## Game patches
 
@@ -102,7 +151,7 @@ name, entry name, title, ELF and app version, so renaming an entry changes its h
 | --- | --- | --- | --- |
 | Need for Speed Rivals 01.04 | `NeedForSpeedRivals_CUSA00168.xml` | one resolution: `7f4ee42f` 4K or `fc7fe6b6` 1440p | native 4K or 1440p |
 | Resident Evil 6 01.01 | `ResidentEvil6_CUSA03856.xml` | one resolution: `8b70a2e1` 1080p, `86499dd1` 1440p or `05789f48` 4K | 1080p, 1440p or native 4K (small Capcom logo in 4K) |
-| Bloodborne 01.09 | `Bloodborne_CUSA00900.xml` | one resolution: `cda543da` 1800p, `f0e950ea` 1620p or `0e99b4ca` 1440p | up to 1800p (native 4K blocked by memory) |
+| Bloodborne 01.09 | `Bloodborne_CUSA00900.xml` | one resolution: `cda543da` 1800p, `f0e950ea` 1620p or `0e99b4ca` 1440p | up to 1800p; 4K with8GiB has not been validated |
 | Just Cause 3 01.05 | `JustCause3_CUSA01493.xml` | one resolution: `184cc682` 1080p, `1575f9b2` 1440p or `9644fb2b` 4K, + `fd9434a8` Offline mode | 1080p, 1440p or native 4K |
 | Battlefield 4 01.24 | `Battlefield4_CUSA00049.xml` | one resolution: `f4d53c61` 1080p, `f9ec0351` 1440p, `079ce771` 1620p, `3ad0f441` 1800p or `7add01c8` 4K | 1080p (900p render), 1440p, 1620p, 1800p (stable 60 fps) or native 4K (~49 fps) |
 | Killzone Shadow Fall 01.81 | `KillzoneShadowFall_CUSA00190.xml` | one resolution: `8c299cea` 1440p, `725978ca` 1620p, `4f156bfa` 1800p or `0f189e73` Native 4K | 1440p, 1620p, 1800p (slight darkening on some surfaces) or native 4K (clean, below 60 fps) |
@@ -113,4 +162,3 @@ name, entry name, title, ELF and app version, so renaming an entry changes its h
 - Rivals: keep the community "Resolution Patch" disabled if it is in the patch file.
 - JC3: the Offline mode entry is required. Without it the game loops on the online login.
 - The XMLs only carry entries made in this project. The Bloodborne entries build on Kyo's resolution patch.
-

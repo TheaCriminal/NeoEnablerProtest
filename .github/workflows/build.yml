@@ -57,6 +57,11 @@ jobs:
             exit 1
           fi
 
+      - name: Test memory guards and controls (host only)
+        run: |
+          cc -O2 -Wall -Wextra -Werror tests/budget_test.c -o /tmp/neo-budget-test
+          /tmp/neo-budget-test
+
       - name: Build
         run: PS5_PAYLOAD_SDK="$HOME/ps5-payload-sdk" bash build.sh
 

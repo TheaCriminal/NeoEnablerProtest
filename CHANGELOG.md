@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## 0.2.0
+
+- Automatically selects an 8 GiB PS4 Pro memory budget when the required kernel access is available. The memory
+  adjustment currently supports firmware 13.20; detection uses page permissions and verified kernel bytes,
+  without depending on Byepervisor markers or a specific hypervisor exploit.
+- Separate NEO and 8 GiB status indicators and controls. Disabling one keeps the other setting unchanged.
+- A manual 8 GiB disable also stops automatic enabling for this manager session. Memory changes requested while
+  a game is open wait until games are closed; automatic enabling also waits for kernel access to become available.
+- Shows each running PS4 game's reported DMEM budget. The 8 GiB setting does not force games to allocate it or
+  automatically increase resolution.
+- Kernel layout checks, readback verification and rollback protect memory-budget changes. Unknown layouts are
+  refused; normal NEO functionality remains available when the 8 GiB adjustment is unavailable.
+- A second manager cannot change settings if the web-panel port is already occupied.
+- Host tests cover page access, memory changes, automatic/manual controls and rollback, and run in CI.
+
 - The payload file is now named `neo-manager.elf`.
 - The game patch files only carry patches made in this project. Community patches (60 FPS, debug camera and
   others) were removed and stay available from their original authors.
