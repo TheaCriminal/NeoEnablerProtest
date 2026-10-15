@@ -3,6 +3,7 @@
    and show the mode of open PS4 games. Independently manages a guarded 8GiB NEO budget when kernel access allows.
    Also installs the Media tab shortcut (NEOE00001) when missing. Hook logic in shellcore_hook.h. */
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -18,13 +19,14 @@
 #include <sys/user.h>
 #include <netinet/in.h>
 #include <ps5/kernel.h>
+#include <ps5/klog.h>
 #include "shellcore_hook.h"
 #include "legacy_v4.h"
 #include "icon_data.h"
 #include "memory_control.h"
 
 #define PORT 8765
-#define VERSION "NeoEnabler 0.2.0"
+#define VERSION "NeoEnabler 0.2.1"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -35,7 +37,15 @@ typedef struct { char useless[45]; char message[3075]; } notify_request_t;
 int sceKernelGetAppInfo(pid_t pid, app_info_t *info);
 int sceKernelSendNotificationRequest(int, notify_request_t *, size_t, int);
 
+/* Every action and its result go to the kernel log (kern.msgbuf), so Save Logs keeps them with the hook's lines. */
+static void log_line(const char *fmt, ...) {
+    char line[512];
+    va_list ap; va_start(ap, fmt); vsnprintf(line, sizeof(line), fmt, ap); va_end(ap);
+    klog_printf("[NeoEnabler] %s\n", line);
+}
+
 static void notify(const char *msg) {
+    log_line("%s", msg);
     notify_request_t req; memset(&req, 0, sizeof(req));
     strncpy(req.message, msg, sizeof(req.message) - 1);
     sceKernelSendNotificationRequest(0, &req, sizeof(req), 0);
@@ -116,6 +126,15 @@ static int write_file(const char *path, const void *data, size_t size) {
 
 #define SETTINGS_PATH "/data/neo-settings"
 
+/* 8 GiB is offered only on firmwares with a verified budget layout (mb_layouts): 13.20 tested, 13.60 pending testing. */
+static uint32_t fw_raw_version(void) {
+    uint32_t v = 0; size_t n = sizeof(v);
+    sysctlbyname("machdep.upd_version", &v, &n, NULL, 0);
+    return v;
+}
+static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != NULL; }
+static int memory_untested(void) { return fw_raw_version() == 0x13600000; }
+
 static int settings_neo = 1;
 
 static void settings_load(void) {
@@ -125,7 +144,11 @@ static void settings_load(void) {
     if (fread(buf, 1, sizeof(buf) - 1, f)) {
         if (strstr(buf, "neo=0")) settings_neo = 0;
         if (strstr(buf, "neo=1")) settings_neo = 1;
-        if (strstr(buf, "memory_8gib=1")) memory_request(1);
+        if (strstr(buf, "memory_8gib=1")) {
+            if (memory_supported()) memory_request(1);
+            else log_line("settings: memory_8gib=1 ignored, 8 GiB is not supported on firmware %x.%02x",
+                          (fw_raw_version() >> 24) & 0xff, (fw_raw_version() >> 16) & 0xff);
+        }
     }
     fclose(f);
 }
@@ -142,14 +165,14 @@ static int settings_save(int neo_on) {
 static int install_launcher(void) {
     const char *param_path = "/user/app/" TITLE_ID "/sce_sys/param.json", *icon_path = "/user/app/" TITLE_ID "/sce_sys/icon0.png";
     int err = appinst_open();
-    if (err) { printf("appinst open rc=%x\n", err); return -3; }
+    if (err) { log_line("Media tab shortcut: appinst open rc=%x", err); return -3; }
     uint8_t exists = 0;
     if (!appinst.exists(TITLE_ID, &exists) && exists &&
         same_file(param_path, launcher_param, sizeof(launcher_param) - 1) && same_file(icon_path, icon0_png, sizeof(icon0_png))) return 0;
     if ((mkdir("/user/app/" TITLE_ID, 0755) && errno != EEXIST) || (mkdir("/user/app/" TITLE_ID "/sce_sys", 0755) && errno != EEXIST)) return -1;
     if (write_file(param_path, launcher_param, sizeof(launcher_param) - 1) || write_file(icon_path, icon0_png, sizeof(icon0_png))) return -2;
     err = appinst.install_dir ? appinst.install_dir(TITLE_ID, "/user/app/", 0) : appinst.install_all(0);
-    printf("install %s rc=%x\n", TITLE_ID, err);
+    log_line("Media tab shortcut: install %s rc=%x", TITLE_ID, err);
     return err ? -3 : 1;
 }
 
@@ -273,9 +296,8 @@ static void serve_page(int fd, const char *msg) {
     char games[1024]; games_text(games, sizeof(games), 1);
     mb_snapshot memory;mb_check(&memory);
     const char*memory_state=memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled";
-    uint32_t fw_raw = 0; size_t fw_sz = 4;
-    sysctlbyname("machdep.upd_version", &fw_raw, &fw_sz, NULL, 0);
-    int mem_supported = mb_find_layout(fw_raw) != NULL;
+    uint32_t fw_raw = fw_raw_version();
+    int mem_supported = memory_supported();
     const char *dis = mem_supported ? "" : " disabled";
     char fw_str[16];
     snprintf(fw_str, sizeof(fw_str), "%x.%02x", (fw_raw >> 24) & 0xff, (fw_raw >> 16) & 0xff);
@@ -312,7 +334,8 @@ static void serve_page(int fd, const char *msg) {
              msg ? "<p>" : "", msg ? msg : "", msg ? "</p>" : "",
              st == 1 ? "on" : st == 0 ? "off" : "unk", state_text(st),
              memory.state==MB_8GIB?"on":memory.state==MB_UNKNOWN?"unk":"off",memory_state,
-             mem_supported ? "" : "<br><small>Not available on this firmware</small>",
+             !mem_supported ? "<br><small>Not available on this firmware (supported: 13.20; 13.60 pending testing)</small>"
+             : memory_untested() ? "<br><small>Firmware 13.60: pending testing, please report results</small>" : "",
              dis, dis, games);
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
 }
@@ -461,8 +484,18 @@ static int do_set(int enable, char *msg, size_t cap, int show) {
     if (!enable && !rc && (s.pid <= 0 || !s.frame || v4_remove(s.pid, s.frame))) rc = 9;
     if (!rc) snprintf(msg, cap, "NeoEnabler %s", enable ? "enabled" : "disabled");
     else snprintf(msg, cap, "NeoEnabler: failed to %s (rc=%d, state: %s)", enable ? "enable" : "disable", rc, state_text(st));
-    if (show) notify(msg);
+    if (show) notify(msg); else log_line("%s", msg);
     return rc;
+}
+
+/* State after an action: NEO hook, legacy v4 hook, actual 8 GiB budget and the requested one. */
+static void log_state(void) {
+    shell_t s; int st = hook_state(&s);
+    mb_snapshot m; mb_check(&m);
+    log_line("state: NEO hook %s, v4 hook %s, 8 GiB %s (requested %s): %s", state_text(st),
+             v4_active(&s) ? "present" : "absent",
+             m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
+             memory_target ? "on" : "off", m.detail);
 }
 
 int main(void) {
@@ -479,20 +512,27 @@ int main(void) {
         if(srv>=0)close(srv);
         return 1;
     }
+    log_line("%s started", VERSION);
     settings_load();
+    log_line("settings: neo=%d memory_8gib=%d", settings_neo, memory_target);
     do_set(settings_neo, msg, sizeof(msg), 0);
     int memory_previous_result=memory_poll();
-    printf("8 GiB: %s\n",memory_message);
+    log_line("8 GiB: %s", memory_message);
     int li = install_launcher();
     snprintf(msg + strlen(msg), sizeof(msg) - strlen(msg), "\nWeb panel: port %d%s", PORT,
              li == 1 ? "\nShortcut installed in the Media tab" : li < 0 ? "\nFailed to install the Media tab shortcut" : "");
     notify(msg); puts(msg);
+    log_state();
     time_t last_memory_poll=time(NULL);
     for (;;) {
         time_t now=time(NULL);
         if(now<last_memory_poll||now-last_memory_poll>=2){
             int memory_result=memory_poll();
-            if(memory_result!=memory_previous_result&&(memory_result==0||memory_result==5||memory_result==6))notify(memory_message);
+            if(memory_result!=memory_previous_result){
+                if(memory_result==0||memory_result==5||memory_result==6)notify(memory_message);
+                else log_line("8 GiB: %s (result %d)",memory_message,memory_result);
+                log_state();
+            }
             memory_previous_result=memory_result;last_memory_poll=now;
         }
         fd_set ready;FD_ZERO(&ready);FD_SET(srv,&ready);struct timeval wait={1,0};
@@ -509,22 +549,32 @@ int main(void) {
         sscanf(req, "%7s %63s", method, path);
         int post = !strcmp(method, "POST");
         if (post && (!strcmp(path, "/enable") || !strcmp(path, "/disable"))) {
+            log_line("panel: NEO %s requested", !strcmp(path, "/enable") ? "enable" : "disable");
             do_set(!strcmp(path, "/enable"), msg, sizeof(msg), 1);
+            log_state();
             serve_page(fd, msg);
         } else if(post&&(!strcmp(path,"/memory/enable")||!strcmp(path,"/memory/disable"))){
-            memory_request(!strcmp(path,"/memory/enable"));
-            notify(memory_message);serve_page(fd,memory_message);
+            log_line("panel: 8 GiB %s requested",!strcmp(path,"/memory/enable")?"enable":"disable");
+            if(!memory_supported()){
+                const char*umsg="8 GiB is not supported on this firmware (supported: 13.20; 13.60 pending testing); nothing changed";
+                notify(umsg);serve_page(fd,umsg);
+            }else{
+                memory_request(!strcmp(path,"/memory/enable"));
+                notify(memory_message);log_state();serve_page(fd,memory_message);
+            }
         } else if (post && !strcmp(path, "/settings/save")) {
             shell_t ss; int sst = hook_state(&ss);
             if (sst == HOOK_OFF && v4_active(&ss)) sst = HOOK_ON;
             int ok = !settings_save(sst == HOOK_ON);
             const char *smsg = ok ? "Settings saved" : "Failed to save settings";
+            log_line("panel: save settings neo=%d memory_8gib=%d", sst == HOOK_ON, memory_target);
             notify(smsg); serve_page(fd, smsg);
         } else if (post && !strcmp(path, "/quit")) {
             reply(fd, "200 OK", "text/html; charset=utf-8", "<!doctype html><meta charset=utf-8><title>NeoEnabler</title>"
                   "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. NEO and memory settings were kept.</body>");
             close(fd);
             notify("NeoEnabler: panel stopped (NEO and memory settings kept)");
+            log_state();
             break;
         } else if (!strcmp(path, "/status")) {
             shell_t s; int st = hook_state(&s);

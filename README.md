@@ -26,8 +26,8 @@ Version **0.2.0** adds an optional **8 GiB PS4 Pro memory budget**, **disabled b
 supports **firmware 13.20** (tested) and **13.60** (offsets found, needs hardware test). The hypervisor must
 already be unlocked by Byepervisor or another method that allows reading and writing the kernel code page;
 NeoEnabler checks that access without relying on exploit-specific markers and does not unlock the hypervisor
-itself. Without that access, the normal NEO feature remains available. On unsupported firmwares, the 8 GiB
-controls are greyed out.
+itself. Without that access, the normal NEO feature remains available. On other firmwares the 8 GiB
+controls are greyed out and the request is refused (since 0.2.1).
 
 **If you are on firmware 13.20 or 13.60, please test the 8 GiB budget and report your results.**
 

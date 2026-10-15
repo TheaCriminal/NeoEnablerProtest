@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1
+
+- The manager writes every action and its result to the system log: startup, loaded settings, NEO on/off, 8 GiB
+  requests and changes, Save Settings, errors and Quit, each followed by a `state:` line with the NEO hook and the
+  8 GiB state. Lines start with `[NeoEnabler]` and are included when you use Save Logs (`/data/neo-logs.txt`).
+- 8 GiB can only be turned on from firmware 13.20 (tested) or 13.60 (pending testing). On other firmwares the
+  controls stay greyed out, the panel refuses the request and a saved 8 GiB setting is ignored. On 13.60 the panel
+  shows that the firmware is pending testing.
+
 ## 0.2.0
 
 ### 8 GiB PS4 Pro memory budget

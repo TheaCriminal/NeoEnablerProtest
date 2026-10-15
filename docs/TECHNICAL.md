@@ -77,7 +77,7 @@ checksum attached.
 | --- | --- |
 | `GET /` | Independent NEO and 8 GiB states/controls, open PS4 games and reported DMEM |
 | `POST /enable`, `POST /disable` | Installs or removes the hook (disable also removes the v4 hook) and notifies on the PS5 |
-| `POST /memory/enable`, `POST /memory/disable` | Selects 8 GiB or restores the original budget, independently of the hook; defers actual writes while a game is open |
+| `POST /memory/enable`, `POST /memory/disable` | Selects 8 GiB or restores the original budget, independently of the hook; defers actual writes while a game is open. Refused on firmwares without a budget layout (only 13.20 and 13.60 have one) |
 | `POST /quit` | Stops the panel and keeps the hook state |
 | `GET /status` | Plain text: version, 8 GiB state/automatic policy/result, hook state, firmware and open games with reported DMEM |
 | `GET /diagnostic` | JSONL metadata capture (same format as `diagnostics/neo_diagnostic.c`): firmware, SDK, running games, driver presence, DMEM/FMEM queries. No patches applied, no kernel TEXT reads |
@@ -92,6 +92,8 @@ checksum attached.
   loads the Pro driver on the same firmware), with the same name in both modes, and then the mode comes from the
   `kPS4Pro` bit of the launch attribute (offset 0x28 of `sceKernelGetAppInfo`, checked on 13.20).
 - The panel has no authentication: any device on the local network can use it.
+- Log: every action and its result go to the kernel log with the prefix `[NeoEnabler]`, followed by a `state:` line
+  (NEO hook, v4 hook, actual and requested 8 GiB state). Save Logs writes the kernel log to `/data/neo-logs.txt`.
 
 ## 8 GiB memory budget (0.2.0)
 
