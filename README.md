@@ -75,7 +75,7 @@ a game that is not in the table below.
 | --- | --- | --- |
 | Need for Speed Rivals (01.04) | 1440p, 4K | If your existing patch file for the game has "Resolution Patch", keep it off. |
 | Resident Evil 6 (01.01) | 1080p, 1440p, 4K | Small Capcom logo in 4K. |
-| Bloodborne (01.09) | 1440p, 1620p, 1800p | 4K previously ran out of memory; it has not been validated with the 8 GiB option. |
+| Bloodborne (01.09) | 1440p, 1620p, 1800p, native 4K | Native 4K needs the 8 GiB memory budget. **Tested on firmware 13.20 only.** |
 | Just Cause 3 (01.05) | 1080p, 1440p, 4K | Also enable "Offline mode", or the game keeps trying to log in. |
 | Battlefield 4 (01.24) | 1080p, 1440p, 1620p, 1800p, 4K | 1800p holds 60 fps. 4K runs around 49 fps. |
 | Killzone Shadow Fall (01.81) | 1440p, 1620p, 1800p, 4K | Some surfaces are slightly darker from 1440p to 1800p. 4K is clean but below 60 fps. |
