@@ -5,6 +5,21 @@
 - Driveclub 1440p: no more black flashes in the pause menu, and the frame rate no longer drops to 30 when a frame
   is late (same fix as the 4K entries). If you had it enabled, it stays enabled.
 
+## 0.3.0
+
+- New **GPU clock** tab with a 1800–2350 MHz target slider, a live SMU clock reading, Apply boost and Disable.
+  Uses the original MP1 driver on firmware **13.20 only**. Default is off, with a 2200 MHz target.
+  Targets above 2200 MHz are experimental and have not been gameplay-validated.
+- GPU clock enable state and target are included in **Save Settings** (`/data/neo-settings`). Old settings files
+  remain compatible. Settings writes use a flushed temporary file followed by rename.
+- A saved GPU target is requested for a running/new PS4 game, independently of NEO and 8 GiB. The manager sends
+  no repeated SET requests to fight frequency changes made by the SMU. Actual frequency can be below the target.
+- Disable and Quit request the clock captured before applying boost to the running game. On game exit/transition,
+  the system resumes its power policy; the next PS4 launch captures a new baseline. Restoration errors remain
+  visible and block further boost requests until Disable succeeds.
+- Added `GET /gpu/status` and GPU fields in `/status` and system logs. Form requests are bounded and read fully
+  before applying settings; invalid GPU frequencies are rejected.
+
 ## 0.2.1
 
 - The manager writes every action and its result to the system log: startup, loaded settings, NEO on/off, 8 GiB

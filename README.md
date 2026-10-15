@@ -39,7 +39,7 @@ Open `http://<PS5 IP>:8765` in a browser on your network, or the **NeoEnabler** 
 
 - Turn PS4 Pro mode on or off.
 - Turn 8 GiB on or off independently of NEO.
-- **Save Settings**: saves both NEO and 8 GiB state to `/data/neo-settings` on the PS5. Restored on next startup.
+- **Save Settings**: saves NEO, 8 GiB and GPU clock settings to `/data/neo-settings` on the PS5. Restored on next startup.
 - **Save Diagnostic**: writes firmware metadata to `/data/neo-diagnostic.jsonl` for extraction via FTP.
 - See the firmware version, running PS4 games and their DMEM budget.
 
@@ -52,6 +52,30 @@ not change resolution or force memory pools to grow. Restoring the original budg
 NEO configuration. A failed kernel-write recovery requires a console reboot before launching games.
 
 Anyone on your local network can open the panel.
+
+### GPU clock tab (0.3.0)
+
+Open **GPU clock** in the panel, select a target from **1800 to 2350 MHz** in 50 MHz steps, and use
+**Apply boost**. The current clock reported by the SMU updates every two seconds. The target and enable flag
+are saved with **Save Settings** and requested again when the manager starts with a PS4 game running or detects
+a new PS4 launch. This works independently of NEO and 8 GiB, including PS4 base mode.
+
+GPU boost is **off by default**, with 2200 MHz selected. It currently supports **firmware 13.20 only** and uses
+the stock `/dev/mp1` driver without patching the kernel or relying on a hypervisor exploit marker.
+The 2350 MHz slider limit is an experimental requested target, not a guaranteed sustained hardware frequency.
+The current short gameplay validation covers a 2200 MHz request with SMU readings around 2155–2200 MHz.
+Higher targets have not been gameplay-validated; FPS gains and long-term stability have not been established.
+
+**Disable boost** requests the clock captured before boost for the running game. **Quit** also requests that
+restoration; NEO and memory settings are kept. On game exit/transition the manager stops applying that game's
+target and lets the system manage clocks. A new PS4 launch captures a new baseline. The manager does not keep
+resending a target when the SMU varies the clock, and it does not change CPU clocks, thermal/power controls,
+memory bandwidth, or enabled ROPs. If a clock request or restoration fails, the panel shows the error and stops
+automatic retries; use Disable to retry restoration before enabling again.
+
+Live JSON status: `GET /gpu/status`. The saved file adds `gpu_clock_enabled=0|1` and `gpu_clock_mhz=<MHz>`;
+older settings files default to GPU boost off. Invalid saved GPU values disable boost. On unsupported firmware,
+the controls are greyed out, direct enable requests are refused and a saved GPU enable flag is ignored.
 
 ## Game patches
 

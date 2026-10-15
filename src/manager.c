@@ -24,9 +24,12 @@
 #include "legacy_v4.h"
 #include "icon_data.h"
 #include "memory_control.h"
+#include "gpu_control.h"
+#include "settings.h"
+#include "http_request.h"
 
 #define PORT 8765
-#define VERSION "NeoEnabler 0.2.1"
+#define VERSION "NeoEnabler 0.3.0"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -140,11 +143,16 @@ static int settings_neo = 1;
 static void settings_load(void) {
     FILE *f = fopen(SETTINGS_PATH, "rb");
     if (!f) return;
-    char buf[128] = {0};
-    if (fread(buf, 1, sizeof(buf) - 1, f)) {
-        if (strstr(buf, "neo=0")) settings_neo = 0;
-        if (strstr(buf, "neo=1")) settings_neo = 1;
-        if (strstr(buf, "memory_8gib=1")) {
+    char buf[1024] = {0};
+    size_t used = fread(buf, 1, sizeof(buf) - 1, f);
+    if (ferror(f) || !feof(f)) { fclose(f); log_line("settings: unreadable or oversized file ignored"); return; }
+    if (used) {
+        neo_settings cfg;
+        if (neo_settings_parse(buf, &cfg)) log_line("settings: invalid GPU values; GPU boost disabled");
+        settings_neo = cfg.neo;
+        gpu_configure(cfg.gpu_enabled, cfg.gpu_mhz);
+        if (cfg.gpu_enabled && !gpu_backend_supported()) log_line("settings: saved GPU boost ignored on unsupported firmware");
+        if (cfg.memory) {
             if (memory_supported()) memory_request(1);
             else log_line("settings: memory_8gib=1 ignored, 8 GiB is not supported on firmware %x.%02x",
                           (fw_raw_version() >> 24) & 0xff, (fw_raw_version() >> 16) & 0xff);
@@ -154,9 +162,10 @@ static void settings_load(void) {
 }
 
 static int settings_save(int neo_on) {
-    char buf[128];
-    snprintf(buf, sizeof(buf), "neo=%d\nmemory_8gib=%d\n", neo_on ? 1 : 0, memory_target);
-    return write_file(SETTINGS_PATH, buf, strlen(buf));
+    neo_settings cfg = {neo_on, memory_target, gpu.enabled, gpu.target};
+    char buf[128]; int n = neo_settings_format(&cfg, buf, sizeof(buf));
+    if (n < 0 || write_file(SETTINGS_PATH ".tmp", buf, (size_t)n)) return -1;
+    return rename(SETTINGS_PATH ".tmp", SETTINGS_PATH);
 }
 
 /* Returns 0 already installed, 1 installed now, <0 error. "Installed" means registered in the system
@@ -253,6 +262,31 @@ static int games_text(char *out, size_t cap, int html) {
     return games;
 }
 
+/* A unique PS4 eboot is the only automatic clock target. Native games, mixed
+ * game processes, failed scans and launcher processes never trigger boost. */
+static int gpu_game_pid(void) {
+    int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC, 0}; size_t n = 0;
+    if (sysctl(mib, 4, NULL, &n, NULL, 0) || !n || n > 32 * 1024 * 1024) return -1;
+    unsigned char *buf = malloc(n);
+    if (!buf) return -1;
+    if (sysctl(mib, 4, buf, &n, NULL, 0)) { free(buf); return -1; }
+    int candidate = 0, count = 0, valid = 1; size_t off = 0;
+    while (off + sizeof(struct kinfo_proc) <= n) {
+        struct kinfo_proc *ki = (void *)(buf + off);
+        if (ki->ki_structsize < (int)sizeof(*ki) || (size_t)ki->ki_structsize > n - off) { valid = 0; break; }
+        if (!strcmp(ki->ki_comm, "eboot.bin")) {
+            app_info_t info = {0}; uint32_t h = 0; count++;
+            if (sceKernelGetAppInfo(ki->ki_pid, &info) || !info.title_id[0]) valid = 0;
+            else if (!kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverForNeoMode.sprx", &h) ||
+                     !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriver.sprx", &h) ||
+                     !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverCompat1.sprx", &h)) candidate = ki->ki_pid;
+        }
+        off += (size_t)ki->ki_structsize;
+    }
+    if (off != n || count > 1) valid = 0;
+    free(buf); return valid ? candidate : -1;
+}
+
 static void send_all(int fd, const char *p, size_t n) {
     while (n) { ssize_t w = write(fd, p, n); if (w <= 0) return; p += w; n -= (size_t)w; }
 }
@@ -284,6 +318,11 @@ static const char page_head[] =
     "padding:8px 14px;margin:8px 8px 0 0;cursor:pointer}"
     "button:hover{border-color:#3d7bfd}button:disabled{opacity:.45;cursor:default}"
     "button.danger{background:#3a1f1d;border-color:#5c2c28}"
+    "nav{display:flex;gap:8px;margin:0 0 18px}nav a{color:var(--muted);text-decoration:none;"
+    "padding:9px 16px;border-radius:8px;border:1px solid var(--line)}"
+    "nav a[aria-current=page]{color:var(--fg);background:var(--btn);border-color:#3d7bfd}"
+    "input[type=range]{width:100%;margin:20px 0}output{font-size:24px;font-weight:600}"
+    ".metric{font-size:32px;font-weight:600;margin:10px 0}.notice{margin:12px 0;color:var(--muted)}"
     "ul{margin:8px 0 0;padding-left:20px}small{color:var(--muted)}"
     "</style></head><body>";
 
@@ -309,7 +348,8 @@ static void serve_page(int fd, const char *msg) {
              "<button formaction=/settings/save>Save Settings</button>"
              "<button class=danger formaction=/quit>Quit</button>"
              "</form></div></header>"
-             "<main>%s%s%s<div class=grid>"
+             "<main><nav aria-label='Settings tabs'><a href=/ aria-current=page>Overview</a><a href=/gpu>GPU clock</a></nav>"
+             "%s%s%s<div class=grid>"
              "<div class=card><b>PS4 Pro (NEO) mode</b> "
              "<span class='state %s'>%s</span>"
              "<form method=post><button formaction=/enable>Enable</button>"
@@ -337,6 +377,72 @@ static void serve_page(int fd, const char *msg) {
              !mem_supported ? "<br><small>Not available on this firmware (supported: 13.20; 13.60 pending testing)</small>"
              : memory_untested() ? "<br><small>Firmware 13.60: pending testing, please report results</small>" : "",
              dis, dis, games);
+    reply(fd, "200 OK", "text/html; charset=utf-8", body);
+}
+
+static void serve_gpu_status(int fd) {
+    gpu_refresh(); char current[24] = "null", previous[24] = "null", detail[384], body[1024];
+    size_t at = 0;
+    for (const unsigned char *p = (const unsigned char *)gpu.message; *p && at + 3 < sizeof detail; p++) {
+        if (*p == '"' || *p == '\\') detail[at++] = '\\';
+        detail[at++] = *p < 32 ? ' ' : (char)*p;
+    }
+    detail[at] = 0;
+    if (gpu.reading_valid) snprintf(current, sizeof current, "%u", gpu.actual);
+    if (gpu.baseline_valid) snprintf(previous, sizeof previous, "%u", gpu.baseline);
+    snprintf(body, sizeof body,
+        "{\"supported\":%s,\"enabled\":%s,\"applied\":%s,\"state\":\"%s\","
+        "\"current_mhz\":%s,\"target_mhz\":%u,\"previous_mhz\":%s,\"max_mhz\":%u,\"detail\":\"%s\"}",
+        gpu_backend_supported() ? "true" : "false", gpu.enabled ? "true" : "false",
+        gpu.applied ? "true" : "false", gpu_state_text(), current, gpu.target, previous, GPU_MAX_MHZ, detail);
+    reply(fd, "200 OK", "application/json", body);
+}
+
+static void serve_gpu_page(int fd, const char *msg) {
+    gpu_refresh();
+    char current[32] = "Unavailable", previous[32] = "Not captured", fw[16];
+    uint32_t raw = fw_raw_version();
+    snprintf(fw, sizeof fw, "%x.%02x", (raw >> 24) & 255, (raw >> 16) & 255);
+    if (gpu.reading_valid) snprintf(current, sizeof current, "%u MHz", gpu.actual);
+    if (gpu.baseline_valid) snprintf(previous, sizeof previous, "%u MHz", gpu.baseline);
+    const char *dis = gpu_backend_supported() ? "" : " disabled";
+    static char body[12288];
+    snprintf(body, sizeof body,
+        "%s<header><h1>NeoEnabler <small>FW %s</small></h1>"
+        "<div><form method=post style='display:inline'><input type=hidden name=view value=gpu>"
+        "<button formaction=/settings/save>Save Settings</button><button class=danger formaction=/quit>Quit</button>"
+        "</form></div></header><main>"
+        "<nav aria-label='Settings tabs'><a href=/>Overview</a><a href=/gpu aria-current=page>GPU clock</a></nav>"
+        "%s%s%s<div class=grid>"
+        "<div class=card><b>Current GPU clock</b><div class=metric id=gpu-current>%s</div>"
+        "<small>Live SMU reading. Updates every two seconds.</small></div>"
+        "<div class=card><b>Clock boost</b> <span class='state %s' id=gpu-state>%s</span>"
+        "<p id=gpu-detail>%s</p><small>Previous clock: <span id=gpu-previous>%s</span></small></div>"
+        "<div class='card wide'><form method=post><label for=gpu-target><b>Target GPU clock</b></label>"
+        "<p><output id=gpu-value for=gpu-target>%u</output> MHz</p>"
+        "<input type=range id=gpu-target name=mhz min=%u max=%u step=50 value=%u%s>"
+        "<div><button formaction=/gpu/enable%s>Apply boost</button>"
+        "<button formaction=/gpu/disable%s>Disable boost</button></div></form>"
+        "<p class=notice>Experimental. 2200 MHz has a short gameplay test; higher targets up to 2350 MHz are unvalidated. "
+        "Actual frequency may be lower. Power and thermal controls remain active.</p>"
+        "<small>Applies to PS4 games in base or NEO mode. A saved target is requested on the next PS4 launch. "
+        "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
+        "%s</div></div><p><small>GPU boost is independent of NEO and 8 GiB. Quitting restores the captured GPU clock.<br>"
+        VERSION "</small></p></main>"
+        "<script>const r=document.getElementById('gpu-target'),o=document.getElementById('gpu-value');"
+        "r.addEventListener('input',()=>o.textContent=r.value);"
+        "async function refresh(){try{const x=await fetch('/gpu/status',{cache:'no-store'});if(!x.ok)return;const s=await x.json();"
+        "document.getElementById('gpu-current').textContent=s.current_mhz===null?'Unavailable':s.current_mhz+' MHz';"
+        "const b=document.getElementById('gpu-state');b.textContent=s.state;"
+        "b.className='state '+(s.applied&&s.state==='enabled'?'on':s.state==='disabled'?'off':'unk');"
+        "document.getElementById('gpu-previous').textContent=s.previous_mhz===null?'Not captured':s.previous_mhz+' MHz';"
+        "document.getElementById('gpu-detail').textContent=s.detail;"
+        "}catch(e){document.getElementById('gpu-current').textContent='Disconnected';}}setInterval(refresh,2000);</script>"
+        "</body></html>",
+        page_head, fw, msg ? "<p>" : "", msg ? msg : "", msg ? "</p>" : "", current,
+        gpu.applied && !gpu.blocked ? "on" : gpu.enabled ? "unk" : "off", gpu_state_text(), gpu.message, previous,
+        gpu.target, GPU_MIN_MHZ, GPU_MAX_MHZ, gpu.target, dis, dis, dis,
+        gpu_backend_supported() ? "" : "<p>GPU clock control is available on firmware 13.20 only.</p>");
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
 }
 
@@ -496,6 +602,18 @@ static void log_state(void) {
              v4_active(&s) ? "present" : "absent",
              m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
              memory_target ? "on" : "off", m.detail);
+    log_line("state: GPU %s, requested %u MHz, SMU %s%u MHz, owner PID %d: %s",
+             gpu_state_text(), gpu.target, gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.owner_pid, gpu.message);
+}
+
+static void gpu_tick(void) {
+    static unsigned previous_actions;
+    static int previous_result = 9999;
+    int result = gpu_poll(gpu_game_pid());
+    if (result != previous_result || gpu.actions != previous_actions) {
+        log_line("GPU: %s (result %d)", gpu.message, result);
+        previous_actions = gpu.actions; previous_result = result;
+    }
 }
 
 int main(void) {
@@ -514,10 +632,12 @@ int main(void) {
     }
     log_line("%s started", VERSION);
     settings_load();
-    log_line("settings: neo=%d memory_8gib=%d", settings_neo, memory_target);
+    log_line("settings: neo=%d memory_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u",
+             settings_neo, memory_target, gpu.enabled, gpu.target);
     do_set(settings_neo, msg, sizeof(msg), 0);
     int memory_previous_result=memory_poll();
     log_line("8 GiB: %s", memory_message);
+    gpu_tick();
     int li = install_launcher();
     snprintf(msg + strlen(msg), sizeof(msg) - strlen(msg), "\nWeb panel: port %d%s", PORT,
              li == 1 ? "\nShortcut installed in the Media tab" : li < 0 ? "\nFailed to install the Media tab shortcut" : "");
@@ -527,6 +647,7 @@ int main(void) {
     for (;;) {
         time_t now=time(NULL);
         if(now<last_memory_poll||now-last_memory_poll>=2){
+            gpu_tick();
             int memory_result=memory_poll();
             if(memory_result!=memory_previous_result){
                 if(memory_result==0||memory_result==5||memory_result==6)notify(memory_message);
@@ -542,9 +663,10 @@ int main(void) {
         if (fd < 0) continue;
         struct timeval tv = {5, 0};
         setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-        char req[2048]; ssize_t n = read(fd, req, sizeof(req) - 1);
-        if (n <= 0) { close(fd); continue; }
-        req[n] = 0;
+        char req[4096], *form_body = NULL;
+        if (neo_http_read(fd, req, sizeof req, &form_body)) {
+            reply(fd, "400 Bad Request", "text/plain", "Invalid or incomplete request\n"); close(fd); continue;
+        }
         char method[8] = "", path[64] = "";
         sscanf(req, "%7s %63s", method, path);
         int post = !strcmp(method, "POST");
@@ -562,30 +684,53 @@ int main(void) {
                 memory_request(!strcmp(path,"/memory/enable"));
                 notify(memory_message);log_state();serve_page(fd,memory_message);
             }
+        } else if (post && (!strcmp(path, "/gpu/enable") || !strcmp(path, "/gpu/disable"))) {
+            int enable = !strcmp(path, "/gpu/enable"); unsigned target = gpu.target;
+            if (enable && gpu_form_mhz(form_body, &target) != 1) {
+                reply(fd, "400 Bad Request", "text/plain", "Choose a GPU target from 1800 to 2350 MHz in 50 MHz steps\n");
+            } else {
+                int rc = gpu_request(enable, target, gpu_game_pid());
+                if (rc == -1 && enable) snprintf(gpu.message, sizeof gpu.message, "GPU clock request unavailable or failed; check firmware and SMU access");
+                log_line("panel: GPU enable=%d target=%u rc=%d", enable, target, rc);
+                notify(gpu.message); log_state(); serve_gpu_page(fd, gpu.message);
+            }
         } else if (post && !strcmp(path, "/settings/save")) {
             shell_t ss; int sst = hook_state(&ss);
             if (sst == HOOK_OFF && v4_active(&ss)) sst = HOOK_ON;
             int ok = !settings_save(sst == HOOK_ON);
             const char *smsg = ok ? "Settings saved" : "Failed to save settings";
-            log_line("panel: save settings neo=%d memory_8gib=%d", sst == HOOK_ON, memory_target);
-            notify(smsg); serve_page(fd, smsg);
+            log_line("panel: save settings neo=%d memory_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u",
+                     sst == HOOK_ON, memory_target, gpu.enabled, gpu.target);
+            notify(smsg);
+            if (!strcmp(form_body, "view=gpu")) serve_gpu_page(fd, smsg); else serve_page(fd, smsg);
         } else if (post && !strcmp(path, "/quit")) {
+            if (gpu_request(0, gpu.target, gpu_game_pid())) {
+                notify(gpu.message); serve_gpu_page(fd, "Clock restoration failed. Retry Disable before quitting."); close(fd); continue;
+            }
             reply(fd, "200 OK", "text/html; charset=utf-8", "<!doctype html><meta charset=utf-8><title>NeoEnabler</title>"
-                  "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. NEO and memory settings were kept.</body>");
+                  "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. NEO and memory settings were kept. GPU clock restore requested.</body>");
             close(fd);
-            notify("NeoEnabler: panel stopped (NEO and memory settings kept)");
+            notify("NeoEnabler: panel stopped (NEO and memory kept, GPU boost stopped)");
             log_state();
             break;
         } else if (!strcmp(path, "/status")) {
             shell_t s; int st = hook_state(&s);
             char games[1024]; games_text(games, sizeof(games), 0);
-            char body[2600];mb_snapshot memory;mb_check(&memory);
+            char body[3200];mb_snapshot memory;mb_check(&memory);gpu_refresh();
             snprintf(body, sizeof(body), "build: " VERSION "\nmemory_8gib: %s\nmemory_auto: %s\nmemory_detail: %s\nmemory_last_result: %s\nhook: %s\nv4 hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
                      memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled",
                      memory_target?"enabled":"disabled",memory.detail,memory_message,
                      state_text(st), v4_active(&s) ? "present" : "absent", fw_major(), s.site, s.target, s.cave, s.frame, s.frame_end,
                      s.attr_off, s.four_args, games);
+            size_t used = strlen(body);
+            snprintf(body + used, sizeof body - used,
+                     "gpu_clock: %s\ngpu_clock_enabled: %d\ngpu_target_mhz: %u\ngpu_actual_mhz: %s%u\ngpu_detail: %s\n",
+                     gpu_state_text(), gpu.enabled, gpu.target, gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);
+        } else if (!strcmp(method, "GET") && !strcmp(path, "/gpu")) {
+            serve_gpu_page(fd, NULL);
+        } else if (!strcmp(method, "GET") && !strcmp(path, "/gpu/status")) {
+            serve_gpu_status(fd);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/logs")) {
             serve_logs_show(fd);
         } else if (post && !strcmp(path, "/logs/save")) {
