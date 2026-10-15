@@ -1,0 +1,19 @@
+{
+  "format": "neo-firmware-registry-v1",
+  "default_memory_state": "unsupported",
+  "runtime_whitelist_source": "src/neo_budget.h",
+  "profiles": [
+    {
+      "firmware_raw": "0x13200000",
+      "firmware_display": "13.20",
+      "memory_state": "local_gameplay_validated",
+      "text_to_data_delta": "0x00cb0000",
+      "reference_kernel_text_sha256": "87255d25521aa94334fddf2523c27a845be5609f351f32ef0d9c3650e833e22b",
+      "budget_branch_text_offset": "0x009f9076",
+      "evidence": "Driveclub: reported8192MiB; user confirmed gameplay with memory-using patch",
+      "detector_0_2_0_hardware_validated": false,
+      "other_hypervisor_methods_validated": false
+    }
+  ],
+  "policy": "Offline candidates and new diagnostic reports never enable runtime support. Each firmware requires manual review and hardware validation. This registry is research metadata, not runtime configuration."
+}
