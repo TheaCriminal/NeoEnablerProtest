@@ -80,6 +80,7 @@ checksum attached.
 | `POST /memory/enable`, `POST /memory/disable` | Selects 8 GiB or restores the original budget, independently of the hook; defers actual writes while a game is open |
 | `POST /quit` | Stops the panel and keeps the hook state |
 | `GET /status` | Plain text: version, 8 GiB state/automatic policy/result, hook state, firmware and open games with reported DMEM |
+| `GET /diagnostic` | JSONL metadata capture (same format as `diagnostics/neo_diagnostic.c`): firmware, SDK, running games, driver presence, DMEM/FMEM queries. No patches applied, no kernel TEXT reads |
 
 - Starting the manager enables the hook. The panel shows "enabled" while the v4 hook is present.
 - Changes apply to games launched afterwards. Rebooting the console removes the hook and the panel.

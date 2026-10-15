@@ -23,8 +23,11 @@ The diagnostic uses no firmware-specific offsets and does not read kernel TEXT. 
 ## Collecting data
 
 1. Note your firmware version, console model, jailbreak method and whether the hypervisor is unlocked.
-2. Build and send **only the diagnostic**, never an adapted 13.20 patch. To capture a game's budget, leave it on a stable screen. Collect once without a game and once with a game open, and note whether the game has native Pro support and which patches are active.
-3. Save the complete stdout:
+2. Collect once without a game and once with a game open. Note whether the game has native Pro support and which patches are active.
+
+**Option A (manager running):** open `http://<PS5 IP>:8765/diagnostic` in a browser and save the page as `diagnostic.jsonl`.
+
+**Option B (standalone payload):** build and send only the diagnostic, never an adapted 13.20 patch:
 
 ```sh
 bash diagnostics/build.sh

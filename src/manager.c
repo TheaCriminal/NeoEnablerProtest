@@ -263,6 +263,94 @@ static void serve_page(int fd, const char *msg) {
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
 }
 
+static void serve_diagnostic(int fd) {
+    static char body[16384];
+    size_t len = 0;
+    unsigned records = 0;
+    uint32_t fw = 0; size_t fw_size = 4; int fw_rc, fw_error;
+    errno = 0; fw_rc = sysctlbyname("machdep.upd_version", &fw, &fw_size, NULL, 0); fw_error = errno;
+    records++;
+    len += snprintf(body + len, sizeof(body) - len,
+        "{\"format\":\"neo-diagnostic-v1\",\"record\":\"session\","
+        "\"firmware_raw\":\"0x%08x\",\"firmware_rc\":%d,\"firmware_errno\":%d,\"firmware_bytes\":%zu,"
+        "\"sdk_raw\":\"0x%08x\",\"kernel_data_base\":\"0x%016lx\","
+        "\"scope\":\"metadata_only\",\"patches\":false,\"snapshot_atomic\":false}\n",
+        fw, fw_rc, fw_error, fw_size, kernel_get_fw_version(), (uint64_t)KERNEL_ADDRESS_DATA_BASE);
+
+    /* Self process */
+    records++;
+    len += snprintf(body + len, sizeof(body) - len,
+        "{\"format\":\"neo-diagnostic-v1\",\"record\":\"process\",\"pid\":%d,\"kind\":\"native_payload\","
+        "\"title_id\":\"\",\"app_info_rc\":-1,\"app_info_errno\":0,"
+        "\"neo_driver_rc\":-1,\"base_driver_rc\":-1,\"compat_driver_rc\":-1,\"mode\":\"native\"}\n",
+        (int)getpid());
+
+    /* Enumerate games */
+    int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC, 0}; size_t n = 0;
+    unsigned game_count = 0; int complete = 0, scan_rc = -1, scan_error = 0;
+    errno = 0; scan_rc = sysctl(mib, 4, NULL, &n, NULL, 0); scan_error = errno;
+    if (!scan_rc && n && n <= 32 * 1024 * 1024 - 0x10000) {
+        n += 0x10000; unsigned char *b = malloc(n);
+        if (b) {
+            errno = 0; scan_rc = sysctl(mib, 4, b, &n, NULL, 0); scan_error = errno;
+            if (!scan_rc) {
+                size_t off = 0;
+                while (off + sizeof(struct kinfo_proc) <= n) {
+                    struct kinfo_proc *k = (void *)(b + off);
+                    if (k->ki_structsize < (int)sizeof(*k) || (size_t)k->ki_structsize > n - off) break;
+                    if (!strcmp(k->ki_comm, "eboot.bin") && game_count < 16 && len + 1024 < sizeof(body)) {
+                        app_info_t app = {0}; errno = 0;
+                        int app_rc = sceKernelGetAppInfo(k->ki_pid, &app); int app_error = errno;
+                        char title[11] = {0}; if (!app_rc) memcpy(title, app.title_id, 10);
+                        uint32_t h = 0;
+                        int neo = kernel_dynlib_handle(k->ki_pid, "libSceGnmDriverForNeoMode.sprx", &h);
+                        int base = kernel_dynlib_handle(k->ki_pid, "libSceGnmDriver.sprx", &h);
+                        int compat = kernel_dynlib_handle(k->ki_pid, "libSceGnmDriverCompat1.sprx", &h);
+                        const char *mode = !neo ? "neo" : !base ? "base" : !compat ? "compat_unknown" : "unknown";
+                        records++;
+                        len += snprintf(body + len, sizeof(body) - len,
+                            "{\"format\":\"neo-diagnostic-v1\",\"record\":\"process\",\"pid\":%d,\"kind\":\"game\","
+                            "\"title_id\":\"%s\",\"app_info_rc\":%d,\"app_info_errno\":%d,"
+                            "\"neo_driver_rc\":%d,\"base_driver_rc\":%d,\"compat_driver_rc\":%d,\"mode\":\"%s\"}\n",
+                            (int)k->ki_pid, title, app_rc, app_error, neo, base, compat, mode);
+                        /* DMEM/FMEM queries */
+                        static const char *nodes[] = {"kern.app.dmem_size_pid", "kern.app.fmem_size_pid", "kern.app.fmem_avail_pid"};
+                        for (int q = 0; q < 3 && len + 512 < sizeof(body); q++) {
+                            int qmib[24]; size_t qc = 23, qsz = 8; uint64_t qval = 0;
+                            errno = 0; int qrc = sysctlnametomib(nodes[q], qmib, &qc);
+                            if (!qrc && qc <= 23) { qmib[qc++] = k->ki_pid; qrc = sysctl(qmib, (unsigned)qc, &qval, &qsz, NULL, 0); }
+                            else qrc = -1;
+                            int qerr = errno;
+                            records++;
+                            if (!qrc && qsz == 8)
+                                len += snprintf(body + len, sizeof(body) - len,
+                                    "{\"format\":\"neo-diagnostic-v1\",\"record\":\"query\",\"pid\":%d,\"node\":\"%s\","
+                                    "\"rc\":%d,\"errno\":%d,\"returned_bytes\":%zu,\"value_hex\":\"0x%016lx\"}\n",
+                                    (int)k->ki_pid, nodes[q], qrc, qerr, qsz, qval);
+                            else
+                                len += snprintf(body + len, sizeof(body) - len,
+                                    "{\"format\":\"neo-diagnostic-v1\",\"record\":\"query\",\"pid\":%d,\"node\":\"%s\","
+                                    "\"rc\":%d,\"errno\":%d,\"returned_bytes\":%zu,\"value_hex\":null}\n",
+                                    (int)k->ki_pid, nodes[q], qrc, qerr, qsz);
+                        }
+                        game_count++;
+                    }
+                    off += (size_t)k->ki_structsize;
+                }
+                complete = off == n;
+            }
+            free(b);
+        } else { scan_rc = -1; scan_error = ENOMEM; }
+    } else if (!scan_rc) { scan_rc = -1; scan_error = EOVERFLOW; }
+
+    len += snprintf(body + len, sizeof(body) - len,
+        "{\"format\":\"neo-diagnostic-v1\",\"record\":\"end\",\"records_before_end\":%u,"
+        "\"scan_complete\":%s,\"game_count\":%u,\"scan_rc\":%d,\"scan_errno\":%d}\n",
+        records, complete ? "true" : "false", game_count, scan_rc, scan_error);
+
+    reply(fd, "200 OK", "application/x-ndjson; charset=utf-8", body);
+}
+
 static int do_set(int enable, char *msg, size_t cap, int show) {
     int rc = hook_set(enable);
     shell_t s; int st = hook_state(&s);
@@ -337,6 +425,8 @@ int main(void) {
                      state_text(st), v4_active(&s) ? "present" : "absent", fw_major(), s.site, s.target, s.cave, s.frame, s.frame_end,
                      s.attr_off, s.four_args, games);
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);
+        } else if (!strcmp(method, "GET") && !strcmp(path, "/diagnostic")) {
+            serve_diagnostic(fd);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/")) {
             serve_page(fd, NULL);
         } else {
