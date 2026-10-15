@@ -24,7 +24,7 @@
 #include "memory_control.h"
 
 #define PORT 8765
-#define VERSION "NEO Enabler manager 0.2.0-experimental"
+#define VERSION "NEO Enabler manager 0.2.0"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -263,7 +263,6 @@ static void serve_page(int fd, const char *msg) {
     char games[1024]; games_text(games, sizeof(games), 1);
     mb_snapshot memory;mb_check(&memory);
     const char*memory_state=memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled";
-    char memory_escaped[768];html_escape(memory_message,memory_escaped,sizeof memory_escaped);
     uint32_t fw_raw = 0; size_t fw_sz = 4;
     sysctlbyname("machdep.upd_version", &fw_raw, &fw_sz, NULL, 0);
     int mem_supported = mb_find_layout(fw_raw) != NULL;
@@ -279,11 +278,10 @@ static void serve_page(int fd, const char *msg) {
              "<div class=card>8 GiB memory: <span class='state %s'>%s</span>%s"
              "<form method=post><button formaction=/memory/enable%s>Enable 8 GiB</button>"
              "<button formaction=/memory/disable%s>Disable 8 GiB</button></form>"
-             "<p><small>Target: %s. %s<br>%s</small></p>"
              "<small>Close every game to change the memory budget. Changes apply to new Pro-mode launches.</small></div>"
              "<div class=card><form method=post><button formaction=/settings/save>Save Settings</button></form>"
              "<small>Saves NEO and 8 GiB state to /data/neo-settings. Restored on next startup.</small></div>"
-             "<div class=card>Running games<ul>%s</ul></div>"
+             "<div class=card>Games running<ul>%s</ul></div>"
              "<div class=card><b>Firmware diagnostic</b><p><small>Saves console metadata to /data/neo-diagnostic.jsonl (extract via FTP).</small></p>"
              "<form method=post><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
              "<div class=card><small>Applies to games launched after the change. With the hook enabled, every PS4 game without "
@@ -294,8 +292,7 @@ static void serve_page(int fd, const char *msg) {
              msg ? "<p>" : "", msg ? msg : "", msg ? "</p>" : "",
              memory.state==MB_8GIB?"on":memory.state==MB_UNKNOWN?"unk":"off",memory_state,
              mem_supported ? "" : "<br><small>Not available on this firmware</small>",
-             dis, dis,
-             memory_target?"on":"off",memory.detail,memory_escaped,games);
+             dis, dis, games);
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
 }
 

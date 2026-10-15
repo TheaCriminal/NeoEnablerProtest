@@ -62,6 +62,9 @@ jobs:
           cc -O2 -Wall -Wextra -Werror tests/budget_test.c -o /tmp/neo-budget-test
           /tmp/neo-budget-test
 
+      - name: Test firmware diagnostic toolkit
+        run: python3 -m unittest discover -s tests -p 'test_firmware_report.py' -v
+
       - name: Build
         run: PS5_PAYLOAD_SDK="$HOME/ps5-payload-sdk" bash build.sh
 

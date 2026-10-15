@@ -20,11 +20,14 @@ so NEO Enabler is only useful for the games listed below.
    (port 9021).
 3. A notification on the PS5 confirms that NEO Enabler is enabled.
 
-Version **0.2.0** also automatically enables an **8 GiB PS4 Pro memory budget** when the required kernel
-access is available. This memory adjustment currently supports **firmware 13.20** and **13.60**. The hypervisor must already
-be unlocked by Byepervisor or another method that allows reading and writing the kernel code page; NEO Enabler
-checks that access without relying on exploit-specific markers and does not unlock the hypervisor itself.
-Without that access, the normal NEO feature remains available.
+Version **0.2.0** adds an optional **8 GiB PS4 Pro memory budget**, **disabled by default**. It currently
+supports **firmware 13.20** (tested) and **13.60** (offsets found, needs hardware test). The hypervisor must
+already be unlocked by Byepervisor or another method that allows reading and writing the kernel code page;
+NEO Enabler checks that access without relying on exploit-specific markers and does not unlock the hypervisor
+itself. Without that access, the normal NEO feature remains available. On unsupported firmwares, the 8 GiB
+controls are greyed out.
+
+**If you are on firmware 13.20 or 13.60, please test the 8 GiB budget and report your results.**
 
 Pro mode stays on until you turn it off or reboot the console. It applies to games you open afterwards.
 
@@ -33,25 +36,18 @@ Pro mode stays on until you turn it off or reboot the console. It applies to gam
 Open `http://<PS5 IP>:8765` in a browser on your network, or the **NEO Enabler** shortcut in the PS5 Media tab.
 
 - Turn PS4 Pro mode on or off.
-- See whether the 8 GiB budget is enabled, disabled, or unavailable, and turn it on or off independently of NEO.
-- See which PS4 game is open and whether it is running in PS4 Pro mode.
-- See the DMEM budget reported for each running PS4 game (8192 MiB means 8 GiB).
+- Turn 8 GiB on or off independently of NEO.
+- **Save Settings**: saves both NEO and 8 GiB state to `/data/neo-settings` on the PS5. Restored on next startup.
+- **Save Diagnostic**: writes firmware metadata to `/data/neo-diagnostic.jsonl` for extraction via FTP.
+- See the firmware version, running PS4 games and their DMEM budget.
 
-The manager enables NEO on startup and automatically tries to select 8 GiB. If games are open or kernel access
-is unavailable, it waits and checks again. **Close every game before changing the memory budget.** A memory
-change requested while a game is open is applied after games close. Disabling 8 GiB stops automatic enabling
-for this manager session; enabling it resumes that behavior. Disabling NEO leaves the memory setting as it is,
-and disabling 8 GiB leaves NEO as it is. Quitting the manager keeps both patches but stops automatic checks.
-Starting the manager again restores its startup behavior. Rebooting removes both patches.
+**Close every game before changing the memory budget.** A memory change requested while a game is open is
+applied after games close. Disabling 8 GiB stops automatic enabling; enabling it resumes. NEO and 8 GiB are
+independent. Quitting the manager keeps both patches but stops automatic checks. Rebooting removes both patches.
 
-The 8 GiB setting changes the budget for new PS4 Pro launches. Existing games keep their launch budget, and
-each game decides how much to allocate. It does not change resolution or force a game's internal memory pools
-to grow. Driveclub gameplay with a memory-using patch was reported working in the local 13.20 test; this is not
-a compatibility guarantee for other games. Restoring the original budget selects the captured 5.25 GiB NEO
-configuration. A failed kernel-write recovery requires a console reboot before launching games.
-
-Use one manager at a time. If you used the experimental panel on port 8766, quit it with **Quit the manager**
-before loading this version. Version 0.2.0 uses the regular panel and Media shortcut on port **8765**.
+The 8 GiB setting changes the budget for new PS4 Pro launches. Existing games keep their launch budget. It does
+not change resolution or force memory pools to grow. Restoring the original budget selects the captured 5.25 GiB
+NEO configuration. A failed kernel-write recovery requires a console reboot before launching games.
 
 Anyone on your local network can open the panel.
 
@@ -80,16 +76,17 @@ a game that is not in the table below.
 | Battlefield 4 (01.24) | 1080p, 1440p, 1620p, 1800p, 4K | 1800p holds 60 fps. 4K runs around 49 fps. |
 | Killzone Shadow Fall (01.81) | 1440p, 1620p, 1800p, 4K | Some surfaces are slightly darker from 1440p to 1800p. 4K is clean but below 60 fps. |
 | The Order: 1886 (01.02) | 1080p, 4K, 4K up to 60 fps | Small sparkles may appear on edges while moving. Native 4K 60fps uses triple buffering: no tearing, slight stutter. |
-| Driveclub (01.28) | 1080p, 1440p, 4K (1800p render), native 4K | 4K needs the 8 GiB memory budget. 4K with 1800p render runs close to 60 fps; native 4K is below 60 fps in races. Snow can show inside the car in 4K. |
+| Driveclub (01.28) | 1080p, 1440p, 4K (1800p render), native 4K | 4K needs the 8 GiB memory budget. **Tested on firmware 13.20 only.** 4K with 1800p render runs close to 60 fps; native 4K is below 60 fps in races. Snow can show inside the car in 4K. |
 
 Patch IDs, how the hook works and how to build from source: [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
 ## Helping extend 8 GiB to other firmwares
 
-The 8 GiB budget only works on firmware **13.20** right now. To port it we need a `diagnostic.jsonl` capture
-and, ideally, a raw kernel TEXT dump from each firmware. Build and run `diagnostics/neo_diagnostic.c` on your
-console, save the full stdout and see [diagnostics/README.md](diagnostics/README.md) for details on what files
-to submit.
+The 8 GiB budget is tested on firmware **13.20** only. Firmware **13.60** has verified offsets but needs a
+hardware test. To port it to other firmwares we need a diagnostic capture and, ideally, a raw kernel TEXT dump.
+Use **Save Diagnostic** in the web panel (or `GET /diagnostic`) and see
+[diagnostics/README.md](diagnostics/README.md) for what to submit. **If you are on 13.60, please test and
+share your results.**
 
 ## Credits
 

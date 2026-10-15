@@ -1,40 +1,66 @@
 # Changelog
 
-## Unreleased
-
 ## 0.2.0
 
-- Automatically selects an 8 GiB PS4 Pro memory budget when the required kernel access is available. The memory
-  adjustment currently supports firmware 13.20; detection uses page permissions and verified kernel bytes,
-  without depending on Byepervisor markers or a specific hypervisor exploit. Firmware 13.60
-  uses the same budget patch with verified offsets from public kernel analysis; the application
-  memory areas offset is unverified and will be confirmed on hardware.
+### 8 GiB PS4 Pro memory budget
+
+Selects an 8 GiB PS4 Pro memory budget when the required kernel access is available. Detection uses
+page permissions and verified kernel bytes, without depending on Byepervisor markers or a specific
+hypervisor exploit. Without that access, the normal NEO feature remains available.
+
+**The 8 GiB budget is disabled by default.** Enable it from the web panel and use Save Settings to
+keep it across restarts. It is currently compatible with and tested on **firmware 13.20 only**.
+Firmware 13.60 has verified offsets from kernel analysis but the application memory areas offset is
+unverified and needs a hardware test. **If you are on 13.20 or 13.60, please test and report your
+results.**
+
 - Separate NEO and 8 GiB status indicators and controls. Disabling one keeps the other setting unchanged.
-- A manual 8 GiB disable also stops automatic enabling for this manager session. Memory changes requested while
-  a game is open wait until games are closed; automatic enabling also waits for kernel access to become available.
-- Shows each running PS4 game's reported DMEM budget. The 8 GiB setting does not force games to allocate it or
-  automatically increase resolution.
+- Memory changes requested while a game is open wait until games are closed.
 - Kernel layout checks, readback verification and rollback protect memory-budget changes. Unknown layouts are
   refused; normal NEO functionality remains available when the 8 GiB adjustment is unavailable.
-- A second manager cannot change settings if the web-panel port is already occupied.
-- Host tests cover page access, memory changes, automatic/manual controls and rollback, and run in CI.
+- Shows each running PS4 game's reported DMEM budget.
 
-- The payload file is now named `neo-manager.elf`.
-- The game patch files only carry patches made in this project. Community patches (60 FPS, debug camera and
-  others) were removed and stay available from their original authors.
-- Bloodborne patches renamed to the same pattern as the other games ("1440p (PS4 Pro mode)" and so on). If you
-  had one enabled, enable it again after updating the file.
-- Patch descriptions in Bloodborne, Just Cause 3 and Resident Evil 6 rewritten in plain language.
+### Persistent settings
+
+Save Settings saves both NEO hook and 8 GiB state to `/data/neo-settings` on the PS5. Settings are
+restored on the next manager startup. Without a settings file, NEO is enabled and 8 GiB is disabled.
+
+### Firmware diagnostic
+
+Save Diagnostic writes a JSONL metadata capture to `/data/neo-diagnostic.jsonl` on the PS5, for
+extraction via FTP. The web panel also serves `GET /diagnostic` for direct access. This collects
+firmware version, running games, driver presence and DMEM/FMEM queries without applying patches or
+reading kernel code. Used to port the 8 GiB budget to other firmwares.
+
+### Web panel
+
+- Firmware version displayed at the top of the panel.
+- 8 GiB controls are greyed out on unsupported firmwares.
+- A second manager cannot change settings if the web-panel port is already occupied.
+
+### Game patches
+
+- New game: Driveclub (01.28), 1080p and 1440p in PS4 Pro mode, plus 4K with 1800p render and native 4K.
+  **Driveclub 4K entries need the 8 GiB memory budget and are tested on firmware 13.20 only.**
+- Bloodborne: native 4K in PS4 Pro mode (needs the 8 GiB memory budget, tested on firmware 13.20 only).
+- The Order: 1886: new Native 4K 60fps entry with triple buffering. Vsync stays on (no tearing) and the frame rate goes
+  up to 60 instead of dropping to 30. Uses the 60 FPS Unlock patch by illusion.
 - The Order: 1886, Native 4K: fixed faint vertical stripes on characters under strong light.
 - The Order: 1886, Native 4K: on-screen text, objectives and button prompts are no longer cut in the middle of the
   screen.
 - The Order: 1886, Native 4K: fixed small black and grey blocks flickering on trees, bushes and other foliage, also
   visible as dark outlines on clothing edges.
-- New game: Driveclub (01.28), 1080p and 1440p in PS4 Pro mode, plus 4K with 1800p render and native 4K
-  (both need the 8 GiB memory budget).
-- Bloodborne: native 4K in PS4 Pro mode (needs the 8 GiB memory budget, tested on firmware 13.20 only).
-- The Order: 1886: new Native 4K 60fps entry with triple buffering. Vsync stays on (no tearing) and the frame rate goes
-  up to 60 instead of dropping to 30. Uses the 60 FPS Unlock patch by illusion.
+- Bloodborne patches renamed to the same pattern as the other games ("1440p (PS4 Pro mode)" and so on). If you
+  had one enabled, enable it again after updating the file.
+- Patch descriptions in Bloodborne, Just Cause 3 and Resident Evil 6 rewritten in plain language.
+- The game patch files only carry patches made in this project. Community patches (60 FPS, debug camera and
+  others) were removed and stay available from their original authors.
+
+### Build and CI
+
+- The payload file is now named `neo-manager.elf`.
+- Host unit tests cover page access, memory changes, automatic/manual controls and rollback.
+- CI runs unit tests, firmware diagnostic toolkit tests, cppcheck, shellcheck, secret scan and CodeQL.
 - README: explains how to add the patches to a patch file the game already has, and that every game needs its
   patch to work in PS4 Pro mode.
 
