@@ -108,9 +108,9 @@ static int mb_check(mb_snapshot*s){
  if(!memcmp(s->code,mb_original,12))s->state=MB_STOCK;
  else if(!memcmp(s->code,mb_eight,12))s->state=MB_8GIB;
  else if(!memcmp(s->code,step,12))s->state=MB_STEP;
- else{snprintf(s->detail,sizeof s->detail,"Unknown budget patch; nothing written");return -1;}
+ else{snprintf(s->detail,sizeof s->detail,"Unknown memory patch; nothing written");return -1;}
  s->access_ready=1;
- snprintf(s->detail,sizeof s->detail,"%s",s->state==MB_8GIB?"8 GiB enabled for new NEO launches":s->state==MB_STEP?"8 GiB disabled; previous 5.5 GiB experiment active":"8 GiB disabled; original 5.25 GiB NEO budget");return 0;
+ snprintf(s->detail,sizeof s->detail,"%s",s->state==MB_8GIB?"8 GiB enabled for new NEO launches":s->state==MB_STEP?"8 GiB disabled; previous 5.5 GiB experiment active":"8 GiB disabled; original 5.25 GiB NEO memory");return 0;
 }
 /* Readback/rollback are bounded to this known 12-byte NEO branch. */
 static int mb_set(int enable,char*msg,size_t cap){
@@ -118,20 +118,20 @@ static int mb_set(int enable,char*msg,size_t cap){
  if(mb_check(&s)){snprintf(msg,cap,"%s",s.detail);return 1;}
  const mb_layout*L=s.layout;
  const unsigned char*desired=enable?mb_eight:mb_original;
- if(!memcmp(s.code,desired,12)){snprintf(msg,cap,"%s; no budget write needed",s.detail);return 0;}
- if(mb_games()!=0){snprintf(msg,cap,"Close every game before changing the 8 GiB budget");return 2;}
+ if(!memcmp(s.code,desired,12)){snprintf(msg,cap,"%s",s.detail);return 0;}
+ if(mb_games()!=0){snprintf(msg,cap,"Close every game before changing the 8 GiB memory");return 2;}
  for(unsigned i=1;i<=3;i++){
   signed char count=-1;
   if(MB_READ(s.text+L->areas_off+i*0x138+0x8e,&count,1)||count!=0){snprintf(msg,cap,"Application memory area %u is active or unreadable; nothing written",i);return 3;}
  }
- if(mb_check(&again)||again.text!=s.text||memcmp(again.code,s.code,12)){snprintf(msg,cap,"Budget state changed during checks; nothing written");return 4;}
+ if(mb_check(&again)||again.text!=s.text||memcmp(again.code,s.code,12)){snprintf(msg,cap,"Memory state changed during checks; nothing written");return 4;}
  int rc=MB_WRITE(desired,s.text+L->branch_off,12);unsigned char readback[12];
  int rr=MB_READ(s.text+L->branch_off,readback,12);
  if(rc||rr||memcmp(readback,desired,12)){
   int undo=MB_WRITE(s.code,s.text+L->branch_off,12);
   int check=MB_READ(s.text+L->branch_off,readback,12);
   int restored=!undo&&!check&&!memcmp(readback,s.code,12);
-  snprintf(msg,cap,"Budget write failed; rollback %s%s",restored?"verified":"FAILED",restored?"":"; do not launch games; reboot console");return restored?5:6;
+  snprintf(msg,cap,"Memory write failed; rollback %s%s",restored?"verified":"FAILED",restored?"":"; do not launch games; reboot console");return restored?5:6;
  }
- snprintf(msg,cap,"%s; readback verified",enable?"8 GiB enabled for new NEO launches":"8 GiB disabled; original 5.25 GiB budget restored");return 0;
+ snprintf(msg,cap,"%s; readback verified",enable?"8 GiB enabled for new NEO launches":"8 GiB disabled; original 5.25 GiB memory restored");return 0;
 }
