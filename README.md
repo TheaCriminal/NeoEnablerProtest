@@ -1,29 +1,31 @@
-# NEO Enabler
+# NeoEnabler
+
+<p align="center"><img src="assets/icon0.png" width="128" alt="NeoEnabler"></p>
 
 Play PS4 games on your PS5 in **PS4 Pro mode** at higher resolutions, up to native 4K.
 
 The PS5 already runs PS4 games that have PS4 Pro support in Pro mode. Games without it run as on a regular PS4.
-NEO Enabler makes those games start as if they were on a PS4 Pro (games with Pro support are left as they are). This
+NeoEnabler makes those games start as if they were on a PS4 Pro (games with Pro support are left as they are). This
 alone does not make any game work: every game tested so far broke in Pro mode without its patch (black or
 corrupted image, or the game closing). The patches in `xml/` fix each game for Pro mode and raise its resolution,
-so NEO Enabler is only useful for the games listed below.
+so NeoEnabler is only useful for the games listed below.
 
 ## What you need
 
 - A jailbroken PS5 on firmware 4.00 to 13.60 (tested on 13.20) with an ELF loader, such as etaHEN or elfldr.
-- [ps-patch-system](https://github.com/illusionyy/ps-patch-system), loaded **before** NEO Enabler.
+- [ps-patch-system](https://github.com/illusionyy/ps-patch-system), loaded **before** NeoEnabler.
 
 ## Install
 
 1. Download `neo-manager.elf` from the [latest release](https://github.com/gasb07/NeoEnabler/releases/latest).
 2. After every console boot, load ps-patch-system, then send `neo-manager.elf` with your payload sender
    (port 9021).
-3. A notification on the PS5 confirms that NEO Enabler is enabled.
+3. A notification on the PS5 confirms that NeoEnabler is enabled.
 
 Version **0.2.0** adds an optional **8 GiB PS4 Pro memory budget**, **disabled by default**. It currently
 supports **firmware 13.20** (tested) and **13.60** (offsets found, needs hardware test). The hypervisor must
 already be unlocked by Byepervisor or another method that allows reading and writing the kernel code page;
-NEO Enabler checks that access without relying on exploit-specific markers and does not unlock the hypervisor
+NeoEnabler checks that access without relying on exploit-specific markers and does not unlock the hypervisor
 itself. Without that access, the normal NEO feature remains available. On unsupported firmwares, the 8 GiB
 controls are greyed out.
 
@@ -33,7 +35,7 @@ Pro mode stays on until you turn it off or reboot the console. It applies to gam
 
 ## Control panel
 
-Open `http://<PS5 IP>:8765` in a browser on your network, or the **NEO Enabler** shortcut in the PS5 Media tab.
+Open `http://<PS5 IP>:8765` in a browser on your network, or the **NeoEnabler** shortcut in the PS5 Media tab.
 
 - Turn PS4 Pro mode on or off.
 - Turn 8 GiB on or off independently of NEO.

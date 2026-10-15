@@ -32,9 +32,17 @@ extraction via FTP. The web panel also serves `GET /diagnostic` for direct acces
 firmware version, running games, driver presence and DMEM/FMEM queries without applying patches or
 reading kernel code. Used to port the 8 GiB budget to other firmwares.
 
+### System logs
+
+Save Logs saves the last 1 MB of the kernel message buffer to `/data/neo-logs.txt` on the PS5, for
+extraction via FTP. Show Logs opens the log in the browser.
+
 ### Web panel
 
-- Firmware version displayed at the top of the panel.
+- Renamed to NeoEnabler. New icon (black background, green text).
+- Two-column grid layout with sticky header, inspired by PS4Mount.
+- Save Settings and Quit moved to the header bar.
+- Firmware version displayed in the header.
 - 8 GiB controls are greyed out on unsupported firmwares.
 - A second manager cannot change settings if the web-panel port is already occupied.
 

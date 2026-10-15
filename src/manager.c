@@ -24,7 +24,7 @@
 #include "memory_control.h"
 
 #define PORT 8765
-#define VERSION "NEO Enabler manager 0.2.0"
+#define VERSION "NeoEnabler 0.2.0"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -89,7 +89,7 @@ static const char launcher_param[] =
     "    \"localizedParameters\": {\n"
     "        \"defaultLanguage\": \"en-US\",\n"
     "        \"en-US\": {\n"
-    "            \"titleName\": \"NEO Enabler\"\n"
+    "            \"titleName\": \"NeoEnabler\"\n"
     "        }\n"
     "    }\n"
     "}\n";
@@ -243,16 +243,26 @@ static void reply(int fd, const char *status, const char *type, const char *body
 
 static const char page_head[] =
     "<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
-    "<title>NEO Enabler</title><style>"
-    ":root{--bg:#111418;--fg:#e8eaed;--muted:#9aa0a6;--card:#1b1f24;--on:#2e7d32;--off:#8e2c2c;--btn:#2b3138}"
-    "body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}"
-    "main{max-width:560px;margin:0 auto;padding:24px 16px}h1{font-size:22px;margin:0 0 16px}"
-    ".card{background:var(--card);border-radius:10px;padding:16px;margin-bottom:16px}"
-    ".state{display:inline-block;padding:4px 10px;border-radius:6px;font-weight:600}"
+    "<title>NeoEnabler</title><style>"
+    ":root{--bg:#0e1116;--fg:#e8eaed;--muted:#97a0ab;--card:#171b22;--line:#262c36;--on:#2f9e57;--off:#c2453b;--btn:#262d38}"
+    "*{box-sizing:border-box}"
+    "body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif}"
+    "header{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:12px;align-items:center;"
+    "justify-content:space-between;padding:14px 20px;background:rgba(14,17,22,.95);border-bottom:1px solid var(--line)}"
+    "h1{font-size:20px;margin:0}h1 small{color:var(--muted);font-weight:400;font-size:13px;margin-left:8px}"
+    "main{max-width:900px;margin:0 auto;padding:20px 16px}"
+    ".grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}"
+    "@media(max-width:600px){.grid{grid-template-columns:1fr}}"
+    ".card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}"
+    ".wide{grid-column:1/-1}"
+    ".state{display:inline-block;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:600}"
     ".on{background:var(--on)}.off{background:var(--off)}.unk{background:var(--btn)}"
-    "button{font:inherit;color:var(--fg);background:var(--btn);border:0;border-radius:8px;padding:10px 16px;margin:8px 8px 0 0;cursor:pointer}"
-    "button:hover{filter:brightness(1.25)}ul{margin:8px 0 0;padding-left:20px}small{color:var(--muted)}"
-    "</style></head><body><main><h1>NEO Enabler</h1>";
+    "button{font:inherit;color:var(--fg);background:var(--btn);border:1px solid var(--line);border-radius:8px;"
+    "padding:8px 14px;margin:8px 8px 0 0;cursor:pointer}"
+    "button:hover{border-color:#3d7bfd}button:disabled{opacity:.45;cursor:default}"
+    "button.danger{background:#3a1f1d;border-color:#5c2c28}"
+    "ul{margin:8px 0 0;padding-left:20px}small{color:var(--muted)}"
+    "</style></head><body>";
 
 /* v4 hook still in ShellCore (forces NEO regardless of this manager's hook). */
 static int v4_active(const shell_t *s) { return s->pid > 0 && s->frame && v4_state(s->pid, s->frame) == V4_PRESENT; }
@@ -271,27 +281,36 @@ static void serve_page(int fd, const char *msg) {
     snprintf(fw_str, sizeof(fw_str), "%x.%02x", (fw_raw >> 24) & 0xff, (fw_raw >> 16) & 0xff);
     static char body[10240];
     snprintf(body, sizeof(body),
-             "%s<div class=card>Firmware: <b>%s</b></div>"
-             "<div class=card>PS4 Pro (NEO) mode: <span class='state %s'>%s</span>"
-             "<form method=post><button formaction=/enable>Enable NEO</button><button formaction=/disable>Disable NEO</button></form>"
-             "%s%s%s</div>"
-             "<div class=card>8 GiB memory: <span class='state %s'>%s</span>%s"
-             "<form method=post><button formaction=/memory/enable%s>Enable 8 GiB</button>"
-             "<button formaction=/memory/disable%s>Disable 8 GiB</button></form>"
-             "<small>Close every game to change the memory budget. Changes apply to new Pro-mode launches.</small></div>"
-             "<div class=card><form method=post><button formaction=/settings/save>Save Settings</button></form>"
-             "<small>Saves NEO and 8 GiB state to /data/neo-settings. Restored on next startup.</small></div>"
-             "<div class=card>Games running<ul>%s</ul></div>"
-             "<div class=card><b>Firmware diagnostic</b><p><small>Saves console metadata to /data/neo-diagnostic.jsonl (extract via FTP).</small></p>"
+             "%s"
+             "<header><h1>NeoEnabler <small>FW %s</small></h1>"
+             "<div><form method=post style='display:inline'>"
+             "<button formaction=/settings/save>Save Settings</button>"
+             "<button class=danger formaction=/quit>Quit</button>"
+             "</form></div></header>"
+             "<main>%s%s%s<div class=grid>"
+             "<div class=card><b>PS4 Pro (NEO) mode</b> "
+             "<span class='state %s'>%s</span>"
+             "<form method=post><button formaction=/enable>Enable</button>"
+             "<button formaction=/disable>Disable</button></form></div>"
+             "<div class=card><b>8 GiB memory</b> "
+             "<span class='state %s'>%s</span>%s"
+             "<form method=post><button formaction=/memory/enable%s>Enable</button>"
+             "<button formaction=/memory/disable%s>Disable</button></form>"
+             "<br><small>Close every game first. Applies to new launches.</small></div>"
+             "<div class='card wide'><b>Games running</b><ul>%s</ul></div>"
+             "<div class=card><b>Firmware diagnostic</b><br>"
+             "<small>Saves metadata to /data/neo-diagnostic.jsonl</small>"
              "<form method=post><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
-             "<div class=card><b>System logs</b><p><small>Saves the last 1 MB of kernel logs to /data/neo-logs.txt (extract via FTP).</small></p>"
-             "<form method=post><button formaction=/logs/save>Save Logs</button></form></div>"
-             "<div class=card><small>Applies to games launched after the change. With the hook enabled, every PS4 game without "
-             "native Pro support launches in Pro mode. Rebooting the console disables it.<br>" VERSION "</small>"
-             "<form method=post><button formaction=/quit>Quit the manager</button></form></div></main></body></html>",
+             "<div class=card><b>System logs</b><br>"
+             "<small>Saves kernel logs to /data/neo-logs.txt</small>"
+             "<form method=post><a href=/logs target=_blank><button type=button>Show Logs</button></a>"
+             "<button formaction=/logs/save>Save Logs</button></form></div>"
+             "</div><small style='display:block;margin-top:16px;text-align:center'>With the hook enabled, every PS4 game without "
+             "native Pro support launches in Pro mode. Rebooting disables it.<br>" VERSION "</small>"
+             "</main></body></html>",
              page_head, fw_str,
-             st == 1 ? "on" : st == 0 ? "off" : "unk", state_text(st),
              msg ? "<p>" : "", msg ? msg : "", msg ? "</p>" : "",
+             st == 1 ? "on" : st == 0 ? "off" : "unk", state_text(st),
              memory.state==MB_8GIB?"on":memory.state==MB_UNKNOWN?"unk":"off",memory_state,
              mem_supported ? "" : "<br><small>Not available on this firmware</small>",
              dis, dis, games);
@@ -406,6 +425,17 @@ static void serve_diagnostic_save(int fd) {
 #define LOGS_PATH "/data/neo-logs.txt"
 #define LOGS_MAX (1024 * 1024)
 
+static void serve_logs_show(int fd) {
+    size_t len = LOGS_MAX;
+    char *buf = malloc(len);
+    if (!buf) { reply(fd, "500 Internal Server Error", "text/plain", "out of memory\n"); return; }
+    int rc = sysctlbyname("kern.msgbuf", buf, &len, NULL, 0);
+    if (rc || !len) { free(buf); reply(fd, "500 Internal Server Error", "text/plain", "kern.msgbuf read failed\n"); return; }
+    buf[len < LOGS_MAX ? len : LOGS_MAX - 1] = '\0';
+    reply(fd, "200 OK", "text/plain; charset=utf-8", buf);
+    free(buf);
+}
+
 static void serve_logs_save(int fd) {
     size_t len = LOGS_MAX;
     char *buf = malloc(len);
@@ -429,8 +459,8 @@ static int do_set(int enable, char *msg, size_t cap, int show) {
     int rc = hook_set(enable);
     shell_t s; int st = hook_state(&s);
     if (!enable && !rc && (s.pid <= 0 || !s.frame || v4_remove(s.pid, s.frame))) rc = 9;
-    if (!rc) snprintf(msg, cap, "NEO Enabler %s", enable ? "enabled" : "disabled");
-    else snprintf(msg, cap, "NEO Enabler: failed to %s (rc=%d, state: %s)", enable ? "enable" : "disable", rc, state_text(st));
+    if (!rc) snprintf(msg, cap, "NeoEnabler %s", enable ? "enabled" : "disabled");
+    else snprintf(msg, cap, "NeoEnabler: failed to %s (rc=%d, state: %s)", enable ? "enable" : "disable", rc, state_text(st));
     if (show) notify(msg);
     return rc;
 }
@@ -491,10 +521,10 @@ int main(void) {
             const char *smsg = ok ? "Settings saved" : "Failed to save settings";
             notify(smsg); serve_page(fd, smsg);
         } else if (post && !strcmp(path, "/quit")) {
-            reply(fd, "200 OK", "text/html; charset=utf-8", "<!doctype html><meta charset=utf-8><title>NEO Enabler</title>"
+            reply(fd, "200 OK", "text/html; charset=utf-8", "<!doctype html><meta charset=utf-8><title>NeoEnabler</title>"
                   "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. NEO and memory settings were kept.</body>");
             close(fd);
-            notify("NEO Enabler: panel stopped (NEO and memory settings kept)");
+            notify("NeoEnabler: panel stopped (NEO and memory settings kept)");
             break;
         } else if (!strcmp(path, "/status")) {
             shell_t s; int st = hook_state(&s);
@@ -506,6 +536,8 @@ int main(void) {
                      state_text(st), v4_active(&s) ? "present" : "absent", fw_major(), s.site, s.target, s.cave, s.frame, s.frame_end,
                      s.attr_off, s.four_args, games);
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);
+        } else if (!strcmp(method, "GET") && !strcmp(path, "/logs")) {
+            serve_logs_show(fd);
         } else if (post && !strcmp(path, "/logs/save")) {
             serve_logs_save(fd);
         } else if (post && !strcmp(path, "/diagnostic/save")) {
