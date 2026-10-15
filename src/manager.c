@@ -116,19 +116,23 @@ static int write_file(const char *path, const void *data, size_t size) {
 
 #define SETTINGS_PATH "/data/neo-settings"
 
+static int settings_neo = 1;
+
 static void settings_load(void) {
     FILE *f = fopen(SETTINGS_PATH, "rb");
     if (!f) return;
-    char buf[64] = {0};
+    char buf[128] = {0};
     if (fread(buf, 1, sizeof(buf) - 1, f)) {
+        if (strstr(buf, "neo=0")) settings_neo = 0;
+        if (strstr(buf, "neo=1")) settings_neo = 1;
         if (strstr(buf, "memory_8gib=1")) memory_request(1);
     }
     fclose(f);
 }
 
-static int settings_save(void) {
-    char buf[64];
-    snprintf(buf, sizeof(buf), "memory_8gib=%d\n", memory_target);
+static int settings_save(int neo_on) {
+    char buf[128];
+    snprintf(buf, sizeof(buf), "neo=%d\nmemory_8gib=%d\n", neo_on ? 1 : 0, memory_target);
     return write_file(SETTINGS_PATH, buf, strlen(buf));
 }
 
@@ -275,9 +279,10 @@ static void serve_page(int fd, const char *msg) {
              "<div class=card>8 GiB memory: <span class='state %s'>%s</span>%s"
              "<form method=post><button formaction=/memory/enable%s>Enable 8 GiB</button>"
              "<button formaction=/memory/disable%s>Disable 8 GiB</button></form>"
-             "<form method=post><button formaction=/settings/save%s>Save Settings</button></form>"
              "<p><small>Target: %s. %s<br>%s</small></p>"
              "<small>Close every game to change the memory budget. Changes apply to new Pro-mode launches.</small></div>"
+             "<div class=card><form method=post><button formaction=/settings/save>Save Settings</button></form>"
+             "<small>Saves NEO and 8 GiB state to /data/neo-settings. Restored on next startup.</small></div>"
              "<div class=card>Running games<ul>%s</ul></div>"
              "<div class=card><b>Firmware diagnostic</b><p><small>Saves console metadata to /data/neo-diagnostic.jsonl (extract via FTP).</small></p>"
              "<form method=post><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
@@ -289,7 +294,7 @@ static void serve_page(int fd, const char *msg) {
              msg ? "<p>" : "", msg ? msg : "", msg ? "</p>" : "",
              memory.state==MB_8GIB?"on":memory.state==MB_UNKNOWN?"unk":"off",memory_state,
              mem_supported ? "" : "<br><small>Not available on this firmware</small>",
-             dis, dis, dis,
+             dis, dis,
              memory_target?"on":"off",memory.detail,memory_escaped,games);
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
 }
@@ -423,8 +428,8 @@ int main(void) {
         if(srv>=0)close(srv);
         return 1;
     }
-    do_set(1, msg, sizeof(msg), 0);
     settings_load();
+    do_set(settings_neo, msg, sizeof(msg), 0);
     int memory_previous_result=memory_poll();
     printf("8 GiB: %s\n",memory_message);
     int li = install_launcher();
@@ -459,7 +464,9 @@ int main(void) {
             memory_request(!strcmp(path,"/memory/enable"));
             notify(memory_message);serve_page(fd,memory_message);
         } else if (post && !strcmp(path, "/settings/save")) {
-            int ok = !settings_save();
+            shell_t ss; int sst = hook_state(&ss);
+            if (sst == HOOK_OFF && v4_active(&ss)) sst = HOOK_ON;
+            int ok = !settings_save(sst == HOOK_ON);
             const char *smsg = ok ? "Settings saved" : "Failed to save settings";
             notify(smsg); serve_page(fd, smsg);
         } else if (post && !strcmp(path, "/quit")) {
