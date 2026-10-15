@@ -24,7 +24,7 @@
 #include "memory_control.h"
 
 #define PORT 8765
-#define VERSION "NEO Enabler manager 0.2.0"
+#define VERSION "NEO Enabler manager 0.2.0-experimental"
 
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
