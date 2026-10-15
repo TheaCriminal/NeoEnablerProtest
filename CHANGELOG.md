@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Driveclub 1440p: no more black flashes in the pause menu, and the frame rate no longer drops to 30 when a frame
+  is late (same fix as the 4K entries). If you had it enabled, it stays enabled.
+
 ## 0.2.1
 
 - The manager writes every action and its result to the system log: startup, loaded settings, NEO on/off, 8 GiB
