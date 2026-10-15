@@ -10,7 +10,18 @@
       "text_to_data_delta": "0x00cb0000",
       "reference_kernel_text_sha256": "87255d25521aa94334fddf2523c27a845be5609f351f32ef0d9c3650e833e22b",
       "budget_branch_text_offset": "0x009f9076",
-      "evidence": "Driveclub: reported8192MiB; user confirmed gameplay with memory-using patch",
+      "evidence": "Driveclub: reported 8192 MiB; user confirmed gameplay with memory-using patch",
+      "detector_0_2_0_hardware_validated": false,
+      "other_hypervisor_methods_validated": false
+    },
+    {
+      "firmware_raw": "0x13600000",
+      "firmware_display": "13.60",
+      "memory_state": "needs_text_dump",
+      "text_to_data_delta": "0x00cc0000",
+      "reference_kernel_text_sha256": null,
+      "budget_branch_text_offset": null,
+      "evidence": "text_to_data_delta confirmed from HV-Bypass-13.60 research repo; HV bypass verified on real console 2026-10-12; no kernel TEXT dump available yet",
       "detector_0_2_0_hardware_validated": false,
       "other_hypervisor_methods_validated": false
     }

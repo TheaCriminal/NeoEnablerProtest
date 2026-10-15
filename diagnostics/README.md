@@ -3,6 +3,15 @@
 Collects metadata from other PS5 firmware versions so the 8 GiB budget can be ported.
 Does not apply patches, change settings or unlock anything on the console.
 
+## Firmware status
+
+| Firmware | NEO (Pro mode) | 8 GiB budget | Text-to-data delta | What we need |
+| --- | --- | --- | --- | --- |
+| 4.00 - 13.00 | Supported | Not started | Unknown | Diagnostic capture + kernel TEXT dump |
+| 13.20 | Supported | Validated | `0x00CB0000` | Done |
+| 13.60 | Supported | Needs TEXT dump | `0x00CC0000` | Kernel TEXT dump to locate the budget constructor |
+| 14.00+ | No jailbreak | Not possible | N/A | N/A |
+
 ## What it contains
 
 - `neo-diagnostic.elf`: portable metadata collector. Prints JSONL to the sender's stdout.
