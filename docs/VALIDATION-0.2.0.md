@@ -1,38 +1,22 @@
-# Validação local da versão0.2.0 — 2026-10-15
+# Local validation of version 0.2.0 — 2026-10-15
 
-Estado: construída localmente, ainda não enviada ao PS5; sem commit/tag/push
-ou release remota. Arquivos em `build/neo-manager.elf` e
-`build/neo-manager-0.2.0.elf`, com checksums próprios e notas de release.
+Status: built locally, not yet sent to the PS5. No commit, tag, push or remote release at the time of writing. Artifacts in `build/neo-manager.elf` and `build/neo-manager-0.2.0.elf`.
 
-SHA-256 de ambos:
+SHA-256 of both:
 `1250942defff7e46e70068a60582c1183fc98b254071d0d113ae79e0bbdfb598`.
 
-Resultados:
+Results:
 
-- SDK prospero-clang, `-O2 -Wall -Wextra -Werror`: passou.
-- Testes host `tests/budget_test.c`: passaram. Não acessam console.
-- Verificador x86 do experimento de memória, usando a captura real de TEXT13.20:
-  original5,25GiB, passo5,5GiB e8GiB chegam à continuação original.
-- Versão no manager/CHANGELOG e extração de notas de release: passaram.
-- Módulo de orçamento não contém cookie ou offset de marcador Byepervisor.
-- Checksums dos dois artefatos salvos conferidos; diff sem erros de whitespace.
-- CI configurado para executar os testes host; não foi disparado remotamente.
+- SDK prospero-clang, `-O2 -Wall -Wextra -Werror`: passed.
+- Host tests `tests/budget_test.c`: passed. No console access.
+- x86 verifier using the real 13.20 TEXT capture: original 5.25 GiB, step 5.5 GiB and 8 GiB all reach the original continuation.
+- Version in manager/CHANGELOG and release-notes extraction: passed.
+- Budget module contains no Byepervisor cookie or marker offset.
+- Checksums of both saved artifacts verified; diff has no whitespace errors.
+- CI configured to run host tests; not triggered remotely yet.
 
-Os testes cobrem páginas4KiB/2MiB/1GiB, permissões presentes/RW/XOTEXT,
-falhas de leitura sem acessar instruções quando as permissões recusam,
-firmware/layout desconhecido, ausência de jogos/áreas ativas, mudança de
-estado entre leituras, falhas de escrita/readback, rollback e bloqueio após
-rollback não confirmado. Também cobrem aplicação automática após acesso
-ficar disponível, espera por fechamento do jogo, desativação manual sem
-reativação e habilitação manual posterior.
+Tests cover 4 KiB/2 MiB/1 GiB pages, present/RW/XOTEXT permissions, read failures without accessing instructions when permissions refuse, unknown firmware/layout, no games/active areas, state change between reads, write/readback failures, rollback and blocking after unconfirmed rollback. Also cover automatic enabling after access becomes available, waiting for game close, manual disable without re-enable and later manual enable.
 
-A seleção8GiB anterior foi medida no Driveclub e o usuário confirmou gameplay
-normal com patch que usa memória. Isso não valida o detector novo: não houve
-teste real da0.2.0 com HV protegido, desbloqueado ou com métodos diferentes.
-Guest PTEs são pré-condição, não atestado do estado global de NPT/GMET/HV.
-O mecanismo e os limites estão em `TECHNICAL.md`.
+The previous 8 GiB selection was measured on Driveclub and the user confirmed normal gameplay with a memory-using patch. This does not validate the new detector: there was no real 0.2.0 test with the hypervisor protected, unlocked or with different methods. Guest PTEs are a precondition, not an attestation of global NPT/GMET/HV state. See `TECHNICAL.md` for the mechanism and limits.
 
-Próximo envio exige autorização explícita. Encerrar o painel experimental8766
-pelo Quit antes de usar0.2.0; Quit mantém os patches. A0.2.0 usa8765 e preserva
-o comportamento de ativar NEO e tentar8GiB ao iniciar. Alterações efetivas do
-orçamento aguardam todos os jogos fechados.
+Next deployment requires explicit authorization. Quit the experimental panel on port 8766 before using 0.2.0; Quit keeps patches. Version 0.2.0 uses port 8765 and enables NEO and tries 8 GiB on startup. Budget changes wait for all games to close.

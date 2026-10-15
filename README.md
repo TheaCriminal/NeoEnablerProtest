@@ -86,10 +86,10 @@ Patch IDs, how the hook works and how to build from source: [docs/TECHNICAL.md](
 
 ## Helping extend 8 GiB to other firmwares
 
-The 8 GiB memory budget is currently validated only on firmware **13.20**. Porting it to other PS5 firmware
-versions requires kernel data from those versions. The `diagnostics/` directory contains a portable metadata
-collector and an offline analysis tool for this purpose. If you are on a different firmware and want to help,
-see [diagnostics/README.md](diagnostics/README.md) for how to collect and submit the data we need.
+The 8 GiB budget only works on firmware **13.20** right now. To port it we need a `diagnostic.jsonl` capture
+and, ideally, a raw kernel TEXT dump from each firmware. Build and run `diagnostics/neo_diagnostic.c` on your
+console, save the full stdout and see [diagnostics/README.md](diagnostics/README.md) for details on what files
+to submit.
 
 ## Credits
 
