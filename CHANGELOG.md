@@ -13,6 +13,7 @@
   screen.
 - The Order: 1886, Native 4K: fixed small black and grey blocks flickering on trees, bushes and other foliage, also
   visible as dark outlines on clothing edges.
+- New game: Driveclub (01.28), 1080p in PS4 Pro mode.
 - README: explains how to add the patches to a patch file the game already has, and that every game needs its
   patch to work in PS4 Pro mode.
 
