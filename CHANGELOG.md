@@ -4,6 +4,7 @@
 
 - Driveclub 1440p: no more black flashes in the pause menu, and the frame rate no longer drops to 30 when a frame
   is late (same fix as the 4K entries). If you had it enabled, it stays enabled.
+- README: Driveclub 4K with 1800p render can show flickering blocks in the clouds (known issue).
 
 ## 0.3.0
 
