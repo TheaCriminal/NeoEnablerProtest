@@ -128,6 +128,9 @@ static int write_file(const char *path, const void *data, size_t size) {
     return ok ? 0 : -1;
 }
 
+#include "patch_sync.h"
+static char patches_message[256] = "Not checked yet";
+
 #define SETTINGS_PATH "/data/neo-settings"
 
 /* 8 GiB is offered only on firmwares with a verified budget layout (mb_layouts): 13.20 tested, 13.60 pending testing. */
@@ -341,7 +344,8 @@ static void serve_page(int fd, const char *msg) {
     const char *dis = mem_supported ? "" : " disabled";
     char fw_str[16];
     snprintf(fw_str, sizeof(fw_str), "%x.%02x", (fw_raw >> 24) & 0xff, (fw_raw >> 16) & 0xff);
-    static char body[10240];
+    char patches_esc[768]; html_escape(patches_message, patches_esc, sizeof(patches_esc));
+    static char body[12288];
     snprintf(body, sizeof(body),
              "%s"
              "<header><h1>NeoEnabler <small>FW %s</small></h1>"
@@ -361,6 +365,10 @@ static void serve_page(int fd, const char *msg) {
              "<button formaction=/memory/disable%s>Disable</button></form>"
              "<br><small>Close every game first. Applies to new launches.</small></div>"
              "<div class='card wide'><b>Games running</b><ul>%s</ul></div>"
+             "<div class='card wide'><b>Game patches</b><p>%s</p>"
+             "<small>Downloads the patches from the NeoEnabler repository and adds them to every patch file of the same game "
+             "in " PS_DIR ". Changed files are backed up to " PS_BACKUP_ROOT " first.</small>"
+             "<form method=post><button formaction=/patches/update>Update Patches</button></form></div>"
              "<div class=card><b>Firmware diagnostic</b><br>"
              "<small>Saves metadata to /data/neo-diagnostic.jsonl</small>"
              "<form method=post><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
@@ -377,7 +385,7 @@ static void serve_page(int fd, const char *msg) {
              memory.state==MB_8GIB?"on":memory.state==MB_UNKNOWN?"unk":"off",memory_state,
              !mem_supported ? "<br><small>Not available on this firmware (supported: 13.20; 13.60 pending testing)</small>"
              : memory_untested() ? "<br><small>Firmware 13.60: pending testing, please report results</small>" : "",
-             dis, dis, games);
+             dis, dis, games, patches_esc);
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
 }
 
@@ -607,6 +615,13 @@ static void log_state(void) {
              gpu_state_text(), gpu.target, gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.owner_pid, gpu.message);
 }
 
+static void patches_update(void) {
+    ps_result r;
+    patch_sync(&r);
+    snprintf(patches_message, sizeof(patches_message), "%s", r.message);
+    notify(r.message);
+}
+
 static void gpu_tick(void) {
     static unsigned previous_actions;
     static int previous_result = 9999;
@@ -644,6 +659,7 @@ int main(void) {
              li == 1 ? "\nShortcut installed in the Media tab" : li < 0 ? "\nFailed to install the Media tab shortcut" : "");
     notify(msg); puts(msg);
     log_state();
+    patches_update();
     time_t last_memory_poll=time(NULL);
     for (;;) {
         time_t now=time(NULL);
@@ -695,6 +711,10 @@ int main(void) {
                 log_line("panel: GPU enable=%d target=%u rc=%d", enable, target, rc);
                 notify(gpu.message); log_state(); serve_gpu_page(fd, gpu.message);
             }
+        } else if (post && !strcmp(path, "/patches/update")) {
+            log_line("panel: game patches update requested");
+            patches_update();
+            serve_page(fd, patches_message);
         } else if (post && !strcmp(path, "/settings/save")) {
             shell_t ss; int sst = hook_state(&ss);
             if (sst == HOOK_OFF && v4_active(&ss)) sst = HOOK_ON;
