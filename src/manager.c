@@ -284,6 +284,8 @@ static void serve_page(int fd, const char *msg) {
              "<div class=card>Games running<ul>%s</ul></div>"
              "<div class=card><b>Firmware diagnostic</b><p><small>Saves console metadata to /data/neo-diagnostic.jsonl (extract via FTP).</small></p>"
              "<form method=post><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
+             "<div class=card><b>System logs</b><p><small>Saves the last 1 MB of kernel logs to /data/neo-logs.txt (extract via FTP).</small></p>"
+             "<form method=post><button formaction=/logs/save>Save Logs</button></form></div>"
              "<div class=card><small>Applies to games launched after the change. With the hook enabled, every PS4 game without "
              "native Pro support launches in Pro mode. Rebooting the console disables it.<br>" VERSION "</small>"
              "<form method=post><button formaction=/quit>Quit the manager</button></form></div></main></body></html>",
@@ -401,6 +403,28 @@ static void serve_diagnostic_save(int fd) {
     serve_page(fd, msg);
 }
 
+#define LOGS_PATH "/data/neo-logs.txt"
+#define LOGS_MAX (1024 * 1024)
+
+static void serve_logs_save(int fd) {
+    size_t len = LOGS_MAX;
+    char *buf = malloc(len);
+    char msg[256];
+    if (!buf) {
+        snprintf(msg, sizeof(msg), "Failed to allocate log buffer");
+        notify(msg); serve_page(fd, msg); return;
+    }
+    int rc = sysctlbyname("kern.msgbuf", buf, &len, NULL, 0);
+    if (rc || !len) {
+        snprintf(msg, sizeof(msg), "Failed to read kern.msgbuf (rc=%d, errno=%d)", rc, errno);
+        free(buf); notify(msg); serve_page(fd, msg); return;
+    }
+    int ok = !write_file(LOGS_PATH, buf, len);
+    free(buf);
+    snprintf(msg, sizeof(msg), ok ? "Logs saved to " LOGS_PATH " (%zu bytes)" : "Failed to write " LOGS_PATH, len);
+    notify(msg); serve_page(fd, msg);
+}
+
 static int do_set(int enable, char *msg, size_t cap, int show) {
     int rc = hook_set(enable);
     shell_t s; int st = hook_state(&s);
@@ -482,6 +506,8 @@ int main(void) {
                      state_text(st), v4_active(&s) ? "present" : "absent", fw_major(), s.site, s.target, s.cave, s.frame, s.frame_end,
                      s.attr_off, s.four_args, games);
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);
+        } else if (post && !strcmp(path, "/logs/save")) {
+            serve_logs_save(fd);
         } else if (post && !strcmp(path, "/diagnostic/save")) {
             serve_diagnostic_save(fd);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/diagnostic")) {
