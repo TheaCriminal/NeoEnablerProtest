@@ -25,7 +25,6 @@
 
 #define PORT 8765
 #define VERSION "NEO Enabler manager 0.2.0-experimental"
-
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -113,6 +112,24 @@ static int write_file(const char *path, const void *data, size_t size) {
     int ok = fwrite(data, 1, size, f) == size && fflush(f) == 0 && fsync(fileno(f)) == 0;
     if (fclose(f)) ok = 0;
     return ok ? 0 : -1;
+}
+
+#define SETTINGS_PATH "/data/neo-settings"
+
+static void settings_load(void) {
+    FILE *f = fopen(SETTINGS_PATH, "rb");
+    if (!f) return;
+    char buf[64] = {0};
+    if (fread(buf, 1, sizeof(buf) - 1, f)) {
+        if (strstr(buf, "memory_8gib=1")) memory_request(1);
+    }
+    fclose(f);
+}
+
+static int settings_save(void) {
+    char buf[64];
+    snprintf(buf, sizeof(buf), "memory_8gib=%d\n", memory_target);
+    return write_file(SETTINGS_PATH, buf, strlen(buf));
 }
 
 /* Returns 0 already installed, 1 installed now, <0 error. "Installed" means registered in the system
@@ -243,34 +260,49 @@ static void serve_page(int fd, const char *msg) {
     mb_snapshot memory;mb_check(&memory);
     const char*memory_state=memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled";
     char memory_escaped[768];html_escape(memory_message,memory_escaped,sizeof memory_escaped);
-    static char body[8192];
+    uint32_t fw_raw = 0; size_t fw_sz = 4;
+    sysctlbyname("machdep.upd_version", &fw_raw, &fw_sz, NULL, 0);
+    int mem_supported = mb_find_layout(fw_raw) != NULL;
+    const char *dis = mem_supported ? "" : " disabled";
+    char fw_str[16];
+    snprintf(fw_str, sizeof(fw_str), "%x.%02x", (fw_raw >> 24) & 0xff, (fw_raw >> 16) & 0xff);
+    static char body[10240];
     snprintf(body, sizeof(body),
-             "%s<div class=card>PS4 Pro (NEO) mode: <span class='state %s'>%s</span>"
+             "%s<div class=card>Firmware: <b>%s</b></div>"
+             "<div class=card>PS4 Pro (NEO) mode: <span class='state %s'>%s</span>"
              "<form method=post><button formaction=/enable>Enable NEO</button><button formaction=/disable>Disable NEO</button></form>"
              "%s%s%s</div>"
-             "<div class=card>8 GiB memory: <span class='state %s'>%s</span>"
-             "<form method=post><button formaction=/memory/enable>Enable 8 GiB</button><button formaction=/memory/disable>Disable 8 GiB</button></form>"
-             "<p><small>Automatic 8 GiB: %s. %s<br>%s</small></p>"
+             "<div class=card>8 GiB memory: <span class='state %s'>%s</span>%s"
+             "<form method=post><button formaction=/memory/enable%s>Enable 8 GiB</button>"
+             "<button formaction=/memory/disable%s>Disable 8 GiB</button></form>"
+             "<form method=post><button formaction=/settings/save%s>Save Settings</button></form>"
+             "<p><small>Target: %s. %s<br>%s</small></p>"
              "<small>Close every game to change the memory budget. Changes apply to new Pro-mode launches.</small></div>"
              "<div class=card>Running games<ul>%s</ul></div>"
+             "<div class=card><b>Firmware diagnostic</b><p><small>Saves console metadata to /data/neo-diagnostic.jsonl (extract via FTP).</small></p>"
+             "<form method=post><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
              "<div class=card><small>Applies to games launched after the change. With the hook enabled, every PS4 game without "
              "native Pro support launches in Pro mode. Rebooting the console disables it.<br>" VERSION "</small>"
              "<form method=post><button formaction=/quit>Quit the manager</button></form></div></main></body></html>",
-             page_head, st == 1 ? "on" : st == 0 ? "off" : "unk", state_text(st),
+             page_head, fw_str,
+             st == 1 ? "on" : st == 0 ? "off" : "unk", state_text(st),
              msg ? "<p>" : "", msg ? msg : "", msg ? "</p>" : "",
              memory.state==MB_8GIB?"on":memory.state==MB_UNKNOWN?"unk":"off",memory_state,
+             mem_supported ? "" : "<br><small>Not available on this firmware</small>",
+             dis, dis, dis,
              memory_target?"on":"off",memory.detail,memory_escaped,games);
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
 }
 
-static void serve_diagnostic(int fd) {
-    static char body[16384];
+#define DIAG_PATH "/data/neo-diagnostic.jsonl"
+
+static size_t generate_diagnostic(char *buf, size_t cap) {
     size_t len = 0;
     unsigned records = 0;
     uint32_t fw = 0; size_t fw_size = 4; int fw_rc, fw_error;
     errno = 0; fw_rc = sysctlbyname("machdep.upd_version", &fw, &fw_size, NULL, 0); fw_error = errno;
     records++;
-    len += snprintf(body + len, sizeof(body) - len,
+    len += snprintf(buf + len, cap - len,
         "{\"format\":\"neo-diagnostic-v1\",\"record\":\"session\","
         "\"firmware_raw\":\"0x%08x\",\"firmware_rc\":%d,\"firmware_errno\":%d,\"firmware_bytes\":%zu,"
         "\"sdk_raw\":\"0x%08x\",\"kernel_data_base\":\"0x%016lx\","
@@ -279,7 +311,7 @@ static void serve_diagnostic(int fd) {
 
     /* Self process */
     records++;
-    len += snprintf(body + len, sizeof(body) - len,
+    len += snprintf(buf + len, cap - len,
         "{\"format\":\"neo-diagnostic-v1\",\"record\":\"process\",\"pid\":%d,\"kind\":\"native_payload\","
         "\"title_id\":\"\",\"app_info_rc\":-1,\"app_info_errno\":0,"
         "\"neo_driver_rc\":-1,\"base_driver_rc\":-1,\"compat_driver_rc\":-1,\"mode\":\"native\"}\n",
@@ -298,7 +330,7 @@ static void serve_diagnostic(int fd) {
                 while (off + sizeof(struct kinfo_proc) <= n) {
                     struct kinfo_proc *k = (void *)(b + off);
                     if (k->ki_structsize < (int)sizeof(*k) || (size_t)k->ki_structsize > n - off) break;
-                    if (!strcmp(k->ki_comm, "eboot.bin") && game_count < 16 && len + 1024 < sizeof(body)) {
+                    if (!strcmp(k->ki_comm, "eboot.bin") && game_count < 16 && len + 1024 < cap) {
                         app_info_t app = {0}; errno = 0;
                         int app_rc = sceKernelGetAppInfo(k->ki_pid, &app); int app_error = errno;
                         char title[11] = {0}; if (!app_rc) memcpy(title, app.title_id, 10);
@@ -308,14 +340,14 @@ static void serve_diagnostic(int fd) {
                         int compat = kernel_dynlib_handle(k->ki_pid, "libSceGnmDriverCompat1.sprx", &h);
                         const char *mode = !neo ? "neo" : !base ? "base" : !compat ? "compat_unknown" : "unknown";
                         records++;
-                        len += snprintf(body + len, sizeof(body) - len,
+                        len += snprintf(buf + len, cap - len,
                             "{\"format\":\"neo-diagnostic-v1\",\"record\":\"process\",\"pid\":%d,\"kind\":\"game\","
                             "\"title_id\":\"%s\",\"app_info_rc\":%d,\"app_info_errno\":%d,"
                             "\"neo_driver_rc\":%d,\"base_driver_rc\":%d,\"compat_driver_rc\":%d,\"mode\":\"%s\"}\n",
                             (int)k->ki_pid, title, app_rc, app_error, neo, base, compat, mode);
                         /* DMEM/FMEM queries */
                         static const char *nodes[] = {"kern.app.dmem_size_pid", "kern.app.fmem_size_pid", "kern.app.fmem_avail_pid"};
-                        for (int q = 0; q < 3 && len + 512 < sizeof(body); q++) {
+                        for (int q = 0; q < 3 && len + 512 < cap; q++) {
                             int qmib[24]; size_t qc = 23, qsz = 8; uint64_t qval = 0;
                             errno = 0; int qrc = sysctlnametomib(nodes[q], qmib, &qc);
                             if (!qrc && qc <= 23) { qmib[qc++] = k->ki_pid; qrc = sysctl(qmib, (unsigned)qc, &qval, &qsz, NULL, 0); }
@@ -323,12 +355,12 @@ static void serve_diagnostic(int fd) {
                             int qerr = errno;
                             records++;
                             if (!qrc && qsz == 8)
-                                len += snprintf(body + len, sizeof(body) - len,
+                                len += snprintf(buf + len, cap - len,
                                     "{\"format\":\"neo-diagnostic-v1\",\"record\":\"query\",\"pid\":%d,\"node\":\"%s\","
                                     "\"rc\":%d,\"errno\":%d,\"returned_bytes\":%zu,\"value_hex\":\"0x%016lx\"}\n",
                                     (int)k->ki_pid, nodes[q], qrc, qerr, qsz, qval);
                             else
-                                len += snprintf(body + len, sizeof(body) - len,
+                                len += snprintf(buf + len, cap - len,
                                     "{\"format\":\"neo-diagnostic-v1\",\"record\":\"query\",\"pid\":%d,\"node\":\"%s\","
                                     "\"rc\":%d,\"errno\":%d,\"returned_bytes\":%zu,\"value_hex\":null}\n",
                                     (int)k->ki_pid, nodes[q], qrc, qerr, qsz);
@@ -343,12 +375,28 @@ static void serve_diagnostic(int fd) {
         } else { scan_rc = -1; scan_error = ENOMEM; }
     } else if (!scan_rc) { scan_rc = -1; scan_error = EOVERFLOW; }
 
-    len += snprintf(body + len, sizeof(body) - len,
+    len += snprintf(buf + len, cap - len,
         "{\"format\":\"neo-diagnostic-v1\",\"record\":\"end\",\"records_before_end\":%u,"
         "\"scan_complete\":%s,\"game_count\":%u,\"scan_rc\":%d,\"scan_errno\":%d}\n",
         records, complete ? "true" : "false", game_count, scan_rc, scan_error);
 
-    reply(fd, "200 OK", "application/x-ndjson; charset=utf-8", body);
+    return len;
+}
+
+static void serve_diagnostic(int fd) {
+    static char buf[16384];
+    generate_diagnostic(buf, sizeof(buf));
+    reply(fd, "200 OK", "application/x-ndjson; charset=utf-8", buf);
+}
+
+static void serve_diagnostic_save(int fd) {
+    static char buf[16384];
+    generate_diagnostic(buf, sizeof(buf));
+    int ok = !write_file(DIAG_PATH, buf, strlen(buf));
+    char msg[256];
+    snprintf(msg, sizeof(msg), ok ? "Diagnostic saved to " DIAG_PATH : "Failed to write " DIAG_PATH);
+    notify(msg);
+    serve_page(fd, msg);
 }
 
 static int do_set(int enable, char *msg, size_t cap, int show) {
@@ -376,6 +424,7 @@ int main(void) {
         return 1;
     }
     do_set(1, msg, sizeof(msg), 0);
+    settings_load();
     int memory_previous_result=memory_poll();
     printf("8 GiB: %s\n",memory_message);
     int li = install_launcher();
@@ -409,6 +458,10 @@ int main(void) {
         } else if(post&&(!strcmp(path,"/memory/enable")||!strcmp(path,"/memory/disable"))){
             memory_request(!strcmp(path,"/memory/enable"));
             notify(memory_message);serve_page(fd,memory_message);
+        } else if (post && !strcmp(path, "/settings/save")) {
+            int ok = !settings_save();
+            const char *smsg = ok ? "Settings saved" : "Failed to save settings";
+            notify(smsg); serve_page(fd, smsg);
         } else if (post && !strcmp(path, "/quit")) {
             reply(fd, "200 OK", "text/html; charset=utf-8", "<!doctype html><meta charset=utf-8><title>NEO Enabler</title>"
                   "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. NEO and memory settings were kept.</body>");
@@ -425,6 +478,8 @@ int main(void) {
                      state_text(st), v4_active(&s) ? "present" : "absent", fw_major(), s.site, s.target, s.cave, s.frame, s.frame_end,
                      s.attr_off, s.four_args, games);
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);
+        } else if (post && !strcmp(path, "/diagnostic/save")) {
+            serve_diagnostic_save(fd);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/diagnostic")) {
             serve_diagnostic(fd);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/")) {
