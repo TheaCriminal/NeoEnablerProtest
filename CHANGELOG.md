@@ -8,7 +8,8 @@
 - 8 GiB can only be turned on from firmware 13.20 (tested) or 13.60 (pending testing). On other firmwares the
   controls stay greyed out, the panel refuses the request and a saved 8 GiB setting is ignored. On 13.60 the panel
   shows that the firmware is pending testing.
-- Notifications say "memory" instead of "budget", and the "no budget write needed" note is gone.
+- Notifications say "memory" instead of "budget" and "8 GiB enabled for PS4 games" instead of "for new NEO launches";
+  the "no budget write needed" note is gone.
 
 ## 0.2.0
 

@@ -110,7 +110,7 @@ static int mb_check(mb_snapshot*s){
  else if(!memcmp(s->code,step,12))s->state=MB_STEP;
  else{snprintf(s->detail,sizeof s->detail,"Unknown memory patch; nothing written");return -1;}
  s->access_ready=1;
- snprintf(s->detail,sizeof s->detail,"%s",s->state==MB_8GIB?"8 GiB enabled for new NEO launches":s->state==MB_STEP?"8 GiB disabled; previous 5.5 GiB experiment active":"8 GiB disabled; original 5.25 GiB NEO memory");return 0;
+ snprintf(s->detail,sizeof s->detail,"%s",s->state==MB_8GIB?"8 GiB enabled for PS4 games":s->state==MB_STEP?"8 GiB disabled; previous 5.5 GiB experiment active":"8 GiB disabled; original 5.25 GiB NEO memory");return 0;
 }
 /* Readback/rollback are bounded to this known 12-byte NEO branch. */
 static int mb_set(int enable,char*msg,size_t cap){
@@ -133,5 +133,5 @@ static int mb_set(int enable,char*msg,size_t cap){
   int restored=!undo&&!check&&!memcmp(readback,s.code,12);
   snprintf(msg,cap,"Memory write failed; rollback %s%s",restored?"verified":"FAILED",restored?"":"; do not launch games; reboot console");return restored?5:6;
  }
- snprintf(msg,cap,"%s; readback verified",enable?"8 GiB enabled for new NEO launches":"8 GiB disabled; original 5.25 GiB memory restored");return 0;
+ snprintf(msg,cap,"%s; readback verified",enable?"8 GiB enabled for PS4 games":"8 GiB disabled; original 5.25 GiB memory restored");return 0;
 }
