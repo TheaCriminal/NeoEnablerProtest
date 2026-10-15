@@ -1,4 +1,4 @@
-/* GPL-3.0-only. NEO DMEM budget selection for the verified PS5 13.20 layout.
+/* GPL-3.0-only. NEO DMEM budget selection for verified PS5 kernel layouts.
  * Detect required access from page permissions and exact code, not exploit
  * cookies. Never disables protections or modifies page tables itself.
  */
@@ -33,20 +33,46 @@ static int mb_games(void){
 enum {MB_UNKNOWN=-1,MB_STOCK=0,MB_8GIB=1,MB_STEP=2};
 static const unsigned char mb_original[12]={0x49,0x81,0xc7,0,0,0,0x28,0xe9,0x34,2,0,0};
 static const unsigned char mb_eight[12]={0x49,0xbf,0,0,0,0,2,0,0,0,0xeb,0x36};
-typedef struct {int state,access_ready;uint64_t text;unsigned char code[12];char detail[192];} mb_snapshot;
+
+typedef struct {
+ uint32_t fw;
+ uint32_t data_delta;
+ uint32_t pml4i_off, pdpi_off, pmap_off;
+ uint32_t baseline_off, branch_off, relay_off, cont_off;
+ uint32_t areas_off;
+ unsigned char continuation[10];
+} mb_layout;
+
+static const mb_layout mb_layouts[]={
+ {0x13200000, 0xcb0000,
+  0x3b25294, 0x3b25298, 0x3b25018,
+  0x9f9044, 0x9f9076, 0x9f90b8, 0x9f92b6,
+  0x34c0e50,
+  {0x49,0x8b,0x7d,0x40,0xe8,0x11,0xdb,0xc0,0xff,0x41}},
+ {0x13600000, 0xcc0000,
+  0x3b49294, 0x3b49298, 0x3b49018,
+  0xa013a4, 0xa013d6, 0xa01418, 0xa01616,
+  0x3ad0e50,
+  {0x49,0x8b,0x7d,0x40,0xe8,0x21,0x7f,0xc0,0xff,0x41}},
+};
+#define MB_LAYOUT_COUNT (sizeof mb_layouts/sizeof mb_layouts[0])
+
+typedef struct {int state,access_ready;uint64_t text;unsigned char code[12];char detail[192];const mb_layout*layout;} mb_snapshot;
 static int mb_pointer(uint64_t a){return a>=0xffff800000000000ULL&&a<0xfffffffffffff000ULL&&(a&7)==0;}
-/* Read only ordinary kernel DATA/page-table memory before touching code.
- * All four signatures below reside on this one 4KiB page. Guest permissions
- * are a prerequisite, not an attestation of NPT/GMET state. The actual code
- * read and verified patch write establish the capability used by this tool.
- */
-static int mb_page_access(uint64_t text){
+
+static const mb_layout*mb_find_layout(uint32_t fw){
+ for(unsigned i=0;i<MB_LAYOUT_COUNT;i++)
+  if(mb_layouts[i].fw==fw)return&mb_layouts[i];
+ return NULL;
+}
+
+static int mb_page_access(uint64_t text,const mb_layout*L){
  uint32_t pml4i=0,pdpi=0;uint64_t table=0;
- if(MB_READ(text+0x3b25294,&pml4i,4)||pml4i<256||pml4i>511||
-    MB_READ(text+0x3b25298,&pdpi,4)||pdpi>511||
-    MB_READ(text+0x3b24ff8+0x20,&table,8)||!mb_pointer(table)||(table&0xfff))return 0;
+ if(MB_READ(text+L->pml4i_off,&pml4i,4)||pml4i<256||pml4i>511||
+    MB_READ(text+L->pdpi_off,&pdpi,4)||pdpi>511||
+    MB_READ(text+L->pmap_off,&table,8)||!mb_pointer(table)||(table&0xfff))return 0;
  uint64_t dmap=0xffff800000000000ULL|((uint64_t)pml4i<<39)|((uint64_t)pdpi<<30);
- const unsigned shifts[]={39,30,21,12};uint64_t va=text+0x9f9076;
+ const unsigned shifts[]={39,30,21,12};uint64_t va=text+L->branch_off;
  for(unsigned level=0;level<4;level++){
   uint64_t entry=0;
   if(MB_READ(table+((va>>shifts[level])&511)*8,&entry,8)||
@@ -61,19 +87,21 @@ static int mb_page_access(uint64_t text){
 }
 static int mb_check(mb_snapshot*s){
  memset(s,0,sizeof(*s));s->state=MB_UNKNOWN;uint32_t fw=0;uint64_t data=MB_DATA();
- if(mb_firmware(&fw)||fw!=0x13200000||data<0xffffffff00000000ULL||(data&0xfff)){
-  snprintf(s->detail,sizeof s->detail,"8 GiB adjustment unavailable on this firmware (requires 13.20)");return -1;
+ if(mb_firmware(&fw)||data<0xffffffff00000000ULL||(data&0xfff)){
+  snprintf(s->detail,sizeof s->detail,"8 GiB adjustment unavailable (firmware query failed)");return -1;
  }
- s->text=data-0xcb0000;
- if(!mb_page_access(s->text)){snprintf(s->detail,sizeof s->detail,"Kernel code access unavailable; waiting for hypervisor unlock");return -1;}
+ const mb_layout*L=mb_find_layout(fw);
+ if(!L){snprintf(s->detail,sizeof s->detail,"8 GiB adjustment unavailable on this firmware");return -1;}
+ s->layout=L;
+ s->text=data-L->data_delta;
+ if(!mb_page_access(s->text,L)){snprintf(s->detail,sizeof s->detail,"Kernel code access unavailable; waiting for hypervisor unlock");return -1;}
  const unsigned char baseline[]={0x49,0xbf,0,0,0,0x28,1,0,0,0};
  const unsigned char relay[]={0xe9,0xf9,1,0,0};
- const unsigned char continuation[]={0x49,0x8b,0x7d,0x40,0xe8,0x11,0xdb,0xc0,0xff,0x41};
  unsigned char b[10];
- if(MB_READ(s->text+0x9f9044,b,10)||memcmp(b,baseline,10)||
-    MB_READ(s->text+0x9f90b8,b,5)||memcmp(b,relay,5)||
-    MB_READ(s->text+0x9f92b6,b,10)||memcmp(b,continuation,10)||
-    MB_READ(s->text+0x9f9076,s->code,12)){
+ if(MB_READ(s->text+L->baseline_off,b,10)||memcmp(b,baseline,10)||
+    MB_READ(s->text+L->relay_off,b,5)||memcmp(b,relay,5)||
+    MB_READ(s->text+L->cont_off,b,10)||memcmp(b,L->continuation,10)||
+    MB_READ(s->text+L->branch_off,s->code,12)){
   snprintf(s->detail,sizeof s->detail,"Kernel code unreadable or instruction layout differs");return -1;
  }
  unsigned char step[12];memcpy(step,mb_original,12);step[6]=0x38;
@@ -88,19 +116,20 @@ static int mb_check(mb_snapshot*s){
 static int mb_set(int enable,char*msg,size_t cap){
  mb_snapshot s,again;
  if(mb_check(&s)){snprintf(msg,cap,"%s",s.detail);return 1;}
+ const mb_layout*L=s.layout;
  const unsigned char*desired=enable?mb_eight:mb_original;
  if(!memcmp(s.code,desired,12)){snprintf(msg,cap,"%s; no budget write needed",s.detail);return 0;}
  if(mb_games()!=0){snprintf(msg,cap,"Close every game before changing the 8 GiB budget");return 2;}
  for(unsigned i=1;i<=3;i++){
   signed char count=-1;
-  if(MB_READ(s.text+0x34c0e50+i*0x138+0x8e,&count,1)||count!=0){snprintf(msg,cap,"Application memory area %u is active or unreadable; nothing written",i);return 3;}
+  if(MB_READ(s.text+L->areas_off+i*0x138+0x8e,&count,1)||count!=0){snprintf(msg,cap,"Application memory area %u is active or unreadable; nothing written",i);return 3;}
  }
  if(mb_check(&again)||again.text!=s.text||memcmp(again.code,s.code,12)){snprintf(msg,cap,"Budget state changed during checks; nothing written");return 4;}
- int rc=MB_WRITE(desired,s.text+0x9f9076,12);unsigned char readback[12];
- int rr=MB_READ(s.text+0x9f9076,readback,12);
+ int rc=MB_WRITE(desired,s.text+L->branch_off,12);unsigned char readback[12];
+ int rr=MB_READ(s.text+L->branch_off,readback,12);
  if(rc||rr||memcmp(readback,desired,12)){
-  int undo=MB_WRITE(s.code,s.text+0x9f9076,12);
-  int check=MB_READ(s.text+0x9f9076,readback,12);
+  int undo=MB_WRITE(s.code,s.text+L->branch_off,12);
+  int check=MB_READ(s.text+L->branch_off,readback,12);
   int restored=!undo&&!check&&!memcmp(readback,s.code,12);
   snprintf(msg,cap,"Budget write failed; rollback %s%s",restored?"verified":"FAILED",restored?"":"; do not launch games; reboot console");return restored?5:6;
  }

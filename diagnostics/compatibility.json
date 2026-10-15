@@ -17,11 +17,11 @@
     {
       "firmware_raw": "0x13600000",
       "firmware_display": "13.60",
-      "memory_state": "needs_text_dump",
+      "memory_state": "offsets_found_needs_hardware_test",
       "text_to_data_delta": "0x00cc0000",
       "reference_kernel_text_sha256": null,
-      "budget_branch_text_offset": null,
-      "evidence": "text_to_data_delta confirmed from HV-Bypass-13.60 research repo; HV bypass verified on real console 2026-10-12; no kernel TEXT dump available yet",
+      "budget_branch_text_offset": "0x00a013d6",
+      "evidence": "All TEXT offsets confirmed from local kernel dump analysis; budget branch 12 bytes identical to 13.20; areas offset 0x3ad0e50 unverified (cold dump); needs hardware test",
       "detector_0_2_0_hardware_validated": false,
       "other_hypervisor_methods_validated": false
     }

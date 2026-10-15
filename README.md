@@ -21,7 +21,7 @@ so NEO Enabler is only useful for the games listed below.
 3. A notification on the PS5 confirms that NEO Enabler is enabled.
 
 Version **0.2.0** also automatically enables an **8 GiB PS4 Pro memory budget** when the required kernel
-access is available. This memory adjustment currently supports **firmware 13.20**. The hypervisor must already
+access is available. This memory adjustment currently supports **firmware 13.20** and **13.60**. The hypervisor must already
 be unlocked by Byepervisor or another method that allows reading and writing the kernel code page; NEO Enabler
 checks that access without relying on exploit-specific markers and does not unlock the hypervisor itself.
 Without that access, the normal NEO feature remains available.

@@ -9,7 +9,7 @@ Does not apply patches, change settings or unlock anything on the console.
 | --- | --- | --- | --- | --- |
 | 4.00 - 13.00 | Supported | Not started | Unknown | Diagnostic capture + kernel TEXT dump |
 | 13.20 | Supported | Validated | `0x00CB0000` | Done |
-| 13.60 | Supported | Needs TEXT dump | `0x00CC0000` | Kernel TEXT dump to locate the budget constructor |
+| 13.60 | Supported | Offsets found, needs hardware test | `0x00CC0000` | Console test to verify areas offset and gameplay |
 | 14.00+ | No jailbreak | Not possible | N/A | N/A |
 
 ## What it contains

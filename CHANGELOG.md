@@ -6,7 +6,9 @@
 
 - Automatically selects an 8 GiB PS4 Pro memory budget when the required kernel access is available. The memory
   adjustment currently supports firmware 13.20; detection uses page permissions and verified kernel bytes,
-  without depending on Byepervisor markers or a specific hypervisor exploit.
+  without depending on Byepervisor markers or a specific hypervisor exploit. Firmware 13.60
+  uses the same budget patch with verified offsets from public kernel analysis; the application
+  memory areas offset is unverified and will be confirmed on hardware.
 - Separate NEO and 8 GiB status indicators and controls. Disabling one keeps the other setting unchanged.
 - A manual 8 GiB disable also stops automatic enabling for this manager session. Memory changes requested while
   a game is open wait until games are closed; automatic enabling also waits for kernel access to become available.
