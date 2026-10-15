@@ -79,7 +79,7 @@ a game that is not in the table below.
 | Just Cause 3 (01.05) | 1080p, 1440p, 4K | Also enable "Offline mode", or the game keeps trying to log in. |
 | Battlefield 4 (01.24) | 1080p, 1440p, 1620p, 1800p, 4K | 1800p holds 60 fps. 4K runs around 49 fps. |
 | Killzone Shadow Fall (01.81) | 1440p, 1620p, 1800p, 4K | Some surfaces are slightly darker from 1440p to 1800p. 4K is clean but below 60 fps. |
-| The Order: 1886 (01.02) | 1080p, 4K | Small sparkles may appear on edges while moving. |
+| The Order: 1886 (01.02) | 1080p, 4K, triple buffering up to 60 fps (4K) | Small sparkles may appear on edges while moving. The triple buffering entry is used together with Native 4K: no tearing, slight stutter. |
 | Driveclub (01.28) | 1080p, 1440p, 4K (1800p render), native 4K | 4K needs the 8 GiB memory budget. 4K with 1800p render runs close to 60 fps; native 4K is below 60 fps in races. Snow can show inside the car in 4K. |
 
 Patch IDs, how the hook works and how to build from source: [docs/TECHNICAL.md](docs/TECHNICAL.md).
@@ -109,6 +109,7 @@ to submit.
 | Patch | Author | Source |
 | --- | --- | --- |
 | Bloodborne: Resolution Patch WxH, base of the NEO 1440p/1620p/1800p entries | [Kyo](https://github.com/Kyoskii) | [shadps4-emu/ps4_cheats](https://github.com/shadps4-emu/ps4_cheats/blob/main/PATCHES/Bloodborne.xml) |
+| The Order: 1886: 60 FPS Unlock (one line inside the triple buffering entry) | [illusion](https://github.com/illusionyy) | PS-Game-Patch, `patches/xml/TheOrder1886-Orbis.xml` |
 
 Entries with author "Local experiment" (Pro mode, resolutions, JC3 offline mode) and the NEO fixes inside the
 Bloodborne resolution entries were made in this project.
