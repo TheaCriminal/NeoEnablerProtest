@@ -33,8 +33,8 @@
 - New game: Driveclub (01.28), 1080p and 1440p in PS4 Pro mode, plus 4K with 1800p render and native 4K
   (both need the 8 GiB memory budget).
 - Bloodborne: native 4K in PS4 Pro mode (needs the 8 GiB memory budget, tested on firmware 13.20 only).
-- The Order: 1886: new triple buffering entry for Native 4K. Vsync stays on (no tearing) and the frame rate goes
-  up to 60 instead of dropping to 30.
+- The Order: 1886: new Native 4K 60fps entry with triple buffering. Vsync stays on (no tearing) and the frame rate goes
+  up to 60 instead of dropping to 30. Uses the 60 FPS Unlock patch by illusion.
 - README: explains how to add the patches to a patch file the game already has, and that every game needs its
   patch to work in PS4 Pro mode.
 
