@@ -9,7 +9,8 @@
   controls stay greyed out, the panel refuses the request and a saved 8 GiB setting is ignored. On 13.60 the panel
   shows that the firmware is pending testing.
 - Notifications say "memory" instead of "budget" and "8 GiB enabled for PS4 games" instead of "for new NEO launches";
-  the "no budget write needed" note is gone.
+  the "no budget write needed" and "readback verified" notes are gone. Disabling 8 GiB says "original 5.25 GiB memory
+  restored".
 
 ## 0.2.0
 
