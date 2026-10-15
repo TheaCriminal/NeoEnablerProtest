@@ -84,6 +84,13 @@ a game that is not in the table below.
 
 Patch IDs, how the hook works and how to build from source: [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
+## Helping extend 8 GiB to other firmwares
+
+The 8 GiB memory budget is currently validated only on firmware **13.20**. Porting it to other PS5 firmware
+versions requires kernel data from those versions. The `diagnostics/` directory contains a portable metadata
+collector and an offline analysis tool for this purpose. If you are on a different firmware and want to help,
+see [diagnostics/README.md](diagnostics/README.md) for how to collect and submit the data we need.
+
 ## Credits
 
 ### Code and tools
