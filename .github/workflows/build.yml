@@ -73,6 +73,10 @@ jobs:
           /tmp/neo-http-test
 
       - name: Build
+        # Panel behavior tests use the Node runtime supplied on the hosted runner.
+        run: node tests/panel_test.js
+
+      - name: Build payload
         run: PS5_PAYLOAD_SDK="$HOME/ps5-payload-sdk" bash build.sh
 
       - name: Checksum

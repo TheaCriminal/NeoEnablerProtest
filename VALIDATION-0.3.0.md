@@ -1,6 +1,8 @@
 # NeoEnabler 0.3.0 validation — 2026-10-15
 
-ELF SHA256: `20f8810864214378e7fc3ef45ab883d890dc67ec528c58f0bbdc563b91d9b464`.
+Current ELF SHA256: `f6d97364d2c22f44379cf4c527dcfefbc2baa9cd7e4aa1914d2df7403ae17c1d`.
+
+Panel navigation fix: form submissions use fetch and replace the document rather than creating POST history entries. Tab links use location.replace; Escape/BrowserBack keys request window.close while retaining native Back handling. Node tests cover consecutive actions, duplicate-submit suppression, tab replacement, and close keys. SDK build passed; the deployed panel script and Payload Manager ELF were verified byte-for-byte. Physical Circle behavior still needs confirmation on the console. Close and reopen an already-open browser session to discard its old history.
 
 Host GPU lifecycle/settings tests and HTTP request tests passed. SDK build passed with warnings treated as errors. Existing budget and firmware-report tests passed during implementation. Extracted web JavaScript passed `node --check`; `git diff --check` passed.
 
@@ -10,4 +12,4 @@ Applying 2200 reported enabled/applied with current 2200 and captured baseline 1
 
 The console Payload Manager ELF was replaced and read back byte-for-byte. Local regular and versioned artifacts are in `build/`. Unsupported firmware gating is covered by the fake-backend host tests, including rejection of saved enabled state; no second firmware was tested on hardware. Controls are disabled on unsupported firmware and the backend independently refuses enabling.
 
-2350 MHz is an experimental selectable target, not a verified hardware maximum or gameplay stability result. This integration check applied only 2200 MHz. Current SMU readings do not establish performance gains.
+The maximum allowed target was reduced to 2200 MHz after the initial integration check. Host tests cover rejection of higher requests and saved settings. The rebuilt payload was deployed, the live page and JSON advertise 2200, and live requests for 2201, 2250 and 2350 returned HTTP 400. The Payload Manager copy was updated and read back byte-for-byte. GPU boost remains off. Current SMU readings do not establish performance gains or long-term stability.

@@ -1,0 +1,45 @@
+/* Keep actions and tab switches out of the console browser's Back history. */
+document.addEventListener('DOMContentLoaded', function () {
+    var pending = false;
+    document.addEventListener('submit', function (event) {
+        var form = event.target;
+        if (form.method.toLowerCase() !== 'post') return;
+        event.preventDefault();
+        if (pending) return;
+        pending = true;
+        var button = event.submitter || document.activeElement;
+        var action = button && button.form === form && button.hasAttribute('formaction')
+            ? button.formAction : form.action;
+        var body = new URLSearchParams(new FormData(form)).toString();
+        fetch(action, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: body,
+            cache: 'no-store'
+        }).then(function (response) {
+            return response.text();
+        }).then(function (html) {
+            // Replace this document without creating a POST navigation/history entry.
+            clearInterval(window.neoGpuTimer);
+            document.open();
+            document.write(html);
+            document.close();
+        }).catch(function () {
+            pending = false;
+            alert('Request interrupted. Check the current status before trying again.');
+        });
+    });
+    document.addEventListener('click', function (event) {
+        var link = event.target.closest('nav a');
+        if (!link) return;
+        event.preventDefault();
+        window.location.replace(link.href);
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' || event.key === 'BrowserBack' ||
+            event.keyCode === 27 || event.keyCode === 461) {
+            window.close();
+            // Leave native Back handling available if the browser owns Circle.
+        }
+    });
+});

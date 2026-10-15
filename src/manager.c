@@ -23,6 +23,7 @@
 #include "shellcore_hook.h"
 #include "legacy_v4.h"
 #include "icon_data.h"
+#include "panel_data.h"
 #include "memory_control.h"
 #include "gpu_control.h"
 #include "settings.h"
@@ -324,7 +325,7 @@ static const char page_head[] =
     "input[type=range]{width:100%;margin:20px 0}output{font-size:24px;font-weight:600}"
     ".metric{font-size:32px;font-weight:600;margin:10px 0}.notice{margin:12px 0;color:var(--muted)}"
     "ul{margin:8px 0 0;padding-left:20px}small{color:var(--muted)}"
-    "</style></head><body>";
+    "</style><script src=/panel.js></script></head><body>";
 
 /* v4 hook still in ShellCore (forces NEO regardless of this manager's hook). */
 static int v4_active(const shell_t *s) { return s->pid > 0 && s->frame && v4_state(s->pid, s->frame) == V4_PRESENT; }
@@ -423,13 +424,13 @@ static void serve_gpu_page(int fd, const char *msg) {
         "<input type=range id=gpu-target name=mhz min=%u max=%u step=50 value=%u%s>"
         "<div><button formaction=/gpu/enable%s>Apply boost</button>"
         "<button formaction=/gpu/disable%s>Disable boost</button></div></form>"
-        "<p class=notice>Experimental. 2200 MHz has a short gameplay test; higher targets up to 2350 MHz are unvalidated. "
+        "<p class=notice>Maximum allowed target: 2200 MHz. Short gameplay testing has passed. "
         "Actual frequency may be lower. Power and thermal controls remain active.</p>"
         "<small>Applies to PS4 games in base or NEO mode. A saved target is requested on the next PS4 launch. "
         "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
         "%s</div></div><p><small>GPU boost is independent of NEO and 8 GiB. Quitting restores the captured GPU clock.<br>"
         VERSION "</small></p></main>"
-        "<script>const r=document.getElementById('gpu-target'),o=document.getElementById('gpu-value');"
+        "<script>(function(){const r=document.getElementById('gpu-target'),o=document.getElementById('gpu-value');"
         "r.addEventListener('input',()=>o.textContent=r.value);"
         "async function refresh(){try{const x=await fetch('/gpu/status',{cache:'no-store'});if(!x.ok)return;const s=await x.json();"
         "document.getElementById('gpu-current').textContent=s.current_mhz===null?'Unavailable':s.current_mhz+' MHz';"
@@ -437,7 +438,7 @@ static void serve_gpu_page(int fd, const char *msg) {
         "b.className='state '+(s.applied&&s.state==='enabled'?'on':s.state==='disabled'?'off':'unk');"
         "document.getElementById('gpu-previous').textContent=s.previous_mhz===null?'Not captured':s.previous_mhz+' MHz';"
         "document.getElementById('gpu-detail').textContent=s.detail;"
-        "}catch(e){document.getElementById('gpu-current').textContent='Disconnected';}}setInterval(refresh,2000);</script>"
+        "}catch(e){document.getElementById('gpu-current').textContent='Disconnected';}}window.neoGpuTimer=setInterval(refresh,2000);})();</script>"
         "</body></html>",
         page_head, fw, msg ? "<p>" : "", msg ? msg : "", msg ? "</p>" : "", current,
         gpu.applied && !gpu.blocked ? "on" : gpu.enabled ? "unk" : "off", gpu_state_text(), gpu.message, previous,
@@ -687,7 +688,7 @@ int main(void) {
         } else if (post && (!strcmp(path, "/gpu/enable") || !strcmp(path, "/gpu/disable"))) {
             int enable = !strcmp(path, "/gpu/enable"); unsigned target = gpu.target;
             if (enable && gpu_form_mhz(form_body, &target) != 1) {
-                reply(fd, "400 Bad Request", "text/plain", "Choose a GPU target from 1800 to 2350 MHz in 50 MHz steps\n");
+                reply(fd, "400 Bad Request", "text/plain", "Choose a GPU target from 1800 to 2200 MHz in 50 MHz steps\n");
             } else {
                 int rc = gpu_request(enable, target, gpu_game_pid());
                 if (rc == -1 && enable) snprintf(gpu.message, sizeof gpu.message, "GPU clock request unavailable or failed; check firmware and SMU access");
@@ -727,6 +728,10 @@ int main(void) {
                      "gpu_clock: %s\ngpu_clock_enabled: %d\ngpu_target_mhz: %u\ngpu_actual_mhz: %s%u\ngpu_detail: %s\n",
                      gpu_state_text(), gpu.enabled, gpu.target, gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);
+        } else if (!strcmp(method, "GET") && !strcmp(path, "/panel.js")) {
+            char script[sizeof panel_js + 1];
+            memcpy(script, panel_js, sizeof panel_js); script[sizeof panel_js] = 0;
+            reply(fd, "200 OK", "application/javascript; charset=utf-8", script);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/gpu")) {
             serve_gpu_page(fd, NULL);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/gpu/status")) {

@@ -55,16 +55,19 @@ Anyone on your local network can open the panel.
 
 ### GPU clock tab (0.3.0)
 
-Open **GPU clock** in the panel, select a target from **1800 to 2350 MHz** in 50 MHz steps, and use
+Panel actions update the document without adding POST entries to browser history; switching tabs also replaces
+the current entry. Circle/Back requests closing the console web interface instead of revisiting earlier actions.
+
+Open **GPU clock** in the panel, select a target from **1800 to 2200 MHz** in 50 MHz steps, and use
 **Apply boost**. The current clock reported by the SMU updates every two seconds. The target and enable flag
 are saved with **Save Settings** and requested again when the manager starts with a PS4 game running or detects
 a new PS4 launch. This works independently of NEO and 8 GiB, including PS4 base mode.
 
 GPU boost is **off by default**, with 2200 MHz selected. It currently supports **firmware 13.20 only** and uses
 the stock `/dev/mp1` driver without patching the kernel or relying on a hypervisor exploit marker.
-The 2350 MHz slider limit is an experimental requested target, not a guaranteed sustained hardware frequency.
+The maximum allowed target is 2200 MHz; sustained frequency may be lower.
 The current short gameplay validation covers a 2200 MHz request with SMU readings around 2155–2200 MHz.
-Higher targets have not been gameplay-validated; FPS gains and long-term stability have not been established.
+FPS gains and long-term stability have not been established.
 
 **Disable boost** requests the clock captured before boost for the running game. **Quit** also requests that
 restoration; NEO and memory settings are kept. On game exit/transition the manager stops applying that game's

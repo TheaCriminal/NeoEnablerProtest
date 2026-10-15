@@ -8,9 +8,9 @@
 
 ## 0.3.0
 
-- New **GPU clock** tab with a 1800–2350 MHz target slider, a live SMU clock reading, Apply boost and Disable.
+- New **GPU clock** tab with a 1800–2200 MHz target slider, a live SMU clock reading, Apply boost and Disable.
   Uses the original MP1 driver on firmware **13.20 only**. Default is off, with a 2200 MHz target.
-  Targets above 2200 MHz are experimental and have not been gameplay-validated.
+  Requests above 2200 MHz are rejected, including saved settings.
 - GPU clock enable state and target are included in **Save Settings** (`/data/neo-settings`). Old settings files
   remain compatible. Settings writes use a flushed temporary file followed by rename.
 - A saved GPU target is requested for a running/new PS4 game, independently of NEO and 8 GiB. The manager sends
