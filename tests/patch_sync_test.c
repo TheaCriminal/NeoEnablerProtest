@@ -48,6 +48,7 @@ static char *slurp(const char *path, size_t *len) {
 static char *ps_get(const char *url, size_t *len);
 
 #include "../src/patch_sync.h"
+#include "../src/game_patches.h"
 
 static char *ps_get(const char *url, size_t *len) {
     if (!strcmp(url, PS_LIST_URL)) {
@@ -106,6 +107,25 @@ static void check_repo(void) {
                 }
         }
         assert(entries > 0);
+        /* Naming standard: "<resolution> (PS4 Pro mode[, ...][, requires 8 GiB enabled])", and NeoRequires agrees
+           with the name, so the manager detects the requirements either way. */
+        for (size_t p = 0; xm_next(f->xml, f->len, p, &a); p = a.end) {
+            char name[160], req[32]; int pro, eight, name_pro, name_eight;
+            gp_attr(f->xml, &a, "Name", name, sizeof name);
+            gp_attr(f->xml, &a, "NeoRequires", req, sizeof req);
+            gp_requirements(req, name, &pro, &eight);
+            gp_requirements("", name, &name_pro, &name_eight);
+            const char *mode = strstr(name, " (PS4 Pro mode");
+            size_t nl = strlen(name);
+            int standard = !mode || (mode > name && name[nl - 1] == ')' && !strchr(mode + 14, '(') &&
+                                     (mode[14] == ')' || mode[14] == ','));
+            if (!*req && name_pro) { fprintf(stderr, "%s: \"%s\" has no NeoRequires\n", f->name, name); exit(1); }
+            if (pro != name_pro || eight != name_eight || !standard ||
+                (eight && !strstr(name, ", requires 8 GiB enabled)"))) {
+                fprintf(stderr, "%s: \"%s\" (NeoRequires \"%s\") does not follow the naming standard\n", f->name, name, req);
+                exit(1);
+            }
+        }
         for (int j = 0; j < i; j++)
             if (!strcasecmp(repo[j].title, f->title)) { fprintf(stderr, "%s and %s share a Title\n", repo[j].name, f->name); exit(1); }
     }
@@ -158,6 +178,7 @@ static int count_of(const char *s, size_t n, const char *pat) {
 }
 
 int main(int argc, char **argv) {
+    (void)gp_sfo; (void)gp_game_version; (void)gp_list;   /* unused here */
     assert(argc >= 2);
     repo_dir = argv[1];
     load_repo();
@@ -273,9 +294,43 @@ int main(int argc, char **argv) {
     assert(backups() <= PS_MAX_BACKUPS);
     free(orig[0]); free(orig[1]);
 
+    /* An entry with the same patch lines as our first one under a development name, enabled in the settings:
+       renamed to ours, and the setting moves to the new hash (settings backed up). */
+    fail_file = NULL;
+    size_t bl = first.end - first.start;
+    char *dev = malloc(bl + 256);
+    const char *nm = xm_find(g->xml + first.start, bl, " Name=\"");
+    assert(dev && nm);
+    size_t pre = (size_t)(nm - (g->xml + first.start)) + 7;
+    const char *nm_end = memchr(nm + 7, '"', bl - pre);
+    int dl = snprintf(dev, bl + 256, "<Patch>\n  %.*sdev name%.*s\n</Patch>\n", (int)pre, g->xml + first.start,
+                      (int)(g->xml + first.end - nm_end), nm_end);
+    put("CUSA90005.xml", dev);
+    char ver[32]; snprintf(ver, sizeof ver, "%.*s", (int)first.ver_len, first.ver);
+    char *comma = strchr(ver, ','); if (comma) *comma = 0;
+    size_t tl = xm_tag_len(dev + 10, (size_t)dl - 10);
+    char old_hash[9], new_hash[9], settings[256];
+    snprintf(old_hash, sizeof old_hash, "%08x", ps_tag_hash("CUSA90005.xml", dev + 10, tl, ver));
+    snprintf(new_hash, sizeof new_hash, "%08x", ps_tag_hash("CUSA90005.xml", g->xml + first.start,
+                                                             xm_tag_len(g->xml + first.start, bl), ver));
+    snprintf(settings, sizeof settings, "<?xml version=\"1.0\"?>\n<Settings>\n  <Patch hash=\"%s\" enabled=\"true\" />\n</Settings>\n", old_hash);
+    put("!_settings.xml", settings);
+    patch_sync(&r);
+    puts(r.message);
+    assert(r.renamed == 1 && r.settings_moved == 1 && strstr(r.message, "renamed"));
+    s = get(test_dir, "CUSA90005.xml", &n);
+    assert(!strstr(s, "dev name") && count_of(s, n, "<Metadata") == count_of(g->xml, g->len, "<Metadata"));
+    free(s);
+    s = get(test_dir, "!_settings.xml", &n);
+    assert(gp_setting(s, n, new_hash) == 1 && gp_setting(s, n, old_hash) == 1);
+    free(s);
+    s = get(r.backup_dir, "!_settings.xml", &n);
+    assert(s && !strcmp(s, settings));
+    free(s); free(dev);
+
     char cmd[600]; snprintf(cmd, sizeof(cmd), "rm -rf '%s'", root);
     assert(!system(cmd));
-    printf("PASS patch sync: %d repository XMLs, GitHub listing filter, merge by Title, backups (at most 5), idempotent, download failures\n",
+    printf("PASS patch sync: %d repository XMLs, GitHub listing filter, merge by Title, same patch lines renamed with their settings, backups (at most 5), idempotent, download failures\n",
            repo_count);
     return 0;
 }

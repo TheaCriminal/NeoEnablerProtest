@@ -33,6 +33,22 @@ int main(void) {
     free(again); free(out);
 
     assert(xm_merge("<Patch>", 7, ours, sizeof ours - 1, &out, &n, &added, &replaced) == -1);   /* no </Patch> */
-    puts("PASS XML merge: replace by Name and AppVer, add missing entries, keep others, idempotent");
+
+    /* Same AppVer and patch lines under another name: renamed to ours, not duplicated. */
+    static const char dev[] =
+        "<Patch>\n  <Metadata Title=\"Bloodborne\" Name=\"1440p (modo PS4 Pro)\" Note=\"old\" AppVer=\"01.09\">\n"
+        "    <PatchList>\n      <Line Type=\"bytes\"  Address=\"0x3\" Value=\"0x03\" />\n    </PatchList>\n  </Metadata>\n"
+        "  <Metadata Title=\"Bloodborne\" Name=\"Other\" AppVer=\"01.08\"><PatchList><Line Type=\"bytes\" Address=\"0x3\" Value=\"0x03\"/></PatchList></Metadata>\n"
+        "  <Metadata Title=\"Bloodborne\" Name=\"Different\" AppVer=\"01.09\"><PatchList><Line Type=\"bytes\" Address=\"0x3\" Value=\"0x04\"/></PatchList></Metadata>\n"
+        "</Patch>\n";
+    int renamed;
+    assert(!xm_merge_ex(dev, sizeof dev - 1, ours, sizeof ours - 1, &out, &n, &added, &replaced, &renamed, NULL, NULL));
+    assert(renamed == 1 && added == 1 && replaced == 0);                 /* 4K added, 1440p renamed */
+    assert(!strstr(out, "modo PS4 Pro") && strstr(out, "Name=\"1440p (PS4 Pro mode)\""));
+    assert(strstr(out, "Name=\"Other\"") && strstr(out, "Name=\"Different\""));   /* other version, other lines */
+    assert(!xm_merge_ex(out, n, ours, sizeof ours - 1, &again, &m, &added, &replaced, &renamed, NULL, NULL));
+    assert(!added && !replaced && !renamed && m == n);
+    free(again); free(out);
+    puts("PASS XML merge: replace by Name and AppVer, rename same patch lines, add missing entries, keep others, idempotent");
     return 0;
 }

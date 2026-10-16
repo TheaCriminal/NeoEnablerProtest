@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "xml_merge.h"
+#include "game_patches.h"
 
 #ifndef PS_DIR
 #define PS_DIR "/data/user/patches/xml_orbis"
@@ -27,7 +28,7 @@
 #define PS_MAX_BACKUPS 5
 
 typedef struct {
-    int games, files_updated, files_created, files_unchanged, errors;
+    int games, files_updated, files_created, files_unchanged, renamed, settings_moved, errors;
     char backup_dir[192];
     char message[256];
 } ps_result;
@@ -145,6 +146,71 @@ static int ps_scan(const char *dir, ps_file *files, int cap) {
 }
 
 /* Merges one repository XML (repo_name like "Bloodborne_CUSA00900.xml") into every file of the same game. */
+/* Entries renamed by a merge: their hash changes, so an enabled setting moves to the new hash. */
+#define PS_MAX_RENAMES 512
+typedef struct { char old_hash[9], new_hash[9], file[16]; } ps_rename;
+static ps_rename ps_renames[PS_MAX_RENAMES];
+static int ps_rename_count;
+
+static void ps_tag_attr(const char *tag, size_t len, const char *attr, char *out, size_t cap) {
+    size_t n; const char *v = xm_attr(tag, tag + len, attr, &n);
+    if (v) gp_decode(v, n, out, cap); else out[0] = 0;
+}
+
+static uint32_t ps_tag_hash(const char *file, const char *tag, size_t len, const char *ver) {
+    char name[160], title[160], elf[64];
+    ps_tag_attr(tag, len, "Name", name, sizeof name);
+    ps_tag_attr(tag, len, "Title", title, sizeof title);
+    ps_tag_attr(tag, len, "AppElf", elf, sizeof elf);
+    return gp_sid(GP_FOLDER) ^ gp_sid(file) ^ gp_sid(name) ^ gp_sid(title) ^ gp_sid(elf) ^ gp_sid(ver);
+}
+
+/* xm_rename_fn: logs the rename and records the old and new hash of every AppVer value. */
+static void ps_on_rename(void *ctx, const char *old_tag, size_t old_len, const char *new_tag, size_t new_len) {
+    const char *file = ctx;
+    char old_name[160], new_name[160], vers[160];
+    ps_tag_attr(old_tag, old_len, "Name", old_name, sizeof old_name);
+    ps_tag_attr(new_tag, new_len, "Name", new_name, sizeof new_name);
+    ps_tag_attr(new_tag, new_len, "AppVer", vers, sizeof vers);
+    log_line("patches: %s: \"%.80s\" has the same patch lines as \"%.80s\", renamed", file, old_name, new_name);
+    for (char *tok = vers, *next; tok; tok = next) {
+        next = strchr(tok, ','); if (next) *next++ = 0;
+        while (*tok == ' ' || *tok == '\t') tok++;
+        char *e = tok + strlen(tok);
+        while (e > tok && (e[-1] == ' ' || e[-1] == '\t')) *--e = 0;
+        if (!*tok || ps_rename_count >= PS_MAX_RENAMES) continue;
+        ps_rename *m = &ps_renames[ps_rename_count++];
+        snprintf(m->old_hash, sizeof m->old_hash, "%08x", ps_tag_hash(file, old_tag, old_len, tok));
+        snprintf(m->new_hash, sizeof m->new_hash, "%08x", ps_tag_hash(file, new_tag, new_len, tok));
+        snprintf(m->file, sizeof m->file, "%.15s", file);
+    }
+}
+
+/* Turns on the new hash of every renamed entry that was enabled; the settings file is backed up first. */
+static void ps_move_settings(ps_result *r, const char *dir) {
+    if (!ps_rename_count) return;
+    char path[192]; size_t len;
+    snprintf(path, sizeof path, "%s/!_settings.xml", dir);
+    char *cur = ps_read(path, PS_MAX_FILE, &len), *now = NULL;
+    if (!cur) { log_line("patches: no settings file to update for renamed entries"); return; }
+    size_t now_len = len;
+    now = malloc(len + 1); if (!now) { free(cur); r->errors++; return; }
+    memcpy(now, cur, len + 1);
+    for (int i = 0; i < ps_rename_count; i++) {
+        if (gp_setting(now, now_len, ps_renames[i].old_hash) != 1 || gp_setting(now, now_len, ps_renames[i].new_hash) == 1) continue;
+        char *next; size_t next_len;
+        if (gp_setting_set(now, now_len, ps_renames[i].new_hash, 1, &next, &next_len)) { log_line("patches: settings file malformed, not changed"); r->errors++; break; }
+        free(now); now = next; now_len = next_len;
+        log_line("patches: %s: enabled %s moved to %s", ps_renames[i].file, ps_renames[i].old_hash, ps_renames[i].new_hash);
+        r->settings_moved++;
+    }
+    if (r->settings_moved) {
+        if (ps_backup(r, dir, "!_settings.xml", cur, len)) { log_line("patches: backup of !_settings.xml failed, not changed"); r->errors++; r->settings_moved = 0; }
+        else if (ps_write(dir, "!_settings.xml", now, now_len)) { log_line("patches: writing !_settings.xml failed (errno %d)", errno); r->errors++; r->settings_moved = 0; }
+    }
+    free(now); free(cur);
+}
+
 static void ps_apply(ps_result *r, const char *dir, const ps_file *files, int count,
                      const char *repo_name, const char *xml, size_t xml_len) {
     xm_block first;
@@ -156,19 +222,20 @@ static void ps_apply(ps_result *r, const char *dir, const ps_file *files, int co
     for (int i = 0; i < count; i++) {
         if (!xm_title_is(xml, xml_len, files[i].title, strlen(files[i].title))) continue;
         matched++;
-        char path[160]; size_t len, out_len; char *out; int added, replaced;
+        char path[160]; size_t len, out_len; char *out; int added, replaced, renamed;
         snprintf(path, sizeof(path), "%s/%.15s", dir, files[i].name);
         char *cur = ps_read(path, PS_MAX_FILE, &len);
-        if (!cur || xm_merge(cur, len, xml, xml_len, &out, &out_len, &added, &replaced)) {
+        if (!cur || xm_merge_ex(cur, len, xml, xml_len, &out, &out_len, &added, &replaced, &renamed, ps_on_rename, (void *)files[i].name)) {
             log_line("patches: %s unreadable or malformed, skipped", files[i].name); r->errors++; free(cur); continue;
         }
-        if (!added && !replaced) { log_line("patches: %s already up to date with %s", files[i].name, repo_name); r->files_unchanged++; }
+        r->renamed += renamed;
+        if (!added && !replaced && !renamed) { log_line("patches: %s already up to date with %s", files[i].name, repo_name); r->files_unchanged++; }
         else if (ps_backup(r, dir, files[i].name, cur, len)) {
             log_line("patches: backup of %s failed, file not changed", files[i].name); r->errors++;
         } else if (ps_write(dir, files[i].name, out, out_len)) {
             log_line("patches: writing %s failed (errno %d)", files[i].name, errno); r->errors++;
         } else {
-            log_line("patches: %s <- %s: %d added, %d replaced", files[i].name, repo_name, added, replaced);
+            log_line("patches: %s <- %s: %d added, %d replaced, %d renamed", files[i].name, repo_name, added, replaced, renamed);
             r->files_updated++;
         }
         free(out); free(cur);
@@ -255,6 +322,7 @@ static char *ps_get(const char *url, size_t *len) {
    logs the summary in r->message. */
 static void patch_sync(ps_result *r) {
     memset(r, 0, sizeof(*r));
+    ps_rename_count = 0;
     log_line("patches: sync started, listing %s", PS_LIST_URL);
     size_t list_len;
     char *list = ps_get(PS_LIST_URL, &list_len);
@@ -288,11 +356,12 @@ static void patch_sync(ps_result *r) {
         free(xml);
     }
     free(list);
+    ps_move_settings(r, PS_DIR);
     log_line("patches: listing had %d repository XMLs, %d other entries skipped", listed, skipped);
     int changed = r->files_updated + r->files_created;
     if (!r->games) snprintf(r->message, sizeof(r->message), "Game patches: no patch files found in the repository");
-    else snprintf(r->message, sizeof(r->message), "Game patches: %d game%s, %d file%s updated, %d created, %d unchanged%s%s%.120s",
+    else snprintf(r->message, sizeof(r->message), "Game patches: %d game%s, %d file%s updated, %d created, %d unchanged%s%s%s%.120s",
                   r->games, r->games == 1 ? "" : "s", r->files_updated, r->files_updated == 1 ? "" : "s", r->files_created,
-                  r->files_unchanged, r->errors ? ", errors in log" : "", changed && r->backup_dir[0] ? "\nBackup: " : "",
+                  r->files_unchanged, r->renamed ? ", same patches renamed" : "", r->errors ? ", errors in log" : "", changed && r->backup_dir[0] ? "\nBackup: " : "",
                   changed && r->backup_dir[0] ? r->backup_dir : "");
 }
