@@ -76,34 +76,23 @@ Anyone on your local network can open the panel.
 
 ![GPU clock tab](docs/panel-gpu.jpg)
 
-Panel actions update the document without adding POST entries to browser history; switching tabs also replaces
-the current entry. Circle/Back requests closing the console web interface instead of revisiting earlier actions.
-
 Open **GPU clock** in the panel, select a target from **1800 to 2200 MHz** in 50 MHz steps, and use
 **Apply boost**. The current clock reported by the SMU updates every two seconds. The target and enable flag
-are saved with **Save Settings** and requested again when the manager starts with a PS4 game running or detects
-a new PS4 launch. This works independently of NEO and 8 GiB, including PS4 base mode.
+are saved with **Save Settings** and requested again when a PS4 game starts. This works independently of NEO and
+8 GiB, including PS4 base mode.
 
-GPU boost is **off by default**, with 2200 MHz selected. It currently supports **firmware 13.20 only** and uses
-the stock `/dev/mp1` driver without patching the kernel or relying on a hypervisor exploit marker.
-The maximum allowed target is 2200 MHz; sustained frequency may be lower.
-The current short gameplay validation covers a 2200 MHz request with SMU readings around 2155–2200 MHz.
-FPS gains and long-term stability have not been established.
+GPU boost is **off by default**, with 2200 MHz selected. It supports **firmware 13.20 only** and uses the stock
+`/dev/mp1` driver, without patching the kernel or needing a hypervisor exploit. The sustained frequency may be
+lower than the target. A short gameplay test at 2200 MHz read around 2155-2200 MHz. FPS gains and long-term
+stability have not been established.
 
-**Disable boost** requests the clock captured before boost for the running game. **Quit** also requests that
-restoration. On game exit/transition the manager stops applying that game's
-target and lets the system manage clocks. A new PS4 launch captures a new baseline. The manager does not keep
-resending a target for ordinary SMU variation. A sustained reset to exactly 1800 MHz triggers recovery after
-two policy polls (approximately four seconds), limited to three recoveries per game or manual Enable.
-Further resets stop automatic recovery and show an error; check the game/system state before retrying.
-This reset heuristic does not measure foreground or thermal state. It does not change CPU clocks, thermal/power controls,
-memory bandwidth, or enabled ROPs. If a clock request or restoration fails, the panel shows the error and stops
-automatic retries; use Disable to retry restoration before enabling again.
+**Disable boost** and **Quit** restore the clock the game had before boost. When the game closes, the system
+manages the clocks again, and the next PS4 launch starts from a new baseline. If the clock is reset to 1800 MHz
+while the game runs, the manager restores the target up to three times. If a request or restoration fails, the
+panel shows the error and stops retrying: use Disable to retry the restoration before enabling again.
 
-Live JSON status: `GET /gpu/status`. The saved file adds `gpu_clock_enabled=0|1` and `gpu_clock_mhz=<MHz>`;
-older settings files default to GPU boost off. Invalid saved GPU values disable boost. GPU boost does not need the
-hypervisor exploit. On other firmwares, or when the MP1 driver does not answer, the GPU clock tab is not shown,
-its page and status are not served, enable requests are refused and a saved GPU enable flag is ignored.
+Boost does not change CPU clocks, thermal or power limits, memory bandwidth or ROPs. On other firmwares, or when
+the MP1 driver does not answer, the GPU clock tab is not shown.
 
 ## Game patches
 
