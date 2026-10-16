@@ -53,7 +53,7 @@ int sceKernelSendNotificationRequest(int, notify_request_t *, size_t, int);
 /* The kernel log without the noise and without personal ids, kept as it goes by (the ring holds 128 KiB). */
 #define KLOG_PATH NEO_LOG_DIR "/kernel.log"
 #define KLOG_OLD KLOG_PATH ".old"
-#define KLOG_MAX (1024 * 1024)
+#define KLOG_MAX (3 * 1024 * 1024)
 
 static struct timespec manager_start; /* monotonic clock at the first log line */
 
@@ -823,10 +823,10 @@ static void sb_raw(sbuf *b, const void *p, size_t n) {
 }
 
 /* Polls the kernel log 4 times a second. Every new line goes, without noise and personal ids and with identical
-   runs shortened, to kernel.log (1 MiB, then kernel.log.old). The launch answers of the hook and the crash reports
+   runs shortened, to kernel.log (3 MiB, then kernel.log.old). The launch answers of the hook and the crash reports
    are also copied to neo.log, where they sit with NeoEnabler's own events. The ring is overwritten in 10 to 25
    seconds when idle and noise is almost all of it, so what is kept lasts much longer. */
-static struct { sbuf out; char last[1200]; size_t last_n, same; } km;
+static struct { sbuf out; char last[1200]; size_t last_n, same; unsigned long hidden[LM_NOISE_KINDS]; long long note_ms; } km;
 
 static void km_flush_same(void) {
     if (!km.same) return;
@@ -838,7 +838,9 @@ static void km_flush_same(void) {
 
 static void mirror_emit(void *ctx, const char *line, size_t n) {
     (void)ctx;
-    if (lm_has(line, n, "[NeoEnabler]") || lm_is_noise(line, n)) return;
+    if (lm_has(line, n, "[NeoEnabler]")) return;
+    int nz = lm_noise_kind(line, n);
+    if (nz) { km.hidden[nz - 1]++; return; }
     char red[1400]; size_t rn = lm_redact(line, n < 1200 ? n : 1200, red, sizeof red);
     if (lm_wanted(line, n)) file_log("kernel: ", red, rn);
     if (rn == km.last_n && !memcmp(red, km.last, rn)) { km.same++; return; }
@@ -860,6 +862,19 @@ static void log_mirror_tick(void) {
         char s[64]; size_t k = log_stamp(s, sizeof s);
         sb_printf(&km.out, "%.*s-- lines may have been lost here: the kernel log turned over between two reads --\n", (int)k, s);
         log_line("kernel log: lines may have been lost between two reads");
+    }
+    /* once a minute: how many noise lines were left out, by kind, so the filter is visible */
+    struct timespec mt; clock_gettime(CLOCK_MONOTONIC, &mt);
+    long long ms = (long long)mt.tv_sec * 1000 + mt.tv_nsec / 1000000;
+    if (ms - km.note_ms >= 60000) {
+        km.note_ms = ms;
+        char s[64]; size_t k = log_stamp(s, sizeof s); int any = 0;
+        for (int i = 0; i < LM_NOISE_KINDS; i++) if (km.hidden[i]) {
+            if (!any) sb_printf(&km.out, "%.*s-- lines left out in the last minute:", (int)k, s);
+            sb_printf(&km.out, "%s %s %lu", any ? "," : "", lm_noise_names[i], km.hidden[i]);
+            any = 1; km.hidden[i] = 0;
+        }
+        if (any) sb_raw(&km.out, " --\n", 4);
     }
     if (km.out.n) append_log(KLOG_PATH, KLOG_OLD, KLOG_MAX, km.out.p, km.out.n);
 }
@@ -888,6 +903,9 @@ static void build_report(sbuf *b) {
     sb_printf(b, "GPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", gpu_state_text(), gpu.target,
               gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
     sb_printf(b, "patches: %s\n", patches_message);
+    { char first[64] = ""; FILE *kf = fopen(KLOG_OLD, "r"); if (!kf) kf = fopen(KLOG_PATH, "r");
+      if (kf) { if (fgets(first, 24, kf)) first[23] = 0; fclose(kf); }
+      sb_printf(b, "kernel log kept since: %s (console time)\n", first[0] ? first : "nothing yet"); }
     { size_t bl = 0; char *bt = ps_read("/data/user/patches/build.txt", 256, &bl);
       sb_printf(b, "ps-patch-system %s", bt && bl ? bt : "patch database version unknown (the payload version is not available)\n");
       if (bt && bl && bt[bl - 1] != '\n') sb_raw(b, "\n", 1);

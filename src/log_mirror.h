@@ -133,13 +133,22 @@ static size_t lm_redact(const char *in, size_t n, char *out, size_t cap) {
     return o;
 }
 
-/* Lines the system writes by the thousand and that say nothing about NeoEnabler. Only hidden when the kernel log is
-   shown in a report: they still fill the ring, which NeoEnabler cannot change. */
-static const char *const lm_noise[] = {
-    "[SceLncUtil] blockAppSuspend:", "[SceLncUtil] unblockAppSuspend:", NULL
+/* Lines the system writes by the thousand and that say nothing about NeoEnabler: per-process memory tables, failed
+   authentication calls, the ps-patch-system mount and metadata dumps, resource arbitration dumps and service warnings.
+   They still fill the kernel ring, which NeoEnabler cannot change; they are only left out of its own copy. */
+#define LM_NOISE_KINDS 7
+static const char *const lm_noise_names[LM_NOISE_KINDS] = {
+    "suspend block", "memory table", "PFAuthClient", "mount hook", "ResArbitrator", "metadata dump", "service warning"
+};
+static const struct { const char *pattern; int kind; } lm_noise[] = {
+    {"[SceLncUtil] blockAppSuspend:", 1}, {"[SceLncUtil] unblockAppSuspend:", 1}, {"[SceShellCore] FMEM ", 2},
+    {"[PFAuthClient][ERROR]", 3}, {"shellcode/shellcore_mountroot.cpp", 4}, {"[ResArbitrator]", 5},
+    {"get_app_metadata_", 6}, {"buf->", 6}, {"W:\\Build\\", 7}, {NULL, 0}
 };
 
-static int lm_is_noise(const char *line, size_t n) {
-    for (int i = 0; lm_noise[i]; i++) if (lm_has(line, n, lm_noise[i])) return 1;
+/* 0 when the line is not noise, else its kind from 1 to LM_NOISE_KINDS (a name is in lm_noise_names[kind - 1]). */
+static int lm_noise_kind(const char *line, size_t n) {
+    for (int i = 0; lm_noise[i].pattern; i++) if (lm_has(line, n, lm_noise[i].pattern)) return lm_noise[i].kind;
     return 0;
 }
+

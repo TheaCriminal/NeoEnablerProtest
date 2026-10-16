@@ -78,7 +78,13 @@ int main(void) {
         out[0] = 0; count = 0;
         assert(!lm_scan(&al, r, strlen(r), 1, emit, NULL));
         assert(count == 3 && !strcmp(out, "a|[NeoEnabler] x|b|"));
-        assert(lm_is_noise(SPAM, 80) && !lm_is_noise("plain line", 10));
+        assert(lm_noise_kind(SPAM, 80) == 1 && !lm_noise_kind("plain line", 10));
+        const char *fm = "[SceShellCore] FMEM   6.5/  31.0   0.0/   0.0 NPXS40028 SceRedisServer";
+        assert(lm_noise_kind(fm, strlen(fm)) == 2 && !strcmp(lm_noise_names[1], "memory table"));
+        const char *pf = "[PFAuthClient][ERROR]pf_auth_client.cpp(33) Failed";
+        assert(lm_noise_kind(pf, strlen(pf)) == 3);
+        const char *keep = "[NEO CUSA00900] 2>800002 a1";
+        assert(!lm_noise_kind(keep, strlen(keep)));
         free(al.prev);
     }
     /* redact: personal and console identifiers go, version numbers and counters stay */
