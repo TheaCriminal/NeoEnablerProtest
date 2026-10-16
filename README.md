@@ -98,8 +98,9 @@ memory bandwidth, or enabled ROPs. If a clock request or restoration fails, the 
 automatic retries; use Disable to retry restoration before enabling again.
 
 Live JSON status: `GET /gpu/status`. The saved file adds `gpu_clock_enabled=0|1` and `gpu_clock_mhz=<MHz>`;
-older settings files default to GPU boost off. Invalid saved GPU values disable boost. On unsupported firmware,
-the controls are greyed out, direct enable requests are refused and a saved GPU enable flag is ignored.
+older settings files default to GPU boost off. Invalid saved GPU values disable boost. GPU boost does not need the
+hypervisor exploit. On other firmwares, or when the MP1 driver does not answer, the GPU clock tab is not shown,
+its page and status are not served, enable requests are refused and a saved GPU enable flag is ignored.
 
 ## Game patches
 

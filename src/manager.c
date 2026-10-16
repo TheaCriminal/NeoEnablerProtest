@@ -145,6 +145,8 @@ static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != N
 static int memory_untested(void) { return fw_raw_version() == 0x13600000; }
 /* 8 GiB can be used: supported firmware and kernel code access confirmed (hypervisor exploit enabled). */
 static int memory_available(void) { mb_snapshot m; return memory_supported() && !mb_check(&m); }
+/* GPU clock page and boost: firmware with the MP1 backend (13.20) and the driver answering a clock read. */
+static int gpu_available(void) { unsigned mhz; return gpu_backend_supported() && !gpu_backend_read(&mhz); }
 
 /* Advanced overrides: Pro mode for every PS4 game, and 8 GiB kept on. */
 static int force_neo, force_8gib;
@@ -395,10 +397,12 @@ static int v4_active(const shell_t *s) { return s->pid > 0 && s->frame && v4_sta
 static void page_header(sbuf *b, const char *active) {
     uint32_t fw_raw = fw_raw_version();
     sb_printf(b, "%s<header><div class=brand><div class=mark>N</div><h1>NeoEnabler <small>FW %x.%02x</small></h1></div>"
-              "<nav aria-label='Pages'><a href=/%s>Games</a><a href=/gpu%s>GPU clock</a></nav>"
+              "<nav aria-label='Pages'><a href=/%s>Games</a>%s%s%s</nav>"
               "<form method=post><button class=danger formaction=/quit>Quit</button></form></header>",
               page_head, (fw_raw >> 24) & 0xff, (fw_raw >> 16) & 0xff,
-              !strcmp(active, "games") ? " aria-current=page" : "", !strcmp(active, "gpu") ? " aria-current=page" : "");
+              !strcmp(active, "games") ? " aria-current=page" : "",
+              gpu_available() ? "<a href=/gpu" : "", gpu_available() && !strcmp(active, "gpu") ? " aria-current=page" : "",
+              gpu_available() ? ">GPU clock</a>" : "");
 }
 
 /* Games with NeoEnabler patches on the left (icon, name, title ID, version, every patch of that version with a
@@ -917,7 +921,9 @@ int main(void) {
             notify(amsg); log_state(); serve_page(fd, amsg);
         } else if (post && (!strcmp(path, "/gpu/enable") || !strcmp(path, "/gpu/disable"))) {
             int enable = !strcmp(path, "/gpu/enable"); unsigned target = gpu.target;
-            if (enable && gpu_form_mhz(form_body, &target) != 1) {
+            if (enable && !gpu_available()) {     /* disable stays allowed: it restores the captured clock */
+                reply(fd, "404 Not Found", "text/plain", "GPU clock control is not available on this console\n");
+            } else if (enable && gpu_form_mhz(form_body, &target) != 1) {
                 reply(fd, "400 Bad Request", "text/plain", "Choose a GPU target from 1800 to 2200 MHz in 50 MHz steps\n");
             } else {
                 int rc = gpu_request(enable, target, gpu_game_pid());
@@ -935,7 +941,7 @@ int main(void) {
             log_line("panel: save settings force_neo=%d force_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u",
                      force_neo, force_8gib, gpu.enabled, gpu.target);
             notify(smsg);
-            if (!strcmp(form_body, "view=gpu")) serve_gpu_page(fd, smsg); else serve_page(fd, smsg);
+            if (!strcmp(form_body, "view=gpu") && gpu_available()) serve_gpu_page(fd, smsg); else serve_page(fd, smsg);
         } else if (post && !strcmp(path, "/quit")) {
             if (gpu_request(0, gpu.target, gpu_game_pid())) {
                 notify(gpu.message); serve_gpu_page(fd, "Clock restoration failed. Retry Disable before quitting."); close(fd); continue;
@@ -973,9 +979,11 @@ int main(void) {
         } else if (!strcmp(method, "GET") && !strncmp(path, "/icon/", 6)) {
             serve_icon(fd, path + 6);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/gpu")) {
-            serve_gpu_page(fd, NULL);
+            if (gpu_available()) serve_gpu_page(fd, NULL);
+            else serve_page(fd, "GPU clock control is not available on this console");
         } else if (!strcmp(method, "GET") && !strcmp(path, "/gpu/status")) {
-            serve_gpu_status(fd);
+            if (gpu_available()) serve_gpu_status(fd);
+            else reply(fd, "404 Not Found", "text/plain", "not found\n");
         } else if (!strcmp(method, "GET") && !strcmp(path, "/logs")) {
             serve_logs_show(fd);
         } else if (post && !strcmp(path, "/logs/save")) {
