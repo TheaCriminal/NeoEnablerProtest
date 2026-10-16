@@ -1,0 +1,86 @@
+name: Test result
+description: Tell us how a patch worked on your console. Takes under a minute.
+title: "[Result] <game> <resolution> on FW <version>"
+labels: ["test-result"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Results feed [docs/COMPATIBILITY.md](https://github.com/gasb07/NeoEnabler/blob/main/docs/COMPATIBILITY.md).
+        Reports that work are as useful as reports that fail. If it failed, use the "Game problem" form instead.
+  - type: dropdown
+    id: patch
+    attributes:
+      label: Game and resolution entry
+      options:
+        - Battlefield 4 - 1440p
+        - Battlefield 4 - 1620p
+        - Battlefield 4 - 1800p
+        - Battlefield 4 - 4K
+        - Bloodborne - 1440p
+        - Bloodborne - 1620p
+        - Bloodborne - 1800p
+        - Bloodborne - Native 4K
+        - Driveclub - 1440p
+        - Driveclub - 4K (1620p render)
+        - Driveclub - 4K (1800p render)
+        - Driveclub - Native 4K
+        - Just Cause 3 - 1440p
+        - Just Cause 3 - 4K
+        - Killzone Shadow Fall - 1440p
+        - Killzone Shadow Fall - 1620p
+        - Killzone Shadow Fall - 1800p
+        - Killzone Shadow Fall - 4K
+        - Need for Speed Rivals - 1440p
+        - Need for Speed Rivals - 4K
+        - Resident Evil 6 - 1440p
+        - Resident Evil 6 - 4K
+        - The Order 1886 - 4K
+        - The Order 1886 - 4K up to 60 fps
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - Works
+        - Works with visual artifacts
+        - Game crashes
+        - Console freezes or kernel panic
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: PS5 firmware
+      placeholder: "13.20"
+    validations:
+      required: true
+  - type: dropdown
+    id: mem8
+    attributes:
+      label: 8 GiB memory budget
+      options:
+        - Not needed by this entry
+        - Active and working
+        - Not available on my console
+    validations:
+      required: true
+  - type: input
+    id: setup
+    attributes:
+      label: Console, jailbreak and NeoEnabler version
+      placeholder: Slim, y2jb + etaHEN, v0.3.0
+    validations:
+      required: true
+  - type: input
+    id: fps
+    attributes:
+      label: Approximate FPS (optional)
+      placeholder: 55-60 in races
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (optional)
+      description: Artifacts you saw, other patches enabled, game edition. Paste the `[NEO <title ID>]` log lines if the result is not "Works".

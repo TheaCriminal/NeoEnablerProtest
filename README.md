@@ -134,6 +134,9 @@ game needs at launch. ps-patch-system ignores this attribute.
 
 Patch IDs, how the hook works and how to build from source: [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
+Test results by game and firmware: [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md). Report yours with the
+[Test result form](https://github.com/gasb07/NeoEnabler/issues/new?template=test-result.yml).
+
 ## Helping extend 8 GiB to other firmwares
 
 The 8 GiB budget is tested on firmware **13.20** only. Firmware **13.60** has verified offsets but needs a
