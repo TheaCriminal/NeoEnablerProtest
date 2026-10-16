@@ -226,8 +226,12 @@ static void html_escape(const char *s, char *out, size_t cap) {
     out[o] = 0;
 }
 
+/* Mode of the last open PS4 game listed by games_text: -1 none, 0 base, 1 PS4 Pro. */
+static int running_pro = -1;
+
 /* Open PS4 games and whether they run in PS4 Pro mode. */
 static int games_text(char *out, size_t cap, int html) {
+    running_pro = -1;
     int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC, 0}; size_t n = 0; int len = 0, games = 0;
     out[0] = 0;
     if (sysctl(mib, 4, NULL, &n, NULL, 0) || !n) return 0;
@@ -247,6 +251,7 @@ static int games_text(char *out, size_t cap, int html) {
                     ps4 = 1;
                     neo = (info.attribute & ATTR_PS4_PRO) != 0;
                 }
+                if (ps4) running_pro = neo;
                 if (ps4 && len < (int)cap - 400) {
                     char name[128], esc[384];
                     game_name(info.title_id, name, sizeof(name));
@@ -438,7 +443,7 @@ static void serve_page(int fd, const char *msg) {
     char patches_esc[768]; html_escape(patches_message, patches_esc, sizeof(patches_esc));
     sb_printf(&b, "</section><aside>"
               "<div class=card><h2>Status</h2>"
-              "<div>Launch hook <span class='state %s'>%s</span></div>"
+              "<div>PS4 Pro mode <span class='state %s'>%s</span></div>"
               "<div style='margin-top:6px'>8 GiB memory <span class='state %s'>%s</span>%s</div>"
               "<p><small>Pro mode and 8 GiB follow the enabled patches of each game. 8 GiB returns to the original "
               "memory when the game closes.</small></p><b>Game running</b><ul>%s</ul></div>"
@@ -456,7 +461,8 @@ static void serve_page(int fd, const char *msg) {
               "<span class='state %s'>%s</span><br><small>For every Pro mode launch, until turned off.</small><br>"
               "<button formaction=/advanced/memory%s>%s</button></form></details>"
               "<small style='text-align:center'>" VERSION "</small></aside></div></main></body></html>",
-              st == HOOK_ON ? "on" : "off", state_text(st),
+              st == HOOK_ON && running_pro == 1 ? "on" : "off",
+              st != HOOK_ON ? state_text(st) : running_pro == 1 ? "enabled" : running_pro == 0 ? "disabled" : "ready",
               memory.state == MB_8GIB ? "on" : "off",
               memory.state == MB_8GIB ? "enabled" : memory.state == MB_UNKNOWN ? (mem_ok ? "unavailable" : "not supported") : "disabled",
               memory_untested() ? "<br><small>Firmware 13.60: 8 GiB pending testing, please report results</small>" : "",
