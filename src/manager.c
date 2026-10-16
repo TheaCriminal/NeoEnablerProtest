@@ -45,19 +45,28 @@ int sceKernelGetAppInfo(pid_t pid, app_info_t *info);
 int sceKernelSendNotificationRequest(int, notify_request_t *, size_t, int);
 
 /* NeoEnabler's own log. The kernel log keeps only the last 128 KiB, which the system overwrites within seconds, so
-   every line also goes here, with the console time. At 256 KiB the file becomes neo.log.old and a new one starts. */
+   every line also goes here, with the console time to the millisecond and the seconds since start. At 256 KiB the file becomes neo.log.old and a new one starts. */
 #define NEO_LOG_DIR "/data/neo-enabler"
 #define NEO_LOG_PATH NEO_LOG_DIR "/neo.log"
 #define NEO_LOG_OLD NEO_LOG_PATH ".old"
 #define NEO_LOG_MAX (256 * 1024)
 
+static struct timespec manager_start; /* monotonic clock at the first log line */
+
 static void file_log(const char *kind, const char *line, size_t n) {
     static int dir_ready;
     if (!dir_ready) { mkdir(NEO_LOG_DIR, 0777); dir_ready = 1; }
-    time_t t = time(NULL); struct tm tm; gmtime_r(&t, &tm);
+    /* The console clock is often wrong (2012-01-01 after a boot without network time), so every line also has the
+       seconds since the manager started, from the monotonic clock. */
+    struct timespec wall, mono; struct tm tm;
+    clock_gettime(CLOCK_REALTIME, &wall); clock_gettime(CLOCK_MONOTONIC, &mono);
+    if (!manager_start.tv_sec && !manager_start.tv_nsec) manager_start = mono;
+    double up = (double)(mono.tv_sec - manager_start.tv_sec) + (double)(mono.tv_nsec - manager_start.tv_nsec) / 1e9;
+    time_t t = wall.tv_sec; gmtime_r(&t, &tm);
     char out[1100];
-    size_t k = strftime(out, 24, "%Y-%m-%d %H:%M:%S ", &tm);
-    k += (size_t)snprintf(out + k, sizeof(out) - k - 1, "%s%.*s", kind, (int)(n < 900 ? n : 900), line);
+    size_t k = strftime(out, 24, "%Y-%m-%d %H:%M:%S", &tm);
+    k += (size_t)snprintf(out + k, sizeof(out) - k - 1, ".%03d +%.3fs %s%.*s", (int)(wall.tv_nsec / 1000000), up, kind,
+                          (int)(n < 900 ? n : 900), line);
     out[k++] = '\n';
     int fd = open(NEO_LOG_PATH, O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (fd < 0) return;
@@ -767,7 +776,9 @@ static void build_report(sbuf *b) {
     unsigned fw = fw_major();
     time_t t = time(NULL); struct tm tm; gmtime_r(&t, &tm);
     char now[32]; strftime(now, sizeof now, "%Y-%m-%d %H:%M:%S", &tm);
-    sb_printf(b, "==== Report ====\n%s\nfirmware %x.%02x\nconsole time %s\nhook: %s\n", VERSION, fw >> 8, fw & 0xff, now, state_text(st));
+    struct timespec mono; clock_gettime(CLOCK_MONOTONIC, &mono);
+    sb_printf(b, "==== Report ====\n%s\nfirmware %x.%02x\nconsole time %s (UTC, may be wrong; each log line also has +seconds since the manager started)\n"
+              "manager running since %lds\nhook: %s\n", VERSION, fw >> 8, fw & 0xff, now, (long)(mono.tv_sec - manager_start.tv_sec), state_text(st));
     if (st == HOOK_BAD_CAVE) { char d[400]; bad_cave_text(&s, d, sizeof d); sb_printf(b, "%s\n", d); }
     mb_snapshot m; mb_check(&m);
     sb_printf(b, "8 GiB: %s (requested %s): %s\n", m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
@@ -833,7 +844,10 @@ static void serve_logs_save(int fd) {
 
 static void patches_update(void) {
     ps_result r;
+    struct timespec a, z; clock_gettime(CLOCK_MONOTONIC, &a);
     patch_sync(&r);
+    clock_gettime(CLOCK_MONOTONIC, &z);
+    log_line("patches: sync took %ld ms", (long)((z.tv_sec - a.tv_sec) * 1000 + (z.tv_nsec - a.tv_nsec) / 1000000));
     snprintf(patches_message, sizeof(patches_message), "%s", r.message);
     notify(r.message);
 }

@@ -5,7 +5,8 @@
 - The kernel log keeps only the last 128 KiB and the system overwrites it within seconds, so reports lost the
   NeoEnabler lines. NeoEnabler now also writes its own log to `/data/neo-enabler/neo.log` (rotated at 256 KiB to
   `neo.log.old`), with the console time, and copies the hook's `[NEO <title ID>]` launch lines and the crash report
-  of a game from the kernel log into it.
+  of a game from the kernel log into it. Every line has the console time to the millisecond and the seconds since
+  the manager started, because the console clock is often wrong. The patch sync logs how long it took.
 - **Show Logs**, the new **Download Logs** and **Save Logs** give one text: a report (version, firmware, hook
   state, 8 GiB, GPU, games and enabled patches), NeoEnabler's own log and the kernel log. Download Logs sends it as
   a file from `/logs/download`.
