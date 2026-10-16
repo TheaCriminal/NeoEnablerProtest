@@ -50,10 +50,14 @@ int sceKernelSendNotificationRequest(int, notify_request_t *, size_t, int);
 #define NEO_LOG_PATH NEO_LOG_DIR "/neo.log"
 #define NEO_LOG_OLD NEO_LOG_PATH ".old"
 #define NEO_LOG_MAX (256 * 1024)
-/* The kernel log without the noise and without personal ids, kept as it goes by (the ring holds 128 KiB). */
+/* The kernel log without the noise and without personal ids, kept as it goes by (the ring holds 128 KiB). Three
+   files of at most 30 minutes or 4 MiB each: kernel.log.2 (oldest), kernel.log.1 and kernel.log, so at least an
+   hour is kept unless a file hits its size cap first. */
 #define KLOG_PATH NEO_LOG_DIR "/kernel.log"
-#define KLOG_OLD KLOG_PATH ".old"
-#define KLOG_MAX (3 * 1024 * 1024)
+#define KLOG_OLD1 KLOG_PATH ".1"
+#define KLOG_OLD2 KLOG_PATH ".2"
+#define KLOG_MAX (4 * 1024 * 1024)
+#define KLOG_CHUNK_MS (30LL * 60 * 1000)
 
 static struct timespec manager_start; /* monotonic clock at the first log line */
 
@@ -80,7 +84,7 @@ static void append_log(const char *path, const char *old, size_t max, const char
     fsync(fd);
     off_t size = lseek(fd, 0, SEEK_END);
     close(fd);
-    if ((size_t)size > max) { unlink(old); rename(path, old); }
+    if (old && (size_t)size > max) { unlink(old); rename(path, old); }
 }
 
 static void file_log(const char *kind, const char *line, size_t n) {
@@ -826,6 +830,21 @@ static void sb_raw(sbuf *b, const void *p, size_t n) {
    runs shortened, to kernel.log (3 MiB, then kernel.log.old). The launch answers of the hook and the crash reports
    are also copied to neo.log, where they sit with NeoEnabler's own events. The ring is overwritten in 10 to 25
    seconds when idle and noise is almost all of it, so what is kept lasts much longer. */
+/* The current file is closed after 30 minutes (of this run, or from its first line after a restart) or at 4 MiB:
+   kernel.log.2 is dropped, .1 becomes .2 and the current file becomes .1. */
+static long long klog_chunk_ms = -1;
+
+static void klog_append(const char *data, size_t n, long long now_ms) {
+    struct stat st;
+    if (klog_chunk_ms < 0) klog_chunk_ms = now_ms;
+    int full = !stat(KLOG_PATH, &st) && (size_t)st.st_size >= KLOG_MAX;
+    if (full || now_ms - klog_chunk_ms >= KLOG_CHUNK_MS) {
+        if (!stat(KLOG_PATH, &st)) { unlink(KLOG_OLD2); rename(KLOG_OLD1, KLOG_OLD2); rename(KLOG_PATH, KLOG_OLD1); }
+        klog_chunk_ms = now_ms;
+    }
+    append_log(KLOG_PATH, NULL, (size_t)-1, data, n);
+}
+
 static struct { sbuf out; char last[1200]; size_t last_n, same; unsigned long hidden[LM_NOISE_KINDS]; long long note_ms; } km;
 
 static void km_flush_same(void) {
@@ -876,7 +895,7 @@ static void log_mirror_tick(void) {
         }
         if (any) sb_raw(&km.out, " --\n", 4);
     }
-    if (km.out.n) append_log(KLOG_PATH, KLOG_OLD, KLOG_MAX, km.out.p, km.out.n);
+    if (km.out.n) klog_append(km.out.p, km.out.n, ms);
 }
 
 static void sb_file(sbuf *b, const char *title, const char *path, size_t max) {
@@ -903,7 +922,7 @@ static void build_report(sbuf *b) {
     sb_printf(b, "GPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", gpu_state_text(), gpu.target,
               gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
     sb_printf(b, "patches: %s\n", patches_message);
-    { char first[64] = ""; FILE *kf = fopen(KLOG_OLD, "r"); if (!kf) kf = fopen(KLOG_PATH, "r");
+    { char first[64] = ""; FILE *kf = fopen(KLOG_OLD2, "r"); if (!kf) kf = fopen(KLOG_OLD1, "r"); if (!kf) kf = fopen(KLOG_PATH, "r");
       if (kf) { if (fgets(first, 24, kf)) first[23] = 0; fclose(kf); }
       sb_printf(b, "kernel log kept since: %s (console time)\n", first[0] ? first : "nothing yet"); }
     { size_t bl = 0; char *bt = ps_read("/data/user/patches/build.txt", 256, &bl);
@@ -932,8 +951,9 @@ static int build_logs(sbuf *b) {
     build_report(b);
     sb_file(b, "NeoEnabler log (older)", NEO_LOG_OLD, NEO_LOG_MAX);
     sb_file(b, "NeoEnabler log", NEO_LOG_PATH, NEO_LOG_MAX);
-    sb_file(b, "Kernel log kept by NeoEnabler (older; noise hidden, IPs, MACs, e-mails and account, device ids removed)", KLOG_OLD, KLOG_MAX);
-    sb_file(b, "Kernel log kept by NeoEnabler (noise hidden, IPs, MACs, e-mails and account, device ids removed)", KLOG_PATH, KLOG_MAX);
+    sb_file(b, "Kernel log kept by NeoEnabler, oldest part (noise hidden, IPs, MACs, e-mails and account, device ids removed)", KLOG_OLD2, KLOG_MAX);
+    sb_file(b, "Kernel log kept by NeoEnabler, older part", KLOG_OLD1, KLOG_MAX);
+    sb_file(b, "Kernel log kept by NeoEnabler, newest part", KLOG_PATH, KLOG_MAX);
     return 0;
 }
 
