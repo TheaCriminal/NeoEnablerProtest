@@ -1,7 +1,8 @@
 /* GPL-3.0-only. Game patch sync: downloads the XMLs in xml/ of the NeoEnabler repository and merges their entries
    into every ps-patch-system file (/data/user/patches/xml_orbis/<TITLE ID>.xml) of the same game, matched by the
    entry Title. Files are backed up before the first change of each run; a game without a file gets the
-   repository file under its title ID. Needs log_line() and write_file() from the manager. */
+   repository file under its title ID. Needs log_line() and write_file() from the manager. With PS_NO_HTTP
+   (host tests) the includer provides ps_get(). */
 #pragma once
 #include <stdio.h>
 #include <stdint.h>
@@ -12,7 +13,9 @@
 #include <sys/stat.h>
 #include "xml_merge.h"
 
+#ifndef PS_DIR
 #define PS_DIR "/data/user/patches/xml_orbis"
+#endif
 #ifndef PS_BACKUP_ROOT
 #define PS_BACKUP_ROOT "/data/neo-enabler/xml-backup"
 #endif
@@ -114,7 +117,7 @@ static void ps_apply(ps_result *r, const char *dir, const ps_file *files, int co
         if (!xm_title_is(xml, xml_len, files[i].title, strlen(files[i].title))) continue;
         matched++;
         char path[160]; size_t len, out_len; char *out; int added, replaced;
-        snprintf(path, sizeof(path), "%s/%s", dir, files[i].name);
+        snprintf(path, sizeof(path), "%s/%.15s", dir, files[i].name);
         char *cur = ps_read(path, PS_MAX_FILE, &len);
         if (!cur || xm_merge(cur, len, xml, xml_len, &out, &out_len, &added, &replaced)) {
             log_line("patches: %s unreadable or malformed, skipped", files[i].name); r->errors++; free(cur); continue;
@@ -205,6 +208,7 @@ static char *ps_get(const char *url, size_t *len) {
     buf[n] = 0; *len = n;
     return buf;
 }
+#endif
 
 /* Downloads the repository's xml/ folder and merges it into the patch system files. */
 static void patch_sync(ps_result *r) {
@@ -237,10 +241,9 @@ static void patch_sync(ps_result *r) {
     free(list);
     int changed = r->files_updated + r->files_created;
     if (!r->games) snprintf(r->message, sizeof(r->message), "Game patches: no patch files found in the repository");
-    else snprintf(r->message, sizeof(r->message), "Game patches: %d game%s, %d file%s updated, %d created, %d unchanged%s%s%s",
+    else snprintf(r->message, sizeof(r->message), "Game patches: %d game%s, %d file%s updated, %d created, %d unchanged%s%s%.120s",
                   r->games, r->games == 1 ? "" : "s", r->files_updated, r->files_updated == 1 ? "" : "s", r->files_created,
                   r->files_unchanged, r->errors ? ", errors in log" : "", changed && r->backup_dir[0] ? "\nBackup: " : "",
                   changed && r->backup_dir[0] ? r->backup_dir : "");
     log_line("%s", r->message);
 }
-#endif

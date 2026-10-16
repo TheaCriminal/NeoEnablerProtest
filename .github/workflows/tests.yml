@@ -34,6 +34,43 @@ jobs:
           fi
           $CC $flags tests/budget_test.c -o /tmp/neo-budget-test
           /tmp/neo-budget-test
+      - name: Unit tests (XML merge, patch sync against a fake GitHub serving xml/)
+        env:
+          CC: ${{ matrix.cc }}
+        run: |
+          flags="-O2 -Wall -Wextra -Werror"
+          if [ "${{ matrix.sanitize }}" = "1" ]; then
+            flags="$flags -fsanitize=address,undefined -fno-sanitize-recover=all"
+          fi
+          $CC $flags tests/xml_merge_test.c -o /tmp/neo-xml-merge-test
+          /tmp/neo-xml-merge-test
+          $CC $flags tests/patch_sync_test.c -o /tmp/neo-patch-sync-test
+          /tmp/neo-patch-sync-test xml
+
+  patch-sync-github:
+    name: Patch sync with the GitHub download
+    # The payload downloads from gasb07/NeoEnabler, so forks cannot run this against their own copy.
+    if: github.repository == 'gasb07/NeoEnabler'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download xml/ the way the payload does (API listing, then each download_url)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          mkdir -p /tmp/gh/dl
+          curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" \
+            "https://api.github.com/repos/gasb07/NeoEnabler/contents/xml?ref=${REF}" -o /tmp/gh/listing.json
+          python3 -c 'import json, sys; print("\n".join(e["download_url"] for e in json.load(open(sys.argv[1])) if e["name"].endswith(".xml")))' \
+            /tmp/gh/listing.json > /tmp/gh/urls
+          (cd /tmp/gh/dl && xargs -n1 curl -fsSLO < /tmp/gh/urls)
+      - name: Downloaded files match xml/
+        run: diff -r xml /tmp/gh/dl -x '*.md'
+      - name: Sync with the real listing and downloaded files
+        run: |
+          cc -O2 -Wall -Wextra -Werror tests/patch_sync_test.c -o /tmp/neo-patch-sync-test
+          /tmp/neo-patch-sync-test /tmp/gh/dl /tmp/gh/listing.json
 
   diagnostic-toolkit:
     name: Diagnostic toolkit tests

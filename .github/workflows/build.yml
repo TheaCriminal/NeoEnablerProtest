@@ -72,6 +72,13 @@ jobs:
           cc -O2 -Wall -Wextra -Werror tests/http_test.c -o /tmp/neo-http-test
           /tmp/neo-http-test
 
+      - name: Test XML merge and patch sync (host only)
+        run: |
+          cc -O2 -Wall -Wextra -Werror tests/xml_merge_test.c -o /tmp/neo-xml-merge-test
+          /tmp/neo-xml-merge-test
+          cc -O2 -Wall -Wextra -Werror tests/patch_sync_test.c -o /tmp/neo-patch-sync-test
+          /tmp/neo-patch-sync-test xml
+
       - name: Build
         # Panel behavior tests use the Node runtime supplied on the hosted runner.
         run: node tests/panel_test.js
