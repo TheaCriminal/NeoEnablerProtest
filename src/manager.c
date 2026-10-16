@@ -143,6 +143,8 @@ static uint32_t fw_raw_version(void) {
 }
 static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != NULL; }
 static int memory_untested(void) { return fw_raw_version() == 0x13600000; }
+/* 8 GiB can be used: supported firmware and kernel code access confirmed (hypervisor exploit enabled). */
+static int memory_available(void) { mb_snapshot m; return memory_supported() && !mb_check(&m); }
 
 /* Advanced overrides: Pro mode for every PS4 game, and 8 GiB kept on. */
 static int force_neo, force_8gib;
@@ -409,7 +411,7 @@ static void serve_page(int fd, const char *msg) {
     sb_printf(&b, "<div class=layout><section aria-label='Games'>");
     int n; game_t *g = games_scan(&n);
     size_t sl; char *settings = settings_read(&sl);
-    int mem_ok = memory_supported();
+    int mem_ok = memory_available();
     if (n) sb_printf(&b, "<input type=search id=game-search class=search placeholder='Search by name or title ID' "
                          "autocomplete=off aria-label='Search games'><p id=no-match class=card hidden>No game matches the search.</p>");
     if (!n) sb_printf(&b, "<div class=card><b>No installed game with NeoEnabler patches</b><p><small>Games appear here when "
@@ -767,9 +769,10 @@ static void launch_poll(void) {
                  pending.needs & NEEDS_8GIB ? " and 8 GiB" : "");
     }
     int pro = (pending.needs & NEEDS_PRO) != 0, ok = 1;
-    int want8 = force_8gib || ((pending.needs & NEEDS_8GIB) && memory_supported());
+    int mem_ok = memory_available();
+    int want8 = force_8gib || ((pending.needs & NEEDS_8GIB) && mem_ok);
     /* the budget only applies to Pro mode processes */
-    if (pro && memory_supported()) {
+    if (pro && mem_ok) {
         int rc = memory_request(want8);
         ok = rc == 0;
         if (!ok && time(NULL) - pending.since < LAUNCH_WAIT_S - 1) return;   /* e.g. the previous game still closing */
@@ -786,7 +789,7 @@ static void launch_poll(void) {
     shim_answer(&live, pending.seq, (unsigned char)pro);
     pending.active = 0;
     log_line("launch: %s starts in %s mode%s", pending.tid, pro ? "Pro" : "base",
-             pro && memory_supported() && ok ? (want8 ? " with 8 GiB" : " with the original memory") : "");
+             pro && mem_ok && ok ? (want8 ? " with 8 GiB" : " with the original memory") : "");
 }
 
 /* 8 GiB switched on for a launch goes back to the original budget when no game runs any more. */
@@ -893,7 +896,7 @@ int main(void) {
             if (form_value(form_body, "tid", tid, sizeof tid) || form_value(form_body, "hash", hash, sizeof hash) ||
                 form_value(form_body, "on", on, sizeof on) || (strcmp(on, "0") && strcmp(on, "1"))) {
                 reply(fd, "400 Bad Request", "text/plain", "Invalid patch request\n");
-            } else if (game_set_patch(tid, hash, on[0] == '1', memory_supported(), pmsg, sizeof pmsg)) {
+            } else if (game_set_patch(tid, hash, on[0] == '1', memory_available(), pmsg, sizeof pmsg)) {
                 reply(fd, "409 Conflict", "text/plain; charset=utf-8", pmsg);
             } else reply(fd, "200 OK", "text/plain; charset=utf-8", pmsg);
         } else if (post && (!strcmp(path, "/advanced/neo") || !strcmp(path, "/advanced/memory"))) {
@@ -902,8 +905,8 @@ int main(void) {
             if (!strcmp(path, "/advanced/neo")) {
                 force_neo = value; launch_attach(1);
                 amsg = value ? "Pro mode for every PS4 game: on" : "Pro mode for every PS4 game: off (follows the game patches)";
-            } else if (!memory_supported()) {
-                amsg = "8 GiB is not supported on this firmware; nothing changed";
+            } else if (!memory_available()) {
+                amsg = "8 GiB needs firmware 13.20 or 13.60 with the hypervisor exploit enabled; nothing changed";
             } else {
                 force_8gib = value;
                 if (value) memory_request(1); else if (!auto8.active) memory_request(0);

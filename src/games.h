@@ -119,14 +119,15 @@ static int game_needs(const char *tid) {
 
 /* Enables or disables one patch of a game. Enabling a NeoEnabler resolution entry disables the other NeoEnabler
    resolution entries of that game, so at most one is on; other patches are not affected. Refuses hashes that are not an entry of the game's installed version, and 8 GiB
-   patches when the firmware has no 8 GiB support. Returns 0, or -1 with a reason in msg. */
+   patches when 8 GiB is unavailable (unsupported firmware or no hypervisor exploit). Returns 0, or -1 with a
+   reason in msg. */
 static int game_set_patch(const char *tid, const char *hash, int on, int memory_ok, char *msg, size_t cap) {
     char name[128], ver[16];
     if (!game_tid(tid) || game_info(tid, name, sizeof name, ver, sizeof ver)) { snprintf(msg, cap, "Unknown game"); return -1; }
     int n; gp_patch *p = game_patches(tid, ver, &n), *hit = NULL;
     for (int i = 0; i < n; i++) if (!strcmp(p[i].hash, hash)) hit = &p[i];
     if (!hit) { free(p); snprintf(msg, cap, "This patch is not available for %s %s", tid, ver); return -1; }
-    if (on && hit->needs_8gib && !memory_ok) { free(p); snprintf(msg, cap, "Not available on this firmware"); return -1; }
+    if (on && hit->needs_8gib && !memory_ok) { free(p); snprintf(msg, cap, "This patch needs 8 GiB: firmware 13.20 or 13.60 with the hypervisor exploit enabled"); return -1; }
     size_t sl, ol; char *s = settings_read(&sl), *out = NULL;
     int rc = gp_setting_set(s, sl, hash, on, &out, &ol), others = 0;
     for (int i = 0; !rc && on && hit->resolution && i < n; i++) {

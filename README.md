@@ -41,9 +41,8 @@ supported **only** when both conditions are met:
   page). NeoEnabler checks that access without relying on exploit-specific markers and does not unlock the
   hypervisor itself.
 
-On other firmwares, patches that need 8 GiB are greyed out and cannot be enabled. On 13.20 or 13.60 without the
-hypervisor exploit they can still be ticked, but the game starts without 8 GiB and crashes, so leave them off.
-Everything else works without 8 GiB.
+When either condition is missing, patches that need 8 GiB are greyed out and cannot be enabled. Everything else
+works without 8 GiB.
 
 **If you are on firmware 13.20 or 13.60, please test the 8 GiB budget and report your results.**
 
@@ -58,7 +57,7 @@ Open `http://<PS5 IP>:8765` in a browser on your network, or the **NeoEnabler** 
 - **Games**: every installed PS4 game that has a NeoEnabler patch for its installed version, with its icon, title
   ID, version and all of its patches. Tick a patch to enable it; the change goes straight to the ps-patch-system
   settings, there is nothing to save. Only one NeoEnabler resolution entry per game can be on: ticking one turns
-  the others off. Patches that need 8 GiB are marked and cannot be enabled on firmwares without 8 GiB support.
+  the others off. Patches that need 8 GiB are marked and greyed out when 8 GiB is not available.
   Use the search bar to find a game by name or title ID.
 - **PS4 Pro mode and 8 GiB are automatic.** When a PS4 game starts, NeoEnabler checks its enabled patches: the
   game starts in PS4 Pro mode only when one of them needs it, and 8 GiB is switched on before the game starts
