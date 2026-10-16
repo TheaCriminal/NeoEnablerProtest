@@ -1045,6 +1045,16 @@ static int patches_drop_8gib(const char *only_tid) {
     return dropped;
 }
 
+/* "Keep 8 GiB on" is a request for the budget. Without 8 GiB (no hypervisor exploit, or an unsupported firmware) there
+   is nothing to request: it is cleared and saved, so it does not stay on and come back at the next unlock. */
+static void drop_8gib_request(void) {
+    if (!force_8gib || memory_available()) return;
+    force_8gib = 0;
+    int saved = !settings_save();
+    log_line("Keep 8 GiB on: cleared, 8 GiB is not available (needs firmware 13.20 or 13.60 with the hypervisor exploit)%s",
+             saved ? "" : " (settings not saved)");
+}
+
 /* Called after the hook changes and every two seconds: questions are only read from a live hook. */
 static void launch_attach(int ask) {
     int was = live_ok;
@@ -1153,6 +1163,7 @@ int main(void) {
     launch_attach(1);
     log_line("launch: questions %s (TSC %llu Hz, wait %d s)", live_ok ? "enabled" : "unavailable, hook not installed",
              (unsigned long long)tsc_hz, LAUNCH_WAIT_S);
+    drop_8gib_request();
     if (force_8gib) memory_request(1);
     int memory_previous_result=memory_poll();
     log_line("8 GiB: %s", memory_message);
@@ -1181,6 +1192,7 @@ int main(void) {
             if(memory_result!=memory_previous_result){
                 if(memory_result==0||memory_result==5||memory_result==6)notify(memory_message);
                 else log_line("8 GiB: %s (result %d)",memory_message,memory_result);
+                drop_8gib_request();
                 log_state();
                 patches_drop_8gib(NULL);
             }
