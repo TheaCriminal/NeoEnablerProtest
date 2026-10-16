@@ -115,7 +115,9 @@ static int ps_backup(ps_result *r, const char *dir, const char *name, const char
     }
     char path[224]; snprintf(path, sizeof(path), "%s/%.15s", r->backup_dir, name);
     (void)dir;
-    return write_file(path, data, len);
+    if (write_file(path, data, len)) return -1;
+    log_line("patches: %s backed up to %s", name, r->backup_dir);
+    return 0;
 }
 
 typedef struct { char name[16]; char title[96]; } ps_file;
@@ -160,7 +162,7 @@ static void ps_apply(ps_result *r, const char *dir, const ps_file *files, int co
         if (!cur || xm_merge(cur, len, xml, xml_len, &out, &out_len, &added, &replaced)) {
             log_line("patches: %s unreadable or malformed, skipped", files[i].name); r->errors++; free(cur); continue;
         }
-        if (!added && !replaced) r->files_unchanged++;
+        if (!added && !replaced) { log_line("patches: %s already up to date with %s", files[i].name, repo_name); r->files_unchanged++; }
         else if (ps_backup(r, dir, files[i].name, cur, len)) {
             log_line("patches: backup of %s failed, file not changed", files[i].name); r->errors++;
         } else if (ps_write(dir, files[i].name, out, out_len)) {
@@ -243,14 +245,17 @@ static char *ps_get(const char *url, size_t *len) {
     sceHttpDeleteRequest(req);
     sceHttpDeleteConnection(conn);
     if (!buf) { log_line("patches: reading %s failed", url); return NULL; }
+    log_line("patches: GET %s: %zu bytes", url, n);
     buf[n] = 0; *len = n;
     return buf;
 }
 #endif
 
-/* Downloads the repository's xml/ folder and merges it into the patch system files. */
+/* Downloads the repository's xml/ folder and merges it into the patch system files. Each step is logged; the caller
+   logs the summary in r->message. */
 static void patch_sync(ps_result *r) {
     memset(r, 0, sizeof(*r));
+    log_line("patches: sync started, listing %s", PS_LIST_URL);
     size_t list_len;
     char *list = ps_get(PS_LIST_URL, &list_len);
     if (!list) { snprintf(r->message, sizeof(r->message), "Game patches: download failed, files not changed"); return; }
@@ -258,30 +263,36 @@ static void patch_sync(ps_result *r) {
     int count = ps_scan(PS_DIR, files, PS_MAX_FILES);
     if (count < 0) {
         if (ps_mkdirs(PS_DIR)) { free(list); snprintf(r->message, sizeof(r->message), "Game patches: %s unavailable", PS_DIR); return; }
+        log_line("patches: %s did not exist, created", PS_DIR);
         count = 0;
     }
+    log_line("patches: %d title ID files in %s", count, PS_DIR);
+    int listed = 0, skipped = 0;
     for (const char *p = list; (p = strstr(p, "\"download_url\""));) {
         p += 14;
         while (*p == ' ' || *p == ':') p++;
-        if (*p != '"') continue;
+        if (*p != '"') { skipped++; continue; }   /* folders have "download_url": null */
         const char *url = ++p, *end = strchr(url, '"');
         if (!end) break;
         p = end + 1;
         size_t ul = (size_t)(end - url);
         char u[256];
-        if (ul >= sizeof(u) || strncmp(url, PS_RAW_PREFIX, strlen(PS_RAW_PREFIX)) || ul < 4 || memcmp(end - 4, ".xml", 4)) continue;
+        if (ul >= sizeof(u) || strncmp(url, PS_RAW_PREFIX, strlen(PS_RAW_PREFIX)) || ul < 4 || memcmp(end - 4, ".xml", 4)) {
+            log_line("patches: listing entry %.*s skipped (not a repository XML)", (int)(ul < 200 ? ul : 200), url); skipped++; continue;
+        }
         memcpy(u, url, ul); u[ul] = 0;
+        listed++;
         size_t len; char *xml = ps_get(u, &len);
         if (!xml) { r->errors++; continue; }
         ps_apply(r, PS_DIR, files, count, strrchr(u, '/') + 1, xml, len);
         free(xml);
     }
     free(list);
+    log_line("patches: listing had %d repository XMLs, %d other entries skipped", listed, skipped);
     int changed = r->files_updated + r->files_created;
     if (!r->games) snprintf(r->message, sizeof(r->message), "Game patches: no patch files found in the repository");
     else snprintf(r->message, sizeof(r->message), "Game patches: %d game%s, %d file%s updated, %d created, %d unchanged%s%s%.120s",
                   r->games, r->games == 1 ? "" : "s", r->files_updated, r->files_updated == 1 ? "" : "s", r->files_created,
                   r->files_unchanged, r->errors ? ", errors in log" : "", changed && r->backup_dir[0] ? "\nBackup: " : "",
                   changed && r->backup_dir[0] ? r->backup_dir : "");
-    log_line("%s", r->message);
 }
