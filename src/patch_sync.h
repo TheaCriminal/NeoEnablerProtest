@@ -11,6 +11,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "xml_merge.h"
 
 #ifndef PS_DIR
@@ -23,6 +24,7 @@
 #define PS_RAW_PREFIX "https://raw.githubusercontent.com/gasb07/NeoEnabler/"
 #define PS_MAX_FILE (16u << 20)
 #define PS_MAX_FILES 1024
+#define PS_MAX_BACKUPS 5
 
 typedef struct {
     int games, files_updated, files_created, files_unchanged, errors;
@@ -66,13 +68,49 @@ static int ps_write(const char *dir, const char *name, const char *data, size_t 
     return rename(tmp, path);
 }
 
-/* Copies the current file to this run's backup folder (created on first use). */
+/* Backup folder names are timestamps (YYYYMMDD-HHMMSS), so their names sort by age. */
+static int ps_stamp_dir(const char *s) {
+    if (strlen(s) != 15 || s[8] != '-') return 0;
+    for (int i = 0; i < 15; i++) if (i != 8 && (s[i] < '0' || s[i] > '9')) return 0;
+    return 1;
+}
+
+static int ps_cmp_name(const void *a, const void *b) { return strcmp(a, b); }
+
+/* Deletes the oldest backup folders in root until at most `keep` remain. Other folders are left alone. */
+static void ps_prune_backups(const char *root, int keep) {
+    static char names[256][16];
+    int n = 0; struct dirent *e;
+    DIR *d = opendir(root);
+    if (!d) return;
+    while ((e = readdir(d)) && n < 256)
+        if (ps_stamp_dir(e->d_name)) snprintf(names[n++], sizeof(names[0]), "%.15s", e->d_name);
+    closedir(d);
+    qsort(names, (size_t)n, sizeof(names[0]), ps_cmp_name);
+    for (int i = 0; i < n - keep; i++) {
+        char dir[192], path[224];
+        snprintf(dir, sizeof(dir), "%.160s/%.15s", root, names[i]);
+        if ((d = opendir(dir))) {
+            while ((e = readdir(d)))
+                if (strcmp(e->d_name, ".") && strcmp(e->d_name, "..")) {
+                    snprintf(path, sizeof(path), "%s/%.30s", dir, e->d_name);
+                    remove(path);
+                }
+            closedir(d);
+        }
+        if (rmdir(dir)) log_line("patches: cannot delete old backup %s (errno %d)", dir, errno);
+        else log_line("patches: old backup %s deleted", dir);
+    }
+}
+
+/* Copies the current file to this run's backup folder (created on first use, keeping at most PS_MAX_BACKUPS). */
 static int ps_backup(ps_result *r, const char *dir, const char *name, const char *data, size_t len) {
     if (!r->backup_dir[0]) {
         time_t now = time(NULL); struct tm tm; char stamp[32];
         localtime_r(&now, &tm);
         strftime(stamp, sizeof(stamp), "%Y%m%d-%H%M%S", &tm);
         snprintf(r->backup_dir, sizeof(r->backup_dir), "%.160s/%.20s", PS_BACKUP_ROOT, stamp);
+        ps_prune_backups(PS_BACKUP_ROOT, PS_MAX_BACKUPS - 1);
         if (ps_mkdirs(r->backup_dir)) { log_line("patches: cannot create %s (errno %d)", r->backup_dir, errno); r->backup_dir[0] = 0; return -1; }
     }
     char path[224]; snprintf(path, sizeof(path), "%s/%.15s", r->backup_dir, name);

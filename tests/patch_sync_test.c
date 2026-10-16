@@ -140,6 +140,17 @@ static char *get(const char *dir, const char *name, size_t *len) {
     return slurp(path, len);
 }
 
+static int is_dir(const char *path) { struct stat st; return !stat(path, &st) && S_ISDIR(st.st_mode); }
+
+/* Backup folders named like timestamps in backup_root. */
+static int backups(void) {
+    DIR *d = opendir(backup_root); struct dirent *e; int n = 0;
+    assert(d);
+    while ((e = readdir(d))) n += ps_stamp_dir(e->d_name);
+    closedir(d);
+    return n;
+}
+
 static int count_of(const char *s, size_t n, const char *pat) {
     int c = 0;
     for (const char *p = s; (p = xm_find(p, (size_t)(s + n - p), pat)); p++) c++;
@@ -182,6 +193,17 @@ int main(int argc, char **argv) {
     const char *unrelated = "<Patch>\n  <Metadata Title=\"Unrelated Game\" Name=\"x\" AppVer=\"01.00\"><PatchList/></Metadata>\n</Patch>\n";
     put("CUSA90003.xml", unrelated);
     put("notes.xml", "not a title ID file");
+    /* Six older backups and a folder that is not a backup: the run keeps the newest four plus its own. */
+    char old_dir[160];
+    assert(!ps_mkdirs(backup_root));
+    for (int i = 1; i <= 6; i++) {
+        snprintf(old_dir, sizeof(old_dir), "%s/20200101-00000%d", backup_root, i);
+        assert(!ps_mkdirs(old_dir));
+        snprintf(old_dir, sizeof(old_dir), "%s/20200101-00000%d/CUSA90001.xml", backup_root, i);
+        assert(!write_file(old_dir, "old", 3));
+    }
+    snprintf(old_dir, sizeof(old_dir), "%s/keep-me", backup_root);
+    assert(!ps_mkdirs(old_dir));
     size_t orig_len[2]; char *orig[2];
     for (int i = 0; i < 2; i++) orig[i] = get(test_dir, names[i], &orig_len[i]);
 
@@ -193,6 +215,13 @@ int main(int argc, char **argv) {
     assert(r.games == repo_count && r.errors == 0);
     assert(r.files_updated == 2 && r.files_created == repo_count - 1 && r.files_unchanged == 0);
     assert(r.backup_dir[0] && strstr(r.message, r.backup_dir));
+    assert(backups() == PS_MAX_BACKUPS);
+    for (int i = 1; i <= 6; i++) {
+        snprintf(old_dir, sizeof(old_dir), "%s/20200101-00000%d", backup_root, i);
+        assert(is_dir(old_dir) == (i > 2));                                      /* the two oldest deleted */
+    }
+    snprintf(old_dir, sizeof(old_dir), "%s/keep-me", backup_root);
+    assert(is_dir(old_dir));
     for (int i = 0; i < 2; i++) {
         size_t n, b; char *now = get(test_dir, names[i], &n), *bak = get(r.backup_dir, names[i], &b);
         assert(bak && b == orig_len[i] && !memcmp(bak, orig[i], b));                 /* backup is the original */
@@ -222,6 +251,7 @@ int main(int argc, char **argv) {
     puts(r.message);
     assert(r.files_updated == 0 && r.files_created == 0 && r.files_unchanged == repo_count + 1 && r.errors == 0);
     assert(!r.backup_dir[0] && !strstr(r.message, "Backup"));
+    assert(backups() == PS_MAX_BACKUPS);
     for (int i = 0; i < 2; i++) { s = get(test_dir, names[i], &n); assert(n == before_len[i] && !memcmp(s, before[i], n)); free(s); }
 
     /* Listing download fails: nothing touched. */
@@ -240,11 +270,12 @@ int main(int argc, char **argv) {
     assert(r.errors == 1 && strstr(r.message, "errors in log"));
     assert(r.games == repo_count - 1);
     if (repo_count > 1) assert(r.files_updated == 1);
+    assert(backups() <= PS_MAX_BACKUPS);
     free(orig[0]); free(orig[1]);
 
     char cmd[600]; snprintf(cmd, sizeof(cmd), "rm -rf '%s'", root);
     assert(!system(cmd));
-    printf("PASS patch sync: %d repository XMLs, GitHub listing filter, merge by Title, backups, idempotent, download failures\n",
+    printf("PASS patch sync: %d repository XMLs, GitHub listing filter, merge by Title, backups (at most 5), idempotent, download failures\n",
            repo_count);
     return 0;
 }
