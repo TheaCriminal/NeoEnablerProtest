@@ -3,15 +3,6 @@
   <TitleID>
     <ID>CUSA03856</ID>
   </TitleID>
-  <Metadata Title="RESIDENT EVIL 6" Name="1080p (PS4 Pro mode)" Note="1920x1080 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="mask" Address="44 24 18 00 00 00 00 45 31 c0 41 b9 01 00 00 00 e8 66 dd 1e 00 49 89 c4 4c 89 e2 48 c1 ea 20 48 8d 05 a5 60 bf" Offset="16" Value="e876b03e00" />
-      <Line Type="bytes" Address="0x179fd00" Value="4883c408e8e72ce0ff4889c248c1ea203d0000fe0174213d0000e100720e3d0000f0007707b80000f000eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e9374fc1ff" />
-      <Line Type="mask" Address="40 e9 9e 00 00 00 49 8b 46 40 f7 c1 00 00 00 20 74 79 48 c7 45 b8 00 00 00 00 b9 14 05 00 00 49 8d 7f" Offset="16" Value="eb79" />
-      <Line Type="mask" Address="ff 25 52 46 73 00 68 c8 01 00 00 e9 60 e3 ff ff ff 25 4a 46 73 00 68 c9 01 00 00 e9 50 e3 ff ff ff 25 42 46 73 00" Offset="16" Value="e96b5c010090" />
-      <Line Type="bytes" Address="0x179f800" Value="505351525657415041514152415341544155415641579c4189fc4989f54989d64181fc000400000f87f100000031db4439e30f83e60000004d8b44dd00458b0c9e41c1e9024d85c00f84c900000031c94439c90f83be000000418b048889c2c1ea1e83fa027504ffc1ebe583fa030f85a30000004189c241c1ea104181e2ff3f00004183c202428d14114439ca0f87840000004189c341c1eb084181e3ff0000004183fb697568418b7c880481e7ffff0000448d5902448d79024139d3735083ff10750a43812498ffffffdfeb3a89f82d1803000083f878732e83f80f720583e80febf683f805751f4539fb741a438b049883e01f83f80a740583f80c750943814c98fc00000080ffc741ffc3ebab4401d1e939ffffffffc3e911ffffff0faef89d415f415e415d415c415b415a415941585f5e5a595b58ff2425e0e1eb01" />
-    </PatchList>
-  </Metadata>
   <Metadata Title="RESIDENT EVIL 6" Name="1440p (PS4 Pro mode)" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
     <PatchList>
       <Line Type="mask" Address="44 24 18 00 00 00 00 45 31 c0 41 b9 01 00 00 00 e8 66 dd 1e 00 49 89 c4 4c 89 e2 48 c1 ea 20 48 8d 05 a5 60 bf" Offset="16" Value="e876b03e00" />
