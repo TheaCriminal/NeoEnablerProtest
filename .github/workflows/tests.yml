@@ -48,6 +48,8 @@ jobs:
           /tmp/neo-game-patches-test
           $CC $flags tests/patch_sync_test.c -o /tmp/neo-patch-sync-test
           /tmp/neo-patch-sync-test xml
+          $CC $flags tests/log_mirror_test.c -o /tmp/neo-log-mirror-test
+          /tmp/neo-log-mirror-test
 
   patch-sync-github:
     name: Patch sync with the GitHub download

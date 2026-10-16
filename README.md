@@ -64,7 +64,8 @@ Open `http://<PS5 IP>:8765` in a browser on your network, or the **NeoEnabler** 
   only when one of them needs it. 8 GiB returns to the original 5.25 GiB budget after the game closes.
 - **Status**: PS4 Pro mode of the running game, 8 GiB state and the running game.
 - **Game patches**: Update Patches downloads the patches from this repository (also done at startup).
-- **Logs**: Show Logs, Download Logs (the newest 1 MiB), Save Logs and Save Diagnostic.
+- **Logs**: Show Logs, Download Logs, Save Logs and Save Diagnostic. They give one text with a report of the
+  console, NeoEnabler's own log (`/data/neo-enabler/neo.log`) and the kernel log.
 - **Advanced** (collapsed): Pro mode for every PS4 game, or 8 GiB kept on, regardless of the patches.
 
 Quitting the manager stops the automatic Pro mode and 8 GiB until it runs again. Rebooting removes the hook.

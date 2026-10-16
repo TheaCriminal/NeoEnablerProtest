@@ -71,6 +71,8 @@ jobs:
           /tmp/neo-gpu-test
           cc -O2 -Wall -Wextra -Werror tests/http_test.c -o /tmp/neo-http-test
           /tmp/neo-http-test
+          cc -O2 -Wall -Wextra -Werror tests/log_mirror_test.c -o /tmp/neo-log-mirror-test
+          /tmp/neo-log-mirror-test
 
       - name: Test XML merge and patch sync (host only)
         run: |

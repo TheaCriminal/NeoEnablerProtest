@@ -11,7 +11,7 @@ body:
     attributes:
       label: Setup
       description: PS5 firmware, console model, jailbreak and loader, hypervisor exploit (yes or no), NeoEnabler version.
-      placeholder: FW 13.60, Fat, Byepervisor + etaHEN, v0.3.1
+      placeholder: FW 13.60, Fat, Byepervisor + etaHEN, v0.3.2
     validations:
       required: true
   - type: textarea
@@ -25,7 +25,6 @@ body:
     id: logs
     attributes:
       label: Logs
-      description: '"Save Logs" in the panel. Attach `diagnostic.jsonl` as a file. Never post a kernel or memory dump; contact the maintainer directly instead.'
-      render: text
+      description: 'Click "Download Logs" in the panel and drag neo-logs.txt into this box. Attach `diagnostic.jsonl` the same way. Never post a kernel or memory dump; contact the maintainer directly instead.'
     validations:
       required: true

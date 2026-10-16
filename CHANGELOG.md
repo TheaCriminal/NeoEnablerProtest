@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.2
+
+- The kernel log keeps only the last 128 KiB and the system overwrites it within seconds, so reports lost the
+  NeoEnabler lines. NeoEnabler now also writes its own log to `/data/neo-enabler/neo.log` (rotated at 256 KiB to
+  `neo.log.old`), with the console time, and copies the hook's `[NEO <title ID>]` launch lines and the crash report
+  of a game from the kernel log into it.
+- **Show Logs**, the new **Download Logs** and **Save Logs** give one text: a report (version, firmware, hook
+  state, 8 GiB, GPU, games and enabled patches), NeoEnabler's own log and the kernel log. Download Logs sends it as
+  a file from `/logs/download`.
+- The log text is cut at the newest 1 MiB, from a full line. Before, a kernel log above 1 MiB made the read fail.
+
 ## 0.3.1
 
 - When the panel reports "unknown code in the hook area", the log now also records where the hook call points

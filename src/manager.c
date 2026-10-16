@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/sysctl.h>
@@ -29,9 +30,10 @@
 #include "gpu_control.h"
 #include "settings.h"
 #include "http_request.h"
+#include "log_mirror.h"
 
 #define PORT 8765
-#define VERSION "NeoEnabler 0.3.1"
+#define VERSION "NeoEnabler 0.3.2"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -42,11 +44,36 @@ typedef struct { char useless[45]; char message[3075]; } notify_request_t;
 int sceKernelGetAppInfo(pid_t pid, app_info_t *info);
 int sceKernelSendNotificationRequest(int, notify_request_t *, size_t, int);
 
-/* Every action and its result go to the kernel log (kern.msgbuf), so Save Logs keeps them with the hook's lines. */
+/* NeoEnabler's own log. The kernel log keeps only the last 128 KiB, which the system overwrites within seconds, so
+   every line also goes here, with the console time. At 256 KiB the file becomes neo.log.old and a new one starts. */
+#define NEO_LOG_DIR "/data/neo-enabler"
+#define NEO_LOG_PATH NEO_LOG_DIR "/neo.log"
+#define NEO_LOG_OLD NEO_LOG_PATH ".old"
+#define NEO_LOG_MAX (256 * 1024)
+
+static void file_log(const char *kind, const char *line, size_t n) {
+    static int dir_ready;
+    if (!dir_ready) { mkdir(NEO_LOG_DIR, 0777); dir_ready = 1; }
+    time_t t = time(NULL); struct tm tm; gmtime_r(&t, &tm);
+    char out[1100];
+    size_t k = strftime(out, 24, "%Y-%m-%d %H:%M:%S ", &tm);
+    k += (size_t)snprintf(out + k, sizeof(out) - k - 1, "%s%.*s", kind, (int)(n < 900 ? n : 900), line);
+    out[k++] = '\n';
+    int fd = open(NEO_LOG_PATH, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    if (fd < 0) return;
+    if (write(fd, out, k) < 0) { close(fd); return; }
+    fsync(fd);
+    off_t size = lseek(fd, 0, SEEK_END);
+    close(fd);
+    if (size > NEO_LOG_MAX) { unlink(NEO_LOG_OLD); rename(NEO_LOG_PATH, NEO_LOG_OLD); }
+}
+
+/* Every action and its result go to the kernel log (kern.msgbuf) and to NeoEnabler's own log file. */
 static void log_line(const char *fmt, ...) {
     char line[512];
     va_list ap; va_start(ap, fmt); vsnprintf(line, sizeof(line), fmt, ap); va_end(ap);
     klog_printf("[NeoEnabler] %s\n", line);
+    file_log("[NeoEnabler] ", line, strlen(line));
 }
 
 static void notify(const char *msg) {
@@ -653,65 +680,6 @@ static void serve_diagnostic_save(int fd) {
     serve_page(fd, msg);
 }
 
-#define LOGS_PATH "/data/neo-logs.txt"
-#define LOGS_MAX (1024 * 1024)
-
-/* Newest LOGS_MAX bytes of kern.msgbuf, starting at a full line, NUL terminated. The ring can be larger than
-   LOGS_MAX and the sysctl then fails with ENOMEM, so it is read whole (sized first) and trimmed. Returns 0 and
-   a malloc'd buffer, or -1 with errno set. */
-static int read_msgbuf(char **out, size_t *len) {
-    size_t need = 0;
-    errno = 0;
-    if (sysctlbyname("kern.msgbuf", NULL, &need, NULL, 0) || !need || need > 64u * 1024 * 1024) { if (!errno) errno = EFBIG; return -1; }
-    size_t cap = need + 4096, n = cap;
-    char *buf = malloc(cap + 1);
-    if (!buf) return -1;
-    if (sysctlbyname("kern.msgbuf", buf, &n, NULL, 0) || !n) { int e = errno ? errno : EIO; free(buf); errno = e; return -1; }
-    size_t skip = 0;
-    if (n > LOGS_MAX) {
-        skip = n - LOGS_MAX;
-        char *nl = memchr(buf + skip, '\n', n - skip);
-        if (nl && (size_t)(nl - buf) + 1 < n) skip = (size_t)(nl - buf) + 1;
-        memmove(buf, buf + skip, n - skip);
-        n -= skip;
-    }
-    buf[n] = '\0';
-    *out = buf; *len = n;
-    return 0;
-}
-
-static void serve_logs_show(int fd) {
-    char *buf; size_t len;
-    if (read_msgbuf(&buf, &len)) { reply(fd, "500 Internal Server Error", "text/plain", "kern.msgbuf read failed\n"); return; }
-    reply(fd, "200 OK", "text/plain; charset=utf-8", buf);
-    free(buf);
-}
-
-/* Same text as Show Logs, sent as a file so the browser downloads it. */
-static void serve_logs_download(int fd) {
-    char *buf; size_t len;
-    if (read_msgbuf(&buf, &len)) { reply(fd, "500 Internal Server Error", "text/plain", "kern.msgbuf read failed\n"); return; }
-    char head[256];
-    int h = snprintf(head, sizeof(head), "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\n"
-                     "Content-Disposition: attachment; filename=\"neo-logs.txt\"\r\nContent-Length: %zu\r\n"
-                     "Cache-Control: no-store\r\nConnection: close\r\n\r\n", len);
-    send_all(fd, head, (size_t)h); send_all(fd, buf, len);
-    free(buf);
-}
-
-static void serve_logs_save(int fd) {
-    char *buf; size_t len;
-    char msg[256];
-    if (read_msgbuf(&buf, &len)) {
-        snprintf(msg, sizeof(msg), "Failed to read kern.msgbuf (errno=%d)", errno);
-        notify(msg); serve_page(fd, msg); return;
-    }
-    int ok = !write_file(LOGS_PATH, buf, len);
-    free(buf);
-    snprintf(msg, sizeof(msg), ok ? "Logs saved to " LOGS_PATH " (%zu bytes)" : "Failed to write " LOGS_PATH, len);
-    notify(msg); serve_page(fd, msg);
-}
-
 static int do_set(int enable, char *msg, size_t cap, int show) {
     int rc = hook_set(enable);
     shell_t s; int st = hook_state(&s);
@@ -733,6 +701,134 @@ static void log_state(void) {
              memory_target ? "on" : "off", m.detail);
     log_line("state: GPU %s, requested %u MHz, SMU %s%u MHz, owner PID %d: %s",
              gpu_state_text(), gpu.target, gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.owner_pid, gpu.message);
+}
+
+#define LOGS_PATH "/data/neo-logs.txt"
+#define LOGS_MAX (1024 * 1024)
+
+/* Newest LOGS_MAX bytes of kern.msgbuf, starting at a full line, NUL terminated. The ring is 128 KiB on the PS5, but
+   the size is asked first so a bigger one is read whole and trimmed instead of failing with ENOMEM. Returns 0 and a
+   malloc'd buffer, or -1 with errno set. */
+static int read_msgbuf(char **out, size_t *len) {
+    size_t need = 0;
+    errno = 0;
+    if (sysctlbyname("kern.msgbuf", NULL, &need, NULL, 0) || !need || need > 64u * 1024 * 1024) { if (!errno) errno = EFBIG; return -1; }
+    size_t cap = need + 4096, n = cap;
+    char *buf = malloc(cap + 1);
+    if (!buf) return -1;
+    if (sysctlbyname("kern.msgbuf", buf, &n, NULL, 0) || !n) { int e = errno ? errno : EIO; free(buf); errno = e; return -1; }
+    size_t skip = 0;
+    if (n > LOGS_MAX) {
+        skip = n - LOGS_MAX;
+        char *nl = memchr(buf + skip, '\n', n - skip);
+        if (nl && (size_t)(nl - buf) + 1 < n) skip = (size_t)(nl - buf) + 1;
+        memmove(buf, buf + skip, n - skip);
+        n -= skip;
+    }
+    buf[n] = '\0';
+    *out = buf; *len = n;
+    return 0;
+}
+
+/* Keeps the launch answers of the hook and the crash reports of the kernel log in NeoEnabler's own log. Called about
+   once a second: the kernel log is overwritten in 10 to 25 seconds. */
+static void mirror_emit(void *ctx, const char *line, size_t n) { (void)ctx; file_log("kernel: ", line, n); }
+
+static void log_mirror_tick(void) {
+    static lm_state st;
+    char *buf; size_t len;
+    if (read_msgbuf(&buf, &len)) return;
+    if (lm_scan(&st, buf, len, mirror_emit, NULL) > 0) log_line("kernel log: lines may have been lost between two reads");
+    free(buf);
+}
+
+static void sb_raw(sbuf *b, const void *p, size_t n) {
+    if (b->n + n + 1 > b->cap) {
+        size_t cap = b->cap ? b->cap : 16384;
+        while (cap < b->n + n + 1) cap *= 2;
+        char *q = realloc(b->p, cap);
+        if (!q) return;
+        b->p = q; b->cap = cap;
+    }
+    memcpy(b->p + b->n, p, n); b->n += n; b->p[b->n] = '\0';
+}
+
+static void sb_file(sbuf *b, const char *title, const char *path) {
+    size_t len = 0; char *data = ps_read(path, NEO_LOG_MAX + 4096, &len);
+    sb_printf(b, "\n==== %s ====\n", title);
+    if (data) { sb_raw(b, data, len); if (len && data[len - 1] != '\n') sb_raw(b, "\n", 1); }
+    else sb_printf(b, "(none)\n");
+    free(data);
+}
+
+/* State of the console, the hook and the games, so a report does not depend on lines the kernel log already lost. */
+static void build_report(sbuf *b) {
+    shell_t s; int st = hook_state(&s);
+    unsigned fw = fw_major();
+    time_t t = time(NULL); struct tm tm; gmtime_r(&t, &tm);
+    char now[32]; strftime(now, sizeof now, "%Y-%m-%d %H:%M:%S", &tm);
+    sb_printf(b, "==== Report ====\n%s\nfirmware %x.%02x\nconsole time %s\nhook: %s\n", VERSION, fw >> 8, fw & 0xff, now, state_text(st));
+    if (st == HOOK_BAD_CAVE) { char d[400]; bad_cave_text(&s, d, sizeof d); sb_printf(b, "%s\n", d); }
+    mb_snapshot m; mb_check(&m);
+    sb_printf(b, "8 GiB: %s (requested %s): %s\n", m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
+              memory_target ? "on" : "off", m.detail);
+    sb_printf(b, "GPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", gpu_state_text(), gpu.target,
+              gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
+    sb_printf(b, "patches: %s\n", patches_message);
+    int n; game_t *g = games_scan(&n);
+    size_t sl = 0; char *settings = settings_read(&sl);
+    for (int i = 0; i < n; i++) {
+        sb_printf(b, "game %s %s version %s%s, enabled:", g[i].tid, g[i].name, g[i].version, g[i].update ? " (update installed)" : "");
+        int any = 0;
+        for (int k = 0; k < g[i].count; k++)
+            if (settings && gp_setting(settings, sl, g[i].patches[k].hash) == 1) { sb_printf(b, " [%s]", g[i].patches[k].name); any = 1; }
+        sb_printf(b, "%s\n", any ? "" : " none");
+    }
+    free(settings); games_free(g, n);
+}
+
+/* One text for Show, Download and Save: report, NeoEnabler's own log and the kernel log. */
+static int build_logs(sbuf *b) {
+    build_report(b);
+    sb_file(b, "NeoEnabler log (older)", NEO_LOG_OLD);
+    sb_file(b, "NeoEnabler log", NEO_LOG_PATH);
+    char *k; size_t kl;
+    sb_printf(b, "\n==== Kernel log (last 128 KiB, not complete) ====\n");
+    if (read_msgbuf(&k, &kl)) { sb_printf(b, "kern.msgbuf read failed (errno %d)\n", errno); return -1; }
+    sb_raw(b, k, kl);
+    free(k);
+    return 0;
+}
+
+static void serve_logs_show(int fd) {
+    sbuf b = {0};
+    build_logs(&b);
+    if (!b.p) { reply(fd, "500 Internal Server Error", "text/plain", "out of memory\n"); return; }
+    reply_bytes(fd, "200 OK", "text/plain; charset=utf-8", "no-store", b.p, b.n);
+    free(b.p);
+}
+
+/* Same text as Show Logs, sent as a file so the browser downloads it. */
+static void serve_logs_download(int fd) {
+    sbuf b = {0};
+    build_logs(&b);
+    if (!b.p) { reply(fd, "500 Internal Server Error", "text/plain", "out of memory\n"); return; }
+    char head[256];
+    int h = snprintf(head, sizeof(head), "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\n"
+                     "Content-Disposition: attachment; filename=\"neo-logs.txt\"\r\nContent-Length: %zu\r\n"
+                     "Cache-Control: no-store\r\nConnection: close\r\n\r\n", b.n);
+    send_all(fd, head, (size_t)h); send_all(fd, b.p, b.n);
+    free(b.p);
+}
+
+static void serve_logs_save(int fd) {
+    sbuf b = {0};
+    char msg[256];
+    build_logs(&b);
+    int ok = b.p && !write_file(LOGS_PATH, b.p, b.n);
+    snprintf(msg, sizeof(msg), ok ? "Logs saved to " LOGS_PATH " (%zu bytes)" : "Failed to write " LOGS_PATH, b.n);
+    free(b.p);
+    notify(msg); serve_page(fd, msg);
 }
 
 static void patches_update(void) {
@@ -893,9 +989,11 @@ int main(void) {
     log_state();
     patches_update();
     time_t last_memory_poll=time(NULL);
+    time_t last_mirror=0;
     for (;;) {
         launch_poll();
         time_t now=time(NULL);
+        if(now!=last_mirror){log_mirror_tick();last_mirror=now;}
         if(now<last_memory_poll||now-last_memory_poll>=2){
             launch_attach(-1);
             launch_tick();
