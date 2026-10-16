@@ -1,74 +1,31 @@
 name: Firmware test or support
-description: Report a result on a firmware other than 13.20, or ask for a new firmware.
-title: "[Firmware] <version> <short result>"
+description: A result on a firmware other than 13.20, or a request for a new firmware.
+title: "[Firmware] <version> <result>"
 labels: ["firmware"]
 body:
   - type: markdown
     attributes:
-      value: |
-        Pro mode is supported on firmware 4.00 to 13.60, tested on 13.20. The 8 GiB budget is validated on 13.20 only.
-        Firmware 14.00 and later has no jailbreak and cannot be supported.
-        See `diagnostics/README.md` for how to collect the data.
+      value: See `diagnostics/README.md` to collect the data. Firmware 14.00 and later cannot be supported.
   - type: input
-    id: firmware
+    id: setup
     attributes:
-      label: PS5 firmware
-      description: For example 13.60.
-    validations:
-      required: true
-  - type: input
-    id: console_model
-    attributes:
-      label: Console model
-    validations:
-      required: true
-  - type: input
-    id: jailbreak
-    attributes:
-      label: Jailbreak and ELF loader
-    validations:
-      required: true
-  - type: dropdown
-    id: hypervisor
-    attributes:
-      label: Hypervisor exploit enabled
-      options:
-        - "No"
-        - "Yes (Byepervisor or similar)"
-        - "I don't know"
-    validations:
-      required: true
-  - type: input
-    id: neo_version
-    attributes:
-      label: NeoEnabler version
-    validations:
-      required: true
-  - type: dropdown
-    id: kind
-    attributes:
-      label: What are you reporting
-      options:
-        - Test result of the 8 GiB budget (13.20 or 13.60)
-        - Pro mode result on another firmware
-        - Request to add a firmware
-        - Hook or "unknown code" error
+      label: Setup
+      description: PS5 firmware, console model, jailbreak and loader, hypervisor exploit (yes or no), NeoEnabler version.
+      placeholder: FW 13.60, Fat, Byepervisor + etaHEN, v0.3.0
     validations:
       required: true
   - type: textarea
     id: result
     attributes:
       label: Result
-      description: Which game, which patch, what happened, and whether it ran stable. Include the exact error text, if any.
+      description: What you tested (game, patch, 8 GiB) and what happened, with exact error text.
     validations:
       required: true
   - type: textarea
-    id: diagnostic
+    id: logs
     attributes:
-      label: Diagnostic and logs
-      description: |
-        Paste the NeoEnabler log. Attach `diagnostic.jsonl` (panel: Save Diagnostic, or `/diagnostic`) as a file.
-        Do not remove lines from it. Never attach kernel dumps here.
+      label: Logs
+      description: '"Save Logs" in the panel. Attach `diagnostic.jsonl` as a file. Never attach kernel dumps.'
       render: text
     validations:
       required: true
