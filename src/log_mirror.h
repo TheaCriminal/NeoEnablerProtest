@@ -3,6 +3,7 @@
    The previous snapshot is kept to find how far the ring moved, so every line is passed on once. */
 #pragma once
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -57,4 +58,40 @@ static int lm_scan(lm_state *st, const char *buf, size_t len, void (*emit)(void 
     memcpy(copy, buf, len);
     st->prev = copy; st->prev_n = len; st->done = end > start ? end : start;
     return gap;
+}
+
+/* Lines the system writes by the thousand and that say nothing about NeoEnabler. Only hidden when the kernel log is
+   shown in a report: they still fill the ring, which NeoEnabler cannot change. */
+static const char *const lm_noise[] = {
+    "[SceLncUtil] blockAppSuspend:", "[SceLncUtil] unblockAppSuspend:", NULL
+};
+
+static int lm_is_noise(const char *line, size_t n) {
+    for (int i = 0; lm_noise[i]; i++) if (lm_has(line, n, lm_noise[i])) return 1;
+    return 0;
+}
+
+/* Passes the kernel log to emit (each chunk ends with a newline) without the noise lines, and with a run of identical
+   lines shortened to one line and a count. Returns the number of lines left out. */
+static size_t lm_squeeze(const char *buf, size_t len, void (*emit)(void *, const char *, size_t), void *ctx) {
+    size_t hidden = 0, same = 0; const char *last = NULL; size_t last_n = 0;
+    for (size_t i = 0; i < len;) {
+        const char *nl = memchr(buf + i, '\n', len - i);
+        size_t n = nl ? (size_t)(nl - (buf + i)) : len - i;
+        const char *line = buf + i;
+        i += n + (nl ? 1 : 0);
+        if (lm_is_noise(line, n)) { hidden++; continue; }
+        if (last && n == last_n && !memcmp(line, last, n)) { same++; hidden++; continue; }
+        if (same) {
+            char note[64]; int k = snprintf(note, sizeof note, "(line above repeated %zu more times)\n", same);
+            emit(ctx, note, (size_t)k); same = 0;
+        }
+        emit(ctx, line, n); emit(ctx, "\n", 1);
+        last = line; last_n = n;
+    }
+    if (same) {
+        char note[64]; int k = snprintf(note, sizeof note, "(line above repeated %zu more times)\n", same);
+        emit(ctx, note, (size_t)k);
+    }
+    return hidden;
 }

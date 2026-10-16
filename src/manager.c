@@ -798,15 +798,18 @@ static void build_report(sbuf *b) {
     free(settings); games_free(g, n);
 }
 
+static void squeeze_emit(void *ctx, const char *p, size_t n) { sb_raw(ctx, p, n); }
+
 /* One text for Show, Download and Save: report, NeoEnabler's own log and the kernel log. */
 static int build_logs(sbuf *b) {
     build_report(b);
     sb_file(b, "NeoEnabler log (older)", NEO_LOG_OLD);
     sb_file(b, "NeoEnabler log", NEO_LOG_PATH);
     char *k; size_t kl;
-    sb_printf(b, "\n==== Kernel log (last 128 KiB, not complete) ====\n");
+    sb_printf(b, "\n==== Kernel log (last 128 KiB, not complete; repeated and known noise lines are hidden) ====\n");
     if (read_msgbuf(&k, &kl)) { sb_printf(b, "kern.msgbuf read failed (errno %d)\n", errno); return -1; }
-    sb_raw(b, k, kl);
+    size_t hidden = lm_squeeze(k, kl, squeeze_emit, b);
+    sb_printf(b, "(%zu lines hidden)\n", hidden);
     free(k);
     return 0;
 }

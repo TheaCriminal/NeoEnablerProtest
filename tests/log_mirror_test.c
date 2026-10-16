@@ -11,6 +11,9 @@ static char out[16384]; static int count;
 static void emit(void *ctx, const char *line, size_t n) { (void)ctx; count++; strncat(out, line, n); strcat(out, "|"); }
 static int poll(lm_state *st, const char *ring) { out[0] = 0; count = 0; return lm_scan(st, ring, strlen(ring), emit, NULL); }
 
+static char acc[1024];
+static void add(void *c, const char *p, size_t n) { (void)c; strncat(acc, p, n); }
+
 #define SPAM "[SceLncUtil] blockAppSuspend: name={SceNpUds}, appId={0x00000006}, refCount={1}\n[SceLncUtil] unblockAppSuspend: name={SceNpUds}, appId={0x00000006}, refCount={0}\n"
 
 int main(void) {
@@ -71,6 +74,14 @@ int main(void) {
         char *t = a; a = b; b = t;
     }
     free(a); free(b); free(fl.prev); free(st.prev); free(sp.prev);
+    /* squeeze: noise lines and runs of identical lines are shortened, other lines are kept in order */
+    {
+        const char *k = "a\n" SPAM "b\nb\nb\nc\nd\nd";
+        acc[0] = 0;
+        size_t hidden = lm_squeeze(k, strlen(k), add, NULL);
+        assert(!strcmp(acc, "a\nb\n(line above repeated 2 more times)\nc\nd\n(line above repeated 1 more times)\n"));
+        assert(hidden == 2 + 2 + 1);
+    }
     puts("log_mirror ok");
     return 0;
 }
