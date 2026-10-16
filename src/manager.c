@@ -220,7 +220,7 @@ static void game_name(const char *title_id, char *out, size_t cap) {
 static void html_escape(const char *s, char *out, size_t cap) {
     size_t o = 0;
     for (; *s && o + 7 < cap; s++) {
-        const char *r = *s == '&' ? "&amp;" : *s == '<' ? "&lt;" : *s == '>' ? "&gt;" : *s == '"' ? "&quot;" : NULL;
+        const char *r = *s == '&' ? "&amp;" : *s == '<' ? "&lt;" : *s == '>' ? "&gt;" : *s == '"' ? "&quot;" : *s == '\'' ? "&#39;" : NULL;
         if (r) { size_t l = strlen(r); memcpy(out + o, r, l); o += l; } else out[o++] = *s;
     }
     out[o] = 0;
@@ -376,6 +376,9 @@ static const char page_head[] =
     ".grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}@media(max-width:600px){.grid{grid-template-columns:1fr}}"
     ".wide{grid-column:1/-1}.metric{font-size:32px;font-weight:600;margin:10px 0}.notice{margin:12px 0;color:var(--muted)}"
     ".msg{margin:0 0 14px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}"
+    ".search{width:100%;min-height:42px;margin:0 0 14px;padding:0 14px;border:1px solid var(--line);border-radius:10px;"
+    "background:#0c111a;color:var(--text);font:inherit}.search:focus{outline:2px solid var(--blue);outline-offset:1px}"
+    ".game[hidden]{display:none}"
     "ul{margin:6px 0 0;padding-left:18px}small{color:var(--muted)}"
     "</style><script src=/panel.js></script></head><body>";
 
@@ -402,11 +405,15 @@ static void serve_page(int fd, const char *msg) {
     int n; game_t *g = games_scan(&n);
     size_t sl; char *settings = settings_read(&sl);
     int mem_ok = memory_supported();
+    if (n) sb_printf(&b, "<input type=search id=game-search class=search placeholder='Search by name or title ID' "
+                         "autocomplete=off aria-label='Search games'><p id=no-match class=card hidden>No game matches the search.</p>");
     if (!n) sb_printf(&b, "<div class=card><b>No installed game with NeoEnabler patches</b><p><small>Games appear here when "
                           PS_DIR " has a patch for their installed version that needs PS4 Pro mode. Use Update Patches "
                           "to download the patches.</small></p></div>");
     for (int i = 0; i < n; i++) {
-        sb_printf(&b, "<article class=game><img src='/icon/%s' alt='' loading=lazy><div><h2>", g[i].tid);
+        sb_printf(&b, "<article class=game data-search='");
+        sb_esc(&b, g[i].name);
+        sb_printf(&b, " %s'><img src='/icon/%s' alt='' loading=lazy><div><h2>", g[i].tid, g[i].tid);
         sb_esc(&b, g[i].name[0] ? g[i].name : g[i].tid);
         sb_printf(&b, " <span>(%s)</span></h2><p class=ver>Version %s%s</p><ul class=patches>", g[i].tid, g[i].version,
                   g[i].update ? " (update installed)" : "");

@@ -29,6 +29,21 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Request interrupted. Check the current status before trying again.');
         });
     });
+    // Game search: filters the list by name or title ID, ignoring case and accents.
+    document.addEventListener('input', function (event) {
+        if (event.target.id !== 'game-search') return;
+        var fold = function (text) {
+            return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        };
+        var words = fold(event.target.value).split(/\s+/).filter(Boolean), shown = 0;
+        document.querySelectorAll('article.game').forEach(function (game) {
+            var text = fold(game.dataset.search || '');
+            game.hidden = !words.every(function (word) { return text.indexOf(word) >= 0; });
+            if (!game.hidden) shown++;
+        });
+        var none = document.getElementById('no-match');
+        if (none) none.hidden = shown > 0;
+    });
     // Patch checkboxes write the patch system settings at once; nothing to save.
     document.addEventListener('change', function (event) {
         var box = event.target;
