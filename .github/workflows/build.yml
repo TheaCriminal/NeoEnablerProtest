@@ -76,6 +76,8 @@ jobs:
         run: |
           cc -O2 -Wall -Wextra -Werror tests/xml_merge_test.c -o /tmp/neo-xml-merge-test
           /tmp/neo-xml-merge-test
+          cc -O2 -Wall -Wextra -Werror tests/game_patches_test.c -o /tmp/neo-game-patches-test
+          /tmp/neo-game-patches-test
           cc -O2 -Wall -Wextra -Werror tests/patch_sync_test.c -o /tmp/neo-patch-sync-test
           /tmp/neo-patch-sync-test xml
 

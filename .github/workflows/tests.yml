@@ -34,7 +34,7 @@ jobs:
           fi
           $CC $flags tests/budget_test.c -o /tmp/neo-budget-test
           /tmp/neo-budget-test
-      - name: Unit tests (XML merge, patch sync against a fake GitHub serving xml/)
+      - name: Unit tests (XML merge, game patches and settings, patch sync against a fake GitHub serving xml/)
         env:
           CC: ${{ matrix.cc }}
         run: |
@@ -44,6 +44,8 @@ jobs:
           fi
           $CC $flags tests/xml_merge_test.c -o /tmp/neo-xml-merge-test
           /tmp/neo-xml-merge-test
+          $CC $flags tests/game_patches_test.c -o /tmp/neo-game-patches-test
+          /tmp/neo-game-patches-test
           $CC $flags tests/patch_sync_test.c -o /tmp/neo-patch-sync-test
           /tmp/neo-patch-sync-test xml
 
