@@ -18,11 +18,17 @@ when one of its enabled patches needs it; every other game starts as usual.
 - A jailbroken PS5 on firmware 4.00 to 13.60 (tested on 13.20) with an ELF loader, such as etaHEN or elfldr.
 - [ps-patch-system](https://github.com/illusionyy/ps-patch-system), loaded **before** NeoEnabler.
 
+> [!IMPORTANT]
+> **Load [ps-patch-system](https://github.com/illusionyy/ps-patch-system) first, then NeoEnabler, after every
+> console boot.** NeoEnabler hooks into ps-patch-system and installs nothing without it: the panel then shows
+> "ps-patch-system not loaded" and no game starts in PS4 Pro mode. If you loaded NeoEnabler first, load
+> ps-patch-system, quit NeoEnabler in the panel and send `neo-manager.elf` again.
+
 ## Install
 
 1. Download `neo-manager.elf` from the [latest release](https://github.com/gasb07/NeoEnabler/releases/latest).
-2. After every console boot, load ps-patch-system, then send `neo-manager.elf` with your payload sender
-   (port 9021).
+2. After every console boot, load [ps-patch-system](https://github.com/illusionyy/ps-patch-system) **first**,
+   then send `neo-manager.elf` with your payload sender (port 9021).
 3. A notification on the PS5 confirms that NeoEnabler is enabled. It downloads the game patches from this
    repository and adds them to the ps-patch-system files (see [Game patches](#game-patches)).
 4. Open the panel and tick the patches you want for each game.
