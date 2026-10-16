@@ -458,6 +458,7 @@ static void serve_page(int fd, const char *msg) {
               "<form method=post><button formaction=/patches/update>Update Patches</button></form></div>"
               "<div class=card><h2>Logs</h2><small>Kernel logs, including every NeoEnabler step.</small>"
               "<form method=post><a href=/logs target=_blank><button type=button>Show Logs</button></a>"
+              "<a href=/logs/download><button type=button>Download Logs</button></a>"
               "<button formaction=/logs/save>Save Logs</button><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
               "<details class=card><summary>Advanced</summary>"
               "<form method=post><input type=hidden name=on value=%d><b>Pro mode for every PS4 game</b> "
@@ -655,29 +656,55 @@ static void serve_diagnostic_save(int fd) {
 #define LOGS_PATH "/data/neo-logs.txt"
 #define LOGS_MAX (1024 * 1024)
 
+/* Newest LOGS_MAX bytes of kern.msgbuf, starting at a full line, NUL terminated. The ring can be larger than
+   LOGS_MAX and the sysctl then fails with ENOMEM, so it is read whole (sized first) and trimmed. Returns 0 and
+   a malloc'd buffer, or -1 with errno set. */
+static int read_msgbuf(char **out, size_t *len) {
+    size_t need = 0;
+    errno = 0;
+    if (sysctlbyname("kern.msgbuf", NULL, &need, NULL, 0) || !need || need > 64u * 1024 * 1024) { if (!errno) errno = EFBIG; return -1; }
+    size_t cap = need + 4096, n = cap;
+    char *buf = malloc(cap + 1);
+    if (!buf) return -1;
+    if (sysctlbyname("kern.msgbuf", buf, &n, NULL, 0) || !n) { int e = errno ? errno : EIO; free(buf); errno = e; return -1; }
+    size_t skip = 0;
+    if (n > LOGS_MAX) {
+        skip = n - LOGS_MAX;
+        char *nl = memchr(buf + skip, '\n', n - skip);
+        if (nl && (size_t)(nl - buf) + 1 < n) skip = (size_t)(nl - buf) + 1;
+        memmove(buf, buf + skip, n - skip);
+        n -= skip;
+    }
+    buf[n] = '\0';
+    *out = buf; *len = n;
+    return 0;
+}
+
 static void serve_logs_show(int fd) {
-    size_t len = LOGS_MAX;
-    char *buf = malloc(len);
-    if (!buf) { reply(fd, "500 Internal Server Error", "text/plain", "out of memory\n"); return; }
-    int rc = sysctlbyname("kern.msgbuf", buf, &len, NULL, 0);
-    if (rc || !len) { free(buf); reply(fd, "500 Internal Server Error", "text/plain", "kern.msgbuf read failed\n"); return; }
-    buf[len < LOGS_MAX ? len : LOGS_MAX - 1] = '\0';
+    char *buf; size_t len;
+    if (read_msgbuf(&buf, &len)) { reply(fd, "500 Internal Server Error", "text/plain", "kern.msgbuf read failed\n"); return; }
     reply(fd, "200 OK", "text/plain; charset=utf-8", buf);
     free(buf);
 }
 
+/* Same text as Show Logs, sent as a file so the browser downloads it. */
+static void serve_logs_download(int fd) {
+    char *buf; size_t len;
+    if (read_msgbuf(&buf, &len)) { reply(fd, "500 Internal Server Error", "text/plain", "kern.msgbuf read failed\n"); return; }
+    char head[256];
+    int h = snprintf(head, sizeof(head), "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\n"
+                     "Content-Disposition: attachment; filename=\"neo-logs.txt\"\r\nContent-Length: %zu\r\n"
+                     "Cache-Control: no-store\r\nConnection: close\r\n\r\n", len);
+    send_all(fd, head, (size_t)h); send_all(fd, buf, len);
+    free(buf);
+}
+
 static void serve_logs_save(int fd) {
-    size_t len = LOGS_MAX;
-    char *buf = malloc(len);
+    char *buf; size_t len;
     char msg[256];
-    if (!buf) {
-        snprintf(msg, sizeof(msg), "Failed to allocate log buffer");
+    if (read_msgbuf(&buf, &len)) {
+        snprintf(msg, sizeof(msg), "Failed to read kern.msgbuf (errno=%d)", errno);
         notify(msg); serve_page(fd, msg); return;
-    }
-    int rc = sysctlbyname("kern.msgbuf", buf, &len, NULL, 0);
-    if (rc || !len) {
-        snprintf(msg, sizeof(msg), "Failed to read kern.msgbuf (rc=%d, errno=%d)", rc, errno);
-        free(buf); notify(msg); serve_page(fd, msg); return;
     }
     int ok = !write_file(LOGS_PATH, buf, len);
     free(buf);
@@ -987,6 +1014,8 @@ int main(void) {
             else reply(fd, "404 Not Found", "text/plain", "not found\n");
         } else if (!strcmp(method, "GET") && !strcmp(path, "/logs")) {
             serve_logs_show(fd);
+        } else if (!strcmp(method, "GET") && !strcmp(path, "/logs/download")) {
+            serve_logs_download(fd);
         } else if (post && !strcmp(path, "/logs/save")) {
             serve_logs_save(fd);
         } else if (post && !strcmp(path, "/diagnostic/save")) {
