@@ -1,12 +1,46 @@
 # Changelog
 
-## Unreleased
-
-- Driveclub 1440p: no more black flashes in the pause menu, and the frame rate no longer drops to 30 when a frame
-  is late (same fix as the 4K entries). If you had it enabled, it stays enabled.
-- README: Driveclub 4K with 1800p render can show flickering blocks in the clouds (known issue).
-
 ## 0.3.0
+
+### Games page with automatic PS4 Pro mode and 8 GiB
+
+- New **Games** page: every installed PS4 game that has a NeoEnabler patch for its installed version, with its
+  icon, name, title ID, version (and whether an update is installed) and all of its patches with their
+  descriptions. Tick a patch to enable it: it is written to the ps-patch-system settings at once, with no Patch
+  Manager and nothing to save. A search bar finds games by name or title ID.
+- **PS4 Pro mode and 8 GiB now follow the enabled patches of each game.** When a PS4 game starts, NeoEnabler checks
+  its enabled patches: the game starts in Pro mode only when one of them needs it, and 8 GiB is switched on before
+  the game starts only when one of them needs it. After the game closes, memory returns to the original 5.25 GiB.
+  Every other game starts as usual. There is no limit on the number of games.
+- Only one NeoEnabler resolution entry per game can be on: ticking one turns the others off.
+- Patches that need 8 GiB are greyed out unless the console is on firmware 13.20 or 13.60 (pending testing) with
+  the hypervisor exploit enabled.
+- The NEO and 8 GiB on/off buttons are replaced by a collapsed **Advanced** section: Pro mode for every PS4 game,
+  and keep 8 GiB on. Both are saved at once. A `memory_8gib=1` saved by an older version is ignored.
+- The status shows the PS4 Pro mode of the running game, the 8 GiB state and the running game.
+- The hook of an older NeoEnabler is replaced automatically. Quitting the manager stops the automatic Pro mode and
+  8 GiB until it runs again.
+
+### Automatic patch install
+
+- At startup and with **Update Patches**, NeoEnabler downloads the patches from this repository and adds them to
+  every ps-patch-system file of the same game (all regions, matched by the game title). Entries already there are
+  updated and other patches are kept. An entry with the same patch lines under another name gets the repository
+  name and description and stays enabled if it was. A game without a file gets a new one.
+- Changed files are backed up first to `/data/neo-enabler/xml-backup/<date-time>/`; the last 5 backups are kept.
+- Every step of the download and install is written to the system log.
+- Every NeoEnabler patch entry now says what it needs (`NeoRequires="pro"` or `"pro,8gib"`). ps-patch-system
+  ignores it.
+
+### Game patches
+
+- The 1080p entries were removed from every game.
+- Driveclub: new **4K, 1620p render** entry (needs 8 GiB). 1440p: no more black flashes in the pause menu, and the
+  frame rate no longer drops to 30 when a frame is late. Known issues: 4K with 1620p or 1800p render may show
+  blocky artifacts in the clouds and on other surfaces; in native 4K, snow can show inside the car.
+- The Order: 1886: the Native 4K 60fps entry runs with the original memory (no 8 GiB needed).
+
+### GPU clock tab
 
 - New **GPU clock** tab with a 1800–2200 MHz target slider, a live SMU clock reading, Apply boost and Disable.
   Uses the original MP1 driver on firmware **13.20 only**. Default is off, with a 2200 MHz target.
@@ -20,6 +54,7 @@
   visible and block further boost requests until Disable succeeds.
 - Added `GET /gpu/status` and GPU fields in `/status` and system logs. Form requests are bounded and read fully
   before applying settings; invalid GPU frequencies are rejected.
+- The GPU clock tab is only shown on firmware 13.20 when the MP1 driver answers; elsewhere its page is not served.
 
 ## 0.2.1
 
