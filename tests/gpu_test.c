@@ -44,6 +44,19 @@ int main(void){
  clock_mhz=1800;assert(!gpu_poll(45)&&writes==n+1&&gpu.baseline==1800&&gpu.owner_pid==45);
  assert(gpu_poll(-1)==1&&writes==n+1); /* Unknown game state never issues SET. */
  assert(!gpu_request(0,2200,45));
+ reset();clock_mhz=1800;assert(!gpu_request(1,2200,44));
+ for(unsigned i=0;i<3;i++){
+  unsigned before=writes;clock_mhz=1800;
+  assert(!gpu_poll(44)&&writes==before);
+  assert(!gpu_poll(44)&&writes==before+1&&last_set==2200&&gpu.baseline==1800);
+ }
+ clock_mhz=1800;assert(!gpu_poll(44));assert(gpu_poll(44)==-2&&gpu.blocked);
+ unsigned stopped=writes;assert(gpu_poll(44)==-2&&writes==stopped);
+ assert(!gpu_request(0,2200,44)&&last_set==1800);
+ reset();clock_mhz=1800;assert(!gpu_request(1,2200,44));unsigned before=writes;
+ clock_mhz=1800;assert(!gpu_poll(44));assert(gpu_poll(-1)==1);
+ assert(!gpu_poll(44)&&writes==before); /* Unknown scan breaks reset evidence. */
+ clock_mhz=2155;assert(!gpu_poll(44)&&writes==before);
  unsigned mhz=0;
  for(unsigned m=1800;m<=2200;m+=50){char b[32];snprintf(b,sizeof b,"mhz=%u",m);assert(gpu_form_mhz(b,&mhz)==1&&mhz==m);}
  const char*bad[]={"mhz=2250","mhz=2350","mhz=2200&mhz=1800","mhz=22000","mhz=2200x","mhz=-1","mhz=%32%33%35%30","mhz=","mhz=999999999999999999999","mhz=2349"};

@@ -93,7 +93,10 @@ FPS gains and long-term stability have not been established.
 **Disable boost** requests the clock captured before boost for the running game. **Quit** also requests that
 restoration. On game exit/transition the manager stops applying that game's
 target and lets the system manage clocks. A new PS4 launch captures a new baseline. The manager does not keep
-resending a target when the SMU varies the clock, and it does not change CPU clocks, thermal/power controls,
+resending a target for ordinary SMU variation. A sustained reset to exactly 1800 MHz triggers recovery after
+two policy polls (approximately four seconds), limited to three recoveries per game or manual Enable.
+Further resets stop automatic recovery and show an error; check the game/system state before retrying.
+This reset heuristic does not measure foreground or thermal state. It does not change CPU clocks, thermal/power controls,
 memory bandwidth, or enabled ROPs. If a clock request or restoration fails, the panel shows the error and stops
 automatic retries; use Disable to retry restoration before enabling again.
 

@@ -1,6 +1,6 @@
 /* GPL-3.0-only. PS4-only clock policy using the stock MP1 driver.
- * Apply once on request/new game, never continuously force a clock against SMU
- * policy. Runs in the manager's HTTP thread. No kernel writes or exploit marker.
+ * Apply on request/new game, with bounded recovery of sustained 1800 MHz resets.
+ * Never chase ordinary SMU variation. Runs in the manager's HTTP thread.
  */
 #pragma once
 #include <stdint.h>
@@ -35,7 +35,7 @@ static int gpu_backend_set(unsigned mhz){
 #endif
 typedef struct{
  int enabled,applied,owner_pid,baseline_valid,blocked,restore_pending,reading_valid;
- unsigned target,baseline,actual,actions;
+ unsigned target,baseline,actual,actions,reset_samples,recoveries;
  char message[192];
 } gpu_control;
 static gpu_control gpu={.target=GPU_DEFAULT_MHZ,.message="GPU boost disabled"};
@@ -65,6 +65,7 @@ static void gpu_owner_changed(int pid){
   /* A launch/exit changes the system power policy. Do not replay the old game's
    * baseline over the new system policy; take a new baseline for the new game. */
   gpu.baseline_valid=0;gpu.applied=0;gpu.owner_pid=0;gpu.blocked=0;
+  gpu.reset_samples=0;gpu.recoveries=0;
  }
 }
 static int gpu_poll(int pid){
@@ -75,12 +76,29 @@ static int gpu_poll(int pid){
  if(gpu.restore_pending)return -3;
  if(gpu.blocked)return -2;
  if(gpu_refresh()){
+  gpu.reset_samples=0;
   snprintf(gpu.message,sizeof gpu.message,"SMU clock query failed; no new clock request sent");return -1;
  }
  if(!gpu.enabled){snprintf(gpu.message,sizeof gpu.message,"GPU boost disabled");return 0;}
  if(pid<=0){
+  gpu.reset_samples=0;
   snprintf(gpu.message,sizeof gpu.message,pid<0?"Game detection unavailable; waiting":"Enabled; waiting for a PS4 game");return 1;
  }
+ /* Two consecutive policy polls at exactly the standard 1800 MHz profile.
+  * This is a reset heuristic, not a foreground or thermal-state measurement.
+  * At most three automatic recoveries per game/manual enable; never retry a
+  * failed SET, failed read, or ambiguous process scan. */
+ if(gpu.applied&&gpu.target>1800&&gpu.actual==1800){
+  if(++gpu.reset_samples>=2){
+   gpu.reset_samples=0;
+   if(gpu.recoveries>=3){
+    gpu.blocked=1;
+    snprintf(gpu.message,sizeof gpu.message,"Repeated 1800 MHz resets; automatic recovery stopped. Check game/system state before retrying Enable.");
+    return -2;
+   }
+   gpu.recoveries++;gpu.applied=0;
+  }
+ }else gpu.reset_samples=0;
  if(!gpu.applied){
   if(!gpu.baseline_valid){gpu.baseline=gpu.actual;gpu.baseline_valid=1;gpu.owner_pid=pid;}
   gpu.actions++;
@@ -100,7 +118,7 @@ static int gpu_request(int enable,unsigned mhz,int pid){
  gpu_owner_changed(pid);
  if(!enable){gpu.enabled=0;return gpu_restore();}
  if(gpu.restore_pending){snprintf(gpu.message,sizeof gpu.message,"Retry Disable to restore the previous clock first");return -3;}
- gpu.enabled=1;gpu.target=mhz;gpu.blocked=0;gpu.applied=0;
+ gpu.enabled=1;gpu.target=mhz;gpu.blocked=0;gpu.applied=0;gpu.reset_samples=0;gpu.recoveries=0;
  return gpu_poll(pid);
 }
 static const char*gpu_state_text(void){

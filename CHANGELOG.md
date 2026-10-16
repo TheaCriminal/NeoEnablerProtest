@@ -48,7 +48,8 @@
 - GPU clock enable state and target are included in **Save Settings** (`/data/neo-settings`). Old settings files
   remain compatible. Settings writes use a flushed temporary file followed by rename.
 - A saved GPU target is requested for a running/new PS4 game, independently of NEO and 8 GiB. The manager sends
-  no repeated SET requests to fight frequency changes made by the SMU. Actual frequency can be below the target.
+  no repeated SET requests for ordinary SMU variation. Sustained resets to exactly 1800 MHz trigger bounded
+  recovery after two policy polls, at most three times per game/manual Enable. Actual frequency can be below the target.
 - Disable and Quit request the clock captured before applying boost to the running game. On game exit/transition,
   the system resumes its power policy; the next PS4 launch captures a new baseline. Restoration errors remain
   visible and block further boost requests until Disable succeeds.
