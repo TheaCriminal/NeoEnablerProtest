@@ -180,6 +180,30 @@ static int hook_state(shell_t *s) {
     return HOOK_NO_PATCH_SYSTEM;
 }
 
+/* One line for HOOK_BAD_CAVE: where the call points and what the cave holds, so a report shows whether the cave
+   was unreadable, held another NeoEnabler build or other code. */
+static void bad_cave_text(const shell_t *s, char *out, size_t cap) {
+    unsigned char a[CAVE_SIZE]; char head[3 * 16 + 1] = "";
+    size_t n = s->frame_end - s->cave < sizeof(a) ? s->frame_end - s->cave : sizeof(a);
+    int rc = kernel_proc_copyout(s->pid, s->cave, a, n);
+    int diff = -1, v2 = 0, v3 = 0;
+    if (!rc) {
+        for (size_t i = 0; i < 16 && i < n; i++) snprintf(head + 3 * i, 4, "%02x ", a[i]);
+        for (size_t i = 0; i < sizeof(shim_code) && i < n; i++) {
+            if (i >= SHIM_PREV && i < SHIM_MAGIC) continue;
+            if (a[i] != shim_code[i]) { diff = (int)i; break; }
+        }
+        for (size_t i = 0; i + 8 <= n; i++) {
+            if (!memcmp(a + i, "NEOENBL2", 8)) v2 = 1;
+            if (!memcmp(a + i, "NEOENBL3", 8)) v3 = 1;
+        }
+    }
+    snprintf(out, cap, "hook area: fw %x.%02x site %lx target %lx cave %lx frame %lx-%lx copyout rc %d "
+             "first diff offset %d magic v2 %d v3 %d head %s",
+             fw_major() >> 8, fw_major() & 0xff, (unsigned long)s->site, (unsigned long)s->target,
+             (unsigned long)s->cave, (unsigned long)s->frame, (unsigned long)s->frame_end, rc, diff, v2, v3, head);
+}
+
 static const char *state_text(int st) {
     switch (st) {
     case HOOK_ON: return "enabled";

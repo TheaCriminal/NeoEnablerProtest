@@ -140,7 +140,8 @@ Test results by game and firmware: [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md
 ## Helping extend 8 GiB to other firmwares
 
 The 8 GiB budget is tested on firmware **13.20** only. Firmware **13.60** has verified offsets but needs a
-hardware test. To port it to other firmwares we need a diagnostic capture and, ideally, a raw kernel TEXT dump.
+hardware test. To port it to other firmwares we need a diagnostic capture. **Do not post kernel dumps**; see
+[diagnostics/README.md](diagnostics/README.md).
 Use **Save Diagnostic** in the web panel (or `GET /diagnostic`) and see
 [diagnostics/README.md](diagnostics/README.md) for what to submit. **If you are on 13.60, please test and
 share your results.**

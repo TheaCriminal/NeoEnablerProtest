@@ -18,7 +18,7 @@ body:
     attributes:
       label: Setup
       description: NeoEnabler version, PS5 firmware, console model, jailbreak and loader.
-      placeholder: v0.3.0, FW 13.20, Slim, y2jb + etaHEN
+      placeholder: v0.3.1, FW 13.20, Slim, y2jb + etaHEN
     validations:
       required: true
   - type: textarea

@@ -31,7 +31,7 @@
 #include "http_request.h"
 
 #define PORT 8765
-#define VERSION "NeoEnabler 0.3.0"
+#define VERSION "NeoEnabler 0.3.1"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -698,6 +698,7 @@ static int do_set(int enable, char *msg, size_t cap, int show) {
 /* State after an action: NEO hook, legacy v4 hook, actual 8 GiB budget and the requested one. */
 static void log_state(void) {
     shell_t s; int st = hook_state(&s);
+    if (st == HOOK_BAD_CAVE) { char d[400]; bad_cave_text(&s, d, sizeof(d)); log_line("%s", d); }
     mb_snapshot m; mb_check(&m);
     log_line("state: NEO hook %s, v4 hook %s, 8 GiB %s (requested %s): %s", state_text(st),
              v4_active(&s) ? "present" : "absent",

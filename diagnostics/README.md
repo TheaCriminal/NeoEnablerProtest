@@ -7,7 +7,7 @@ Does not apply patches, change settings or unlock anything on the console.
 
 | Firmware | NEO (Pro mode) | 8 GiB budget | Text-to-data delta | What we need |
 | --- | --- | --- | --- | --- |
-| 4.00 - 13.00 | Supported | Not started | Unknown | Diagnostic capture + kernel TEXT dump |
+| 4.00 - 13.00 | Supported | Not started | Unknown | Diagnostic capture; the maintainer may ask for more by direct contact |
 | 13.20 | Supported | Validated | `0x00CB0000` | Done |
 | 13.60 | Supported | Offsets found, needs hardware test | `0x00CC0000` | Console test to verify areas offset and gameplay |
 | 14.00+ | No jailbreak | Not possible | N/A | N/A |
@@ -39,10 +39,16 @@ Do not remove lines from the JSONL. It must start with `session` and end with `e
 ## What to submit
 
 - `diagnostic.jsonl` (required).
-- A raw kernel TEXT dump starting at offset 0, captured separately by a trusted tool after hypervisor unlock (optional but needed to locate the budget constructor).
-- Firmware version, console model, jailbreak method, hypervisor unlock method, and the tool used for the TEXT dump.
+- Firmware version, console model, jailbreak method and hypervisor unlock method.
 
-Do not include kernel dumps in a public PR. Transfer them separately.
+> [!CAUTION]
+> **Never post a kernel dump, a kernel TEXT dump or any other memory dump of the PS5 anywhere public.** Not in an
+> issue, a pull request, a comment, a gist or a file host. Dumps contain copyrighted Sony code and can contain
+> data from your console. Anything of that kind posted here will be deleted.
+>
+> If you have a dump and think it can help, **do not attach it**. Contact the maintainer directly (GitHub
+> profile: [gasb07](https://github.com/gasb07)) and wait for instructions. A dump is only accepted through direct
+> contact and only when the maintainer asked for it.
 
 ## Offline analysis
 
@@ -50,14 +56,14 @@ These commands need no console or network:
 
 ```sh
 python3 tools/firmware_report.py --diagnostic diagnostic.jsonl --out cases/fw-report
-python3 tools/firmware_report.py --diagnostic diagnostic.jsonl --kernel-text kernel-text.bin --out cases/fw-with-text
+python3 tools/firmware_report.py --diagnostic diagnostic.jsonl --kernel-text kernel-text.bin --out cases/fw-with-text   # maintainer only, for a dump received by direct contact
 ```
 
 `--out` must be a new directory; existing evidence is never overwritten. `--text-base 0x...` is optional and must come from an independent measurement. The output contains `diagnostic.jsonl`, `report.json` and the kernel TEXT if provided. The scanner reports only **candidates**. A match does not prove the code belongs to the budget path, and no match does not prove the path is absent. The report always sets `automatic_patch_allowed:false`.
 
 ## Criteria for adding firmware support
 
-1. Verify dump origin, integrity and actual firmware version.
+1. Verify dump origin, integrity and actual firmware version (dumps are received only by direct contact, never from public posts).
 2. Disassemble candidates and trace the constructor, budget, backing, neighboring reserves and capacity checks.
 3. Identify DATA/pmap layout and access preconditions for that firmware.
 4. Prepare complete guards, rollback and offline tests for the real flow.
