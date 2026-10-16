@@ -82,6 +82,29 @@ int main(void) {
         assert(!strcmp(acc, "a\nb\n(line above repeated 2 more times)\nc\nd\n(line above repeated 1 more times)\n"));
         assert(hidden == 2 + 2 + 1);
     }
+    /* redact: personal and console identifiers go, version numbers and counters stay */
+    {
+        struct { const char *in, *out; } c[] = {
+            {"connect 192.168.0.4 port 8765", "connect <ip> port 8765"},
+            {"firmware 13.20 refCount={0} pid:0xa3 v1.2.3", "firmware 13.20 refCount={0} pid:0xa3 v1.2.3"},
+            {"addr 300.1.1.1 and 1.2.3.4.5", "addr 300.1.1.1 and 1.2.3.4.5"},
+            {"mac 00:1a:2b:3c:4d:5e up", "mac <mac> up"},
+            {"mail jane.doe+x@example.com sent", "mail <email> sent"},
+            {"UserId=1ea2f4da name", "UserId=<id> name"},
+            {"accountId: 123456789 ok", "accountId: <id> ok"},
+            {"[SceCdlgApp][Pss]   [o][0x0000000000070300][0x1ea2f4da][DUALSENSE ]", "[SceCdlgApp][Pss]   [o][<id>][<id>][DUALSENSE ]"},
+            {"[Pss] Open Pad [0x0000000000070300, 0, 0]: ret=0x03090700", "[Pss] Open Pad [<id>, 0, 0]: ret=<id>"},
+            {"SetDeviceIndexBehavior: mode=SpecificUser, param=0x1ea2f4da", "SetDeviceIndexBehavior: mode=SpecificUser, param=<id>"},
+            {"SetDeviceIndexBehavior: mode=MergeAllConnectedDevice, param=null", "SetDeviceIndexBehavior: mode=MergeAllConnectedDevice, param=null"},
+            {"src \"/user/home/1ea2f4da/webkit/shell\" -> dst \"/sce_sbx/006/user/home/1ea2f4da/x\"", "src \"/user/home/<id>/webkit/shell\" -> dst \"/sce_sbx/006/user/home/<id>/x\""},
+            {"deviceId : 0xffffffffffffffff / userId : 0xffffffff /", "deviceId : <id> / userId : <id> /"},
+            {"plain 0x0000000000070300 outside", "plain 0x0000000000070300 outside"},
+        };
+        for (size_t i = 0; i < sizeof c / sizeof c[0]; i++) {
+            char r[256]; size_t rn = lm_redact(c[i].in, strlen(c[i].in), r, sizeof r - 1); r[rn] = 0;
+            if (strcmp(r, c[i].out)) { printf("redact %zu: got [%s] want [%s]\n", i, r, c[i].out); return 1; }
+        }
+    }
     puts("log_mirror ok");
     return 0;
 }

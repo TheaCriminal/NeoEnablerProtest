@@ -712,6 +712,64 @@ static void log_state(void) {
              gpu_state_text(), gpu.target, gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.owner_pid, gpu.message);
 }
 
+/* Identity of the eboot.bin of every game seen mounted, so a report shows whether two title IDs run the same binary
+   (the patches are bytes at fixed addresses). The game's PFS is mounted under /mnt/sandbox/pfsmnt while it runs. The
+   file is read 1 MiB per main loop pass so launch questions and the panel are not held up. fnv64 is FNV-1a over the
+   whole file: it tells binaries apart, it is not a cryptographic hash. */
+#define BIN_MAX 24
+#define PFSMNT "/mnt/sandbox/pfsmnt"
+static struct { char tid[10]; unsigned long long size, fnv; char from[24]; } bins[BIN_MAX];
+static int bin_count;
+static struct { int fd; char tid[10]; unsigned long long size, fnv; char from[24]; } binjob = {.fd = -1};
+
+static int bin_known(const char *tid) {
+    for (int i = 0; i < bin_count; i++) if (!strcmp(bins[i].tid, tid)) return 1;
+    return 0;
+}
+
+static void binary_scan(void) {
+    DIR *d = opendir(PFSMNT);
+    if (!d) return;
+    struct dirent *e;
+    while (binjob.fd < 0 && (e = readdir(d))) {
+        if (strlen(e->d_name) != 14 || strcmp(e->d_name + 9, "-app0")) continue;
+        char tid[10]; snprintf(tid, sizeof tid, "%.9s", e->d_name);
+        if (!game_tid(tid) || bin_known(tid) || bin_count >= BIN_MAX) continue;
+        static const char *const dirs[] = {"-app0-patch0-union", "-app0"};
+        for (int k = 0; k < 2 && binjob.fd < 0; k++) {
+            char path[96]; snprintf(path, sizeof path, PFSMNT "/%s%s/eboot.bin", tid, dirs[k]);
+            int fd = open(path, O_RDONLY);
+            if (fd < 0) continue;
+            binjob.fd = fd; binjob.size = 0; binjob.fnv = 1469598103934665603ULL;
+            snprintf(binjob.tid, sizeof binjob.tid, "%s", tid); snprintf(binjob.from, sizeof binjob.from, "%s", dirs[k] + 1);
+        }
+    }
+    closedir(d);
+}
+
+static void binary_tick(void) {
+    static time_t last_scan;
+    if (binjob.fd < 0) {
+        time_t now = time(NULL);
+        if (now == last_scan || now - last_scan < 2) return;
+        last_scan = now; binary_scan();
+        if (binjob.fd < 0) return;
+    }
+    static unsigned char buf[1 << 20];
+    ssize_t n = read(binjob.fd, buf, sizeof buf);
+    if (n > 0) {
+        unsigned long long h = binjob.fnv;
+        for (ssize_t i = 0; i < n; i++) h = (h ^ buf[i]) * 1099511628211ULL;
+        binjob.fnv = h; binjob.size += (unsigned long long)n;
+        return;
+    }
+    close(binjob.fd); binjob.fd = -1;
+    if (n < 0 || !binjob.size) { log_line("binary: %s eboot.bin could not be read (errno %d)", binjob.tid, errno); snprintf(bins[bin_count].tid, 10, "%s", binjob.tid); bins[bin_count].size = 0; bin_count++; return; }
+    snprintf(bins[bin_count].tid, 10, "%s", binjob.tid); snprintf(bins[bin_count].from, sizeof bins[0].from, "%s", binjob.from);
+    bins[bin_count].size = binjob.size; bins[bin_count].fnv = binjob.fnv; bin_count++;
+    log_line("binary: %s eboot.bin from %s size %llu fnv64 %016llx", binjob.tid, binjob.from, binjob.size, binjob.fnv);
+}
+
 #define LOGS_PATH "/data/neo-logs.txt"
 #define LOGS_MAX (1024 * 1024)
 
@@ -741,7 +799,11 @@ static int read_msgbuf(char **out, size_t *len) {
 
 /* Keeps the launch answers of the hook and the crash reports of the kernel log in NeoEnabler's own log. Called about
    once a second: the kernel log is overwritten in 10 to 25 seconds. */
-static void mirror_emit(void *ctx, const char *line, size_t n) { (void)ctx; file_log("kernel: ", line, n); }
+static void mirror_emit(void *ctx, const char *line, size_t n) {
+    (void)ctx;
+    char red[1400]; size_t rn = lm_redact(line, n < 1200 ? n : 1200, red, sizeof red);
+    file_log("kernel: ", red, rn);
+}
 
 static void log_mirror_tick(void) {
     static lm_state st;
@@ -786,6 +848,15 @@ static void build_report(sbuf *b) {
     sb_printf(b, "GPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", gpu_state_text(), gpu.target,
               gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
     sb_printf(b, "patches: %s\n", patches_message);
+    { size_t bl = 0; char *bt = ps_read("/data/user/patches/build.txt", 256, &bl);
+      sb_printf(b, "ps-patch-system %s", bt && bl ? bt : "patch database version unknown (the payload version is not available)\n");
+      if (bt && bl && bt[bl - 1] != '\n') sb_raw(b, "\n", 1);
+      free(bt); }
+    sb_printf(b, "eboot.bin of games seen mounted since the manager started (fnv64, to compare binaries):%s\n", bin_count ? "" : " none yet");
+    for (int i = 0; i < bin_count; i++) {
+        if (bins[i].size) sb_printf(b, "  %s from %s size %llu fnv64 %016llx\n", bins[i].tid, bins[i].from, bins[i].size, bins[i].fnv);
+        else sb_printf(b, "  %s could not be read\n", bins[i].tid);
+    }
     int n; game_t *g = games_scan(&n);
     size_t sl = 0; char *settings = settings_read(&sl);
     for (int i = 0; i < n; i++) {
@@ -806,7 +877,7 @@ static int build_logs(sbuf *b) {
     sb_file(b, "NeoEnabler log (older)", NEO_LOG_OLD);
     sb_file(b, "NeoEnabler log", NEO_LOG_PATH);
     char *k; size_t kl;
-    sb_printf(b, "\n==== Kernel log (last 128 KiB, not complete; repeated and known noise lines are hidden) ====\n");
+    sb_printf(b, "\n==== Kernel log (last 128 KiB, not complete; repeated and known noise lines are hidden; IPs, MACs, e-mails and account, device ids are removed) ====\n");
     if (read_msgbuf(&k, &kl)) { sb_printf(b, "kern.msgbuf read failed (errno %d)\n", errno); return -1; }
     size_t hidden = lm_squeeze(k, kl, squeeze_emit, b);
     sb_printf(b, "(%zu lines hidden)\n", hidden);
@@ -1009,6 +1080,7 @@ int main(void) {
     time_t last_mirror=0;
     for (;;) {
         launch_poll();
+        binary_tick();
         time_t now=time(NULL);
         if(now!=last_mirror){log_mirror_tick();last_mirror=now;}
         if(now<last_memory_poll||now-last_memory_poll>=2){

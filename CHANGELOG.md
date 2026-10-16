@@ -7,6 +7,10 @@
   `neo.log.old`), with the console time, and copies the hook's `[NEO <title ID>]` launch lines and the crash report
   of a game from the kernel log into it. Every line has the console time to the millisecond and the seconds since
   the manager started, because the console clock is often wrong. The patch sync logs how long it took.
+- The report also lists the size and a fingerprint (fnv64) of the `eboot.bin` of every game seen mounted, so two
+  title IDs can be compared, and the ps-patch-system patch database version.
+- The kernel log in the report hides repeated and known noise lines, and removes IP and MAC addresses, e-mail
+  addresses and account, user and device ids. This is rule based, so check a log before posting it.
 - **Show Logs**, the new **Download Logs** and **Save Logs** give one text: a report (version, firmware, hook
   state, 8 GiB, GPU, games and enabled patches), NeoEnabler's own log and the kernel log. Download Logs sends it as
   a file from `/logs/download`.
