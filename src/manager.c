@@ -441,7 +441,7 @@ static void serve_page(int fd, const char *msg) {
               "<div>Launch hook <span class='state %s'>%s</span></div>"
               "<div style='margin-top:6px'>8 GiB memory <span class='state %s'>%s</span>%s</div>"
               "<p><small>Pro mode and 8 GiB follow the enabled patches of each game. 8 GiB returns to the original "
-              "memory when the game closes.</small></p><b>Games running</b><ul>%s</ul></div>"
+              "memory when the game closes.</small></p><b>Game running</b><ul>%s</ul></div>"
               "<div class=card><h2>Game patches</h2><p>%s</p><small>Downloads the patches from the NeoEnabler repository "
               "into " PS_DIR ". Changed files are backed up to " PS_BACKUP_ROOT " first.</small>"
               "<form method=post><button formaction=/patches/update>Update Patches</button></form></div>"
