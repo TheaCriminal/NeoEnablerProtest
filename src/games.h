@@ -116,8 +116,9 @@ static int game_needs(const char *tid) {
     return needs;
 }
 
-/* Enables or disables one patch of a game. Refuses hashes that are not an entry of the game's installed version,
-   and 8 GiB patches when the firmware has no 8 GiB support. Returns 0, or -1 with a reason in msg. */
+/* Enables or disables one patch of a game. Enabling a NeoEnabler resolution entry disables the other NeoEnabler
+   resolution entries of that game, so at most one is on; other patches are not affected. Refuses hashes that are not an entry of the game's installed version, and 8 GiB
+   patches when the firmware has no 8 GiB support. Returns 0, or -1 with a reason in msg. */
 static int game_set_patch(const char *tid, const char *hash, int on, int memory_ok, char *msg, size_t cap) {
     char name[128], ver[16];
     if (!game_tid(tid) || game_info(tid, name, sizeof name, ver, sizeof ver)) { snprintf(msg, cap, "Unknown game"); return -1; }
@@ -126,10 +127,17 @@ static int game_set_patch(const char *tid, const char *hash, int on, int memory_
     if (!hit) { free(p); snprintf(msg, cap, "This patch is not available for %s %s", tid, ver); return -1; }
     if (on && hit->needs_8gib && !memory_ok) { free(p); snprintf(msg, cap, "Not available on this firmware"); return -1; }
     size_t sl, ol; char *s = settings_read(&sl), *out = NULL;
-    int rc = gp_setting_set(s, sl, hash, on, &out, &ol);
+    int rc = gp_setting_set(s, sl, hash, on, &out, &ol), others = 0;
+    for (int i = 0; !rc && on && hit->resolution && i < n; i++) {
+        if (&p[i] == hit || !p[i].resolution || gp_setting(out, ol, p[i].hash) != 1) continue;
+        char *next; size_t next_len;
+        rc = gp_setting_set(out, ol, p[i].hash, 0, &next, &next_len);
+        if (!rc) { free(out); out = next; ol = next_len; others++; log_line("patches: %s: %s disabled (one resolution at a time)", tid, p[i].name); }
+    }
     if (rc) snprintf(msg, cap, "The patch system settings file is malformed; nothing changed");
     else if (ps_write(PS_DIR, "!_settings.xml", out, ol)) { snprintf(msg, cap, "Writing the settings failed (errno %d)", errno); rc = -1; }
-    else snprintf(msg, cap, "%s: %s %s", tid, hit->name, on ? "enabled" : "disabled");
+    else snprintf(msg, cap, "%s: %s %s%s", tid, hit->name, on ? "enabled" : "disabled",
+                  others ? "; the other resolution was disabled" : "");
     log_line("patches: %s", msg);
     free(out); free(s); free(p);
     return rc ? -1 : 0;

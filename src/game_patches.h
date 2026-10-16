@@ -18,6 +18,7 @@ typedef struct {
     char note[640];
     char hash[9];
     int needs_pro, needs_8gib;
+    int resolution;             /* NeoEnabler resolution entry (needs Pro mode): at most one per game is enabled */
 } gp_patch;
 
 /* Value of a string key of a param.sfo; 0 when found. */
@@ -145,6 +146,7 @@ static int gp_list(const char *xml, size_t len, const char *file, const char *ve
         uint32_t h = gp_sid(GP_FOLDER) ^ gp_sid(file) ^ gp_sid(name) ^ gp_sid(title) ^ gp_sid(elf) ^ gp_sid(matched);
         snprintf(p->hash, sizeof p->hash, "%08x", h);
         gp_requirements(req, name, &p->needs_pro, &p->needs_8gib);
+        p->resolution = p->needs_pro;
     }
     return n;
 }

@@ -413,8 +413,8 @@ static void serve_page(int fd, const char *msg) {
         for (int k = 0; k < g[i].count; k++) {
             const gp_patch *p = &g[i].patches[k];
             int on = gp_setting(settings, sl, p->hash) == 1, blocked = p->needs_8gib && !mem_ok && !on;
-            sb_printf(&b, "<li><label class=patch><input type=checkbox data-tid=%s data-hash=%s%s%s><span><b>",
-                      g[i].tid, p->hash, on ? " checked" : "", blocked ? " disabled" : "");
+            sb_printf(&b, "<li><label class=patch><input type=checkbox data-tid=%s data-hash=%s%s%s%s><span><b>",
+                      g[i].tid, p->hash, p->resolution ? " data-res=1" : "", on ? " checked" : "", blocked ? " disabled" : "");
             sb_esc(&b, p->name);
             sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8 GiB</span>" : "");
             if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }

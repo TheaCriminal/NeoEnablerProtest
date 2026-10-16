@@ -73,6 +73,7 @@ int main(void) {
                         "<Metadata Title=\"G\" Name=\"C\" AppVer=\"01.02\"><PatchList/></Metadata>\n</Patch>\n";
     n = gp_list(other, strlen(other), "CUSA99999.xml", "01.01", p, 16);
     assert(n == 2 && p[0].needs_pro && p[0].needs_8gib && !p[1].needs_pro && !strcmp(p[1].note, "x & y"));
+    assert(p[0].resolution && !p[1].resolution);
     char h[9]; snprintf(h, sizeof h, "%08x", gp_sid("xml_orbis") ^ gp_sid("CUSA99999.xml") ^ gp_sid("A (PS4 Pro mode, requires 8 GiB enabled)") ^
                                              gp_sid("G") ^ gp_sid("eboot.bin") ^ gp_sid("01.01"));
     assert(!strcmp(p[0].hash, h));
@@ -104,6 +105,6 @@ int main(void) {
     free(o);
     assert(gp_setting_set("<Settings>", 10, "dddddddd", 1, &o, &ol) == -1);                     /* truncated file */
 
-    puts("PASS game patches: versions, entry hashes, requirements, settings read and edit");
+    puts("PASS game patches: versions, entry hashes, requirements, resolution entries, settings read and edit");
     return 0;
 }
