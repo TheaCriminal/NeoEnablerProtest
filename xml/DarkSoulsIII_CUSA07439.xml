@@ -3,13 +3,31 @@
   <TitleID>
     <ID>CUSA07439</ID>
   </TitleID>
-  <Metadata Title="Dark Souls III: The Fire Fades Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Based on DanielSvoboda's resolution patch. Requires NEO Enabler." Author="DanielSvoboda (resolution), gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+  <Metadata Title="Dark Souls III: The Fire Fades Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Based on DanielSvoboda's resolution patch. Enable only one resolution entry. Requires NEO Enabler." Author="DanielSvoboda (resolution), gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes32" Address="0x04e1efb0" Value="0x00000a00" />
       <Line Type="bytes32" Address="0x04e1efb4" Value="0x000005a0" />
       <Line Type="bytes" Address="0x045e92c0" Value="000000ce00000000" />
       <Line Type="bytes" Address="0x045e9350" Value="000000ce00000000" />
       <Line Type="bytes" Address="0x045e93e0" Value="000000ce00000000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Dark Souls III: The Fire Fades Edition" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Based on DanielSvoboda's resolution patch. Enable only one resolution entry. Requires NEO Enabler." Author="DanielSvoboda (resolution), gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes32" Address="0x04e1efb0" Value="0x00000b40" />
+      <Line Type="bytes32" Address="0x04e1efb4" Value="0x00000654" />
+      <Line Type="bytes" Address="0x045e92c0" Value="000000d600000000" />
+      <Line Type="bytes" Address="0x045e9350" Value="000000d600000000" />
+      <Line Type="bytes" Address="0x045e93e0" Value="000000d600000000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Dark Souls III: The Fire Fades Edition" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Based on DanielSvoboda's resolution patch. Enable only one resolution entry. Requires NEO Enabler." Author="DanielSvoboda (resolution), gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes32" Address="0x04e1efb0" Value="0x00000c80" />
+      <Line Type="bytes32" Address="0x04e1efb4" Value="0x00000708" />
+      <Line Type="bytes" Address="0x045e92c0" Value="000000de00000000" />
+      <Line Type="bytes" Address="0x045e9350" Value="000000de00000000" />
+      <Line Type="bytes" Address="0x045e93e0" Value="000000de00000000" />
     </PatchList>
   </Metadata>
 </Patch>

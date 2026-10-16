@@ -121,7 +121,7 @@ game needs at launch. ps-patch-system ignores this attribute.
 | Battlefield 4 (01.24) | 1440p, 1620p, 1800p, 4K | 1800p holds 60 fps. 4K runs around 49 fps. |
 | Killzone Shadow Fall (01.81) | 1440p, 1620p, 1800p, 4K | Some surfaces are slightly darker from 1440p to 1800p. 4K is clean but below 60 fps. |
 | The Order: 1886 (01.02) | 4K, 4K up to 60 fps | Small sparkles may appear on edges while moving. Native 4K 60fps uses triple buffering: no tearing, slight stutter. |
-| Dark Souls III: The Fire Fades Edition (01.03) | 1440p | The game already runs in PS4 Pro mode. 1620p and above do not fit in its memory. |
+| Dark Souls III: The Fire Fades Edition (01.03) | 1440p, 1620p, 1800p | The game already runs in PS4 Pro mode. 4K does not fit in its memory. |
 | Driveclub (01.28) | 1440p, 4K (1620p render), 4K (1800p render), native 4K | 4K needs the 8 GiB memory budget. **Tested on firmware 13.20 only.** 4K with 1800p render runs close to 60 fps; native 4K is below 60 fps in races. 4K with 1620p or 1800p render may show blocky artifacts in the clouds and on other surfaces. Native 4K: snow can show inside the car. |
 
 Patch IDs, how the hook works and how to build from source: [docs/TECHNICAL.md](docs/TECHNICAL.md).

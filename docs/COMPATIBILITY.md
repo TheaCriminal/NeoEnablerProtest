@@ -25,7 +25,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Need for Speed Rivals (01.04) | 1440p, 4K | Validated |
 | Resident Evil 6 (01.01) | 1440p, 4K | Validated |
 | The Order: 1886 (01.02) | 4K, 4K up to 60 fps | Validated |
-| Dark Souls III: The Fire Fades Edition (01.03) | 1440p | Validated |
+| Dark Souls III: The Fire Fades Edition (01.03) | 1440p, 1620p, 1800p | Validated |
 
 ## Other firmwares
 
