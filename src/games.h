@@ -70,7 +70,8 @@ static game_t *games_scan(int *count) {
     if (!d) return NULL;
     int cap = 32, n = 0; struct dirent *e;
     game_t *g = malloc(sizeof(game_t) * (size_t)cap);
-    while (g && (e = readdir(d))) {
+    if (!g) { closedir(d); return NULL; }
+    while ((e = readdir(d))) {
         if (!game_tid(e->d_name)) continue;
         game_t x = {0};
         snprintf(x.tid, sizeof x.tid, "%.9s", e->d_name);
@@ -91,7 +92,7 @@ static game_t *games_scan(int *count) {
         g[n++] = x;
     }
     closedir(d);
-    if (g) qsort(g, (size_t)n, sizeof(game_t), game_cmp);
+    qsort(g, (size_t)n, sizeof(game_t), game_cmp);
     *count = n;
     return g;
 }
