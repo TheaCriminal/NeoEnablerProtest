@@ -1,0 +1,117 @@
+name: Game problem
+description: A supported game crashes, shows a black or corrupted image, or does not start in PS4 Pro mode.
+title: "[Game] <title ID> <short symptom>"
+labels: ["game-problem"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill in every required field. Reports without logs and exact versions cannot be diagnosed.
+        NeoEnabler only has patches for the games listed in the README, for the game versions listed there.
+        If your title ID or game version is not in the `xml/` folder, there is no patch for it and this is expected.
+  - type: input
+    id: title_id
+    attributes:
+      label: Title ID
+      description: For example CUSA00900. Shown in the NeoEnabler panel and in the game's Options menu.
+    validations:
+      required: true
+  - type: input
+    id: game_version
+    attributes:
+      label: Game version
+      description: For example 01.09. Shown in the NeoEnabler panel.
+    validations:
+      required: true
+  - type: dropdown
+    id: game_source
+    attributes:
+      label: Game source
+      options:
+        - Disc
+        - Digital (PSN)
+        - Dumped fpkg / backup
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: neo_version
+    attributes:
+      label: NeoEnabler version
+      description: Release tag you downloaded, for example v0.3.0.
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: PS5 firmware
+      description: For example 13.20.
+    validations:
+      required: true
+  - type: input
+    id: console_model
+    attributes:
+      label: Console model
+      description: For example Fat disc, Slim digital, Pro.
+    validations:
+      required: true
+  - type: input
+    id: jailbreak
+    attributes:
+      label: Jailbreak and ELF loader
+      description: Exploit and loader used, for example y2jb + etaHEN. Include the ps-patch-system version.
+    validations:
+      required: true
+  - type: dropdown
+    id: hypervisor
+    attributes:
+      label: Hypervisor exploit enabled
+      description: Needed for the 8 GiB memory budget.
+      options:
+        - "No"
+        - "Yes (Byepervisor or similar)"
+        - "I don't know"
+    validations:
+      required: true
+  - type: dropdown
+    id: load_order
+    attributes:
+      label: Did you load ps-patch-system before NeoEnabler?
+      options:
+        - "Yes, after this boot"
+        - "No"
+        - "I don't know"
+    validations:
+      required: true
+  - type: textarea
+    id: enabled_patches
+    attributes:
+      label: Enabled patches
+      description: Every patch ticked for this game in the panel, NeoEnabler and others (60 fps, motion blur, debug cam, and so on).
+    validations:
+      required: true
+  - type: textarea
+    id: symptom
+    attributes:
+      label: What happens
+      description: Crash, black screen, kernel panic, console freeze, wrong image. Say when it happens (splash, menu, in game) and whether the console recovers.
+    validations:
+      required: true
+  - type: textarea
+    id: tested
+    attributes:
+      label: What you already tried
+      description: Other resolution entries, all other patches off, reboot and reload order. Say which ones worked.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Use "Save Logs" in the NeoEnabler panel and paste it here. Keep the lines that start with `[NEO <title ID>]`.
+        If the game crashed, also paste the crash report (signal, fault address, thread name).
+        If there is no `[NEO ...]` line, NeoEnabler did not act on this game.
+      render: text
+    validations:
+      required: true

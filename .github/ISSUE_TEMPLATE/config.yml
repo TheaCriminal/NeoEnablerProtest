@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Read the README first
+    url: https://github.com/gasb07/NeoEnabler#readme
+    about: Supported firmwares, supported games and install order (load ps-patch-system first).

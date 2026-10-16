@@ -1,0 +1,45 @@
+name: Panel or manager bug
+description: The NeoEnabler panel, the manager payload, the GPU clock tab or the patch download misbehaves.
+title: "[Manager] <short symptom>"
+labels: ["manager"]
+body:
+  - type: input
+    id: neo_version
+    attributes:
+      label: NeoEnabler version
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: PS5 firmware
+    validations:
+      required: true
+  - type: input
+    id: jailbreak
+    attributes:
+      label: Jailbreak and ELF loader
+      description: Include the ps-patch-system version.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps, starting from console boot.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: '"Save Logs" from the panel, or the sender output.'
+      render: text
+    validations:
+      required: true
