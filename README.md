@@ -10,6 +10,9 @@ alone does not make any game work: every game tested so far broke in Pro mode wi
 corrupted image, or the game closing). The patches in `xml/` fix each game for Pro mode and raise its resolution,
 so NeoEnabler is only useful for the games listed below.
 
+You pick the patches in the NeoEnabler panel. A game starts in Pro mode, and gets the 8 GiB memory budget, only
+when one of its enabled patches needs it; every other game starts as usual.
+
 ## What you need
 
 - A jailbroken PS5 on firmware 4.00 to 13.60 (tested on 13.20) with an ELF loader, such as etaHEN or elfldr.
@@ -20,18 +23,19 @@ so NeoEnabler is only useful for the games listed below.
 1. Download `neo-manager.elf` from the [latest release](https://github.com/gasb07/NeoEnabler/releases/latest).
 2. After every console boot, load ps-patch-system, then send `neo-manager.elf` with your payload sender
    (port 9021).
-3. A notification on the PS5 confirms that NeoEnabler is enabled.
+3. A notification on the PS5 confirms that NeoEnabler is enabled. It downloads the game patches from this
+   repository and adds them to the ps-patch-system files (see [Game patches](#game-patches)).
+4. Open the panel and tick the patches you want for each game.
 
-Version **0.2.0** adds an optional **8 GiB PS4 Pro memory budget**, **disabled by default**. It currently
-supports **firmware 13.20** (tested) and **13.60** (offsets found, needs hardware test). The hypervisor must
-already be unlocked by Byepervisor or another method that allows reading and writing the kernel code page;
-NeoEnabler checks that access without relying on exploit-specific markers and does not unlock the hypervisor
-itself. Without that access, the normal NEO feature remains available. On other firmwares the 8 GiB
-controls are greyed out and the request is refused (since 0.2.1).
+The **8 GiB PS4 Pro memory budget** is used only by patches that need it. It currently supports **firmware 13.20**
+(tested) and **13.60** (offsets found, needs hardware test). The hypervisor must already be unlocked by Byepervisor
+or another method that allows reading and writing the kernel code page; NeoEnabler checks that access without
+relying on exploit-specific markers and does not unlock the hypervisor itself. Without that access, or on other
+firmwares, patches that need 8 GiB cannot be enabled and everything else works.
 
 **If you are on firmware 13.20 or 13.60, please test the 8 GiB budget and report your results.**
 
-Pro mode stays on until you turn it off or reboot the console. It applies to games you open afterwards.
+NeoEnabler must keep running for the automatic Pro mode and 8 GiB: send it again after every reboot.
 
 ## Control panel
 
@@ -76,7 +80,7 @@ The current short gameplay validation covers a 2200 MHz request with SMU reading
 FPS gains and long-term stability have not been established.
 
 **Disable boost** requests the clock captured before boost for the running game. **Quit** also requests that
-restoration; NEO and memory settings are kept. On game exit/transition the manager stops applying that game's
+restoration. On game exit/transition the manager stops applying that game's
 target and lets the system manage clocks. A new PS4 launch captures a new baseline. The manager does not keep
 resending a target when the SMU varies the clock, and it does not change CPU clocks, thermal/power controls,
 memory bandwidth, or enabled ROPs. If a clock request or restoration fails, the panel shows the error and stops
@@ -88,19 +92,19 @@ the controls are greyed out, direct enable requests are refused and a saved GPU 
 
 ## Game patches
 
-Every game needs its patch from `xml/` to work in PS4 Pro mode. Turn PS4 Pro mode off in the panel before playing
-a game that is not in the table below.
+Every game needs its patch from `xml/` to work in PS4 Pro mode. NeoEnabler installs them for you:
 
-1. Copy the game's file to `/data/user/patches/xml_orbis/` on the PS5 and rename it to the title ID only, for
-   example `Bloodborne_CUSA00900.xml` becomes `CUSA00900.xml`.
-
-   If ps-patch-system already has a file for that game (`/data/user/patches/xml_orbis/<TITLE ID>.xml`, for example
-   `/data/user/patches/xml_orbis/CUSA00900.xml`), don't replace it. Open the game's file from `xml/`, copy every
-   `<Metadata ...>` block (each one holds its own `<PatchList>`), and paste them into the existing file, before
-   the closing `</Patch>` line. Each `<PatchList>` must stay inside its `<Metadata>` block, or the patch system
-   won't load it.
-2. In the Patch Manager, enable **one** resolution entry for the game, for example "Native 4K (PS4 Pro mode)".
+1. At startup (and with **Update Patches** in the panel), NeoEnabler downloads `xml/` from this repository and adds
+   its entries to every ps-patch-system file of the same game in `/data/user/patches/xml_orbis/` (all regions,
+   matched by the game title). Entries already there are updated; other patches in those files are kept. An entry
+   with the same patch lines under another name is renamed to the repository name, and stays enabled if it was. A
+   game without a file gets a new `<TITLE ID>.xml`. Changed files are backed up first to
+   `/data/neo-enabler/xml-backup/<date-time>/` (the last 5 backups are kept).
+2. In the panel's Games page, tick **one** resolution entry for the game, for example "Native 4K (PS4 Pro mode)".
 3. For 4K entries, set the PS5 video output to 2160p.
+
+Every NeoEnabler entry carries `NeoRequires="pro"` or `NeoRequires="pro,8gib"`, which tells the manager what the
+game needs at launch. ps-patch-system ignores this attribute.
 
 | Game (version) | Resolutions | Notes |
 | --- | --- | --- |
@@ -135,6 +139,7 @@ share your results.**
 | [ps5-app-dumper](https://github.com/EchoStretch/ps5-app-dumper) | [EchoStretch](https://github.com/EchoStretch) | Reference for the `libSceAppInstUtil` load order and the Media tab shortcut (`deeplinkUri`) |
 | [etaHEN](https://github.com/etaHEN/etaHEN) | [LightningMods](https://github.com/LightningMods) | Jailbreak, ELF loader, FTP and klog used during development and testing |
 | [Pillow](https://github.com/python-pillow/Pillow) | [python-pillow](https://github.com/python-pillow) | Icon generation (`tools/make_icon.py`) |
+| [ShadowMountPlus](https://github.com/drakmor/ShadowMountPlus) | [drakmor](https://github.com/drakmor) | Visual style of the games page (colors and layout of its web library) |
 
 ### Game patches
 
