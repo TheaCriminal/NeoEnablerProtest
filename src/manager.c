@@ -50,31 +50,45 @@ int sceKernelSendNotificationRequest(int, notify_request_t *, size_t, int);
 #define NEO_LOG_PATH NEO_LOG_DIR "/neo.log"
 #define NEO_LOG_OLD NEO_LOG_PATH ".old"
 #define NEO_LOG_MAX (256 * 1024)
+/* The kernel log without the noise and without personal ids, kept as it goes by (the ring holds 128 KiB). */
+#define KLOG_PATH NEO_LOG_DIR "/kernel.log"
+#define KLOG_OLD KLOG_PATH ".old"
+#define KLOG_MAX (1024 * 1024)
 
 static struct timespec manager_start; /* monotonic clock at the first log line */
 
-static void file_log(const char *kind, const char *line, size_t n) {
-    static int dir_ready;
-    if (!dir_ready) { mkdir(NEO_LOG_DIR, 0777); dir_ready = 1; }
-    /* The console clock is often wrong (2012-01-01 after a boot without network time), so every line also has the
-       seconds since the manager started, from the monotonic clock. */
+/* "YYYY-MM-DD HH:MM:SS.mmm +S.SSSs ". The console clock is often wrong (2012-01-01 after a boot without network
+   time), so every line also has the seconds since the manager started, from the monotonic clock. */
+static size_t log_stamp(char *out, size_t cap) {
     struct timespec wall, mono; struct tm tm;
     clock_gettime(CLOCK_REALTIME, &wall); clock_gettime(CLOCK_MONOTONIC, &mono);
     if (!manager_start.tv_sec && !manager_start.tv_nsec) manager_start = mono;
     double up = (double)(mono.tv_sec - manager_start.tv_sec) + (double)(mono.tv_nsec - manager_start.tv_nsec) / 1e9;
     time_t t = wall.tv_sec; gmtime_r(&t, &tm);
-    char out[1100];
-    size_t k = strftime(out, 24, "%Y-%m-%d %H:%M:%S", &tm);
-    k += (size_t)snprintf(out + k, sizeof(out) - k - 1, ".%03d +%.3fs %s%.*s", (int)(wall.tv_nsec / 1000000), up, kind,
-                          (int)(n < 900 ? n : 900), line);
-    out[k++] = '\n';
-    int fd = open(NEO_LOG_PATH, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    size_t k = strftime(out, cap, "%Y-%m-%d %H:%M:%S", &tm);
+    k += (size_t)snprintf(out + k, cap - k, ".%03d +%.3fs ", (int)(wall.tv_nsec / 1000000), up);
+    return k;
+}
+
+/* Appends to a log file and fsyncs. Past `max` bytes the file becomes `old` and a new one starts. */
+static void append_log(const char *path, const char *old, size_t max, const char *data, size_t n) {
+    static int dir_ready;
+    if (!dir_ready) { mkdir(NEO_LOG_DIR, 0777); dir_ready = 1; }
+    int fd = open(path, O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (fd < 0) return;
-    if (write(fd, out, k) < 0) { close(fd); return; }
+    if (write(fd, data, n) < 0) { close(fd); return; }
     fsync(fd);
     off_t size = lseek(fd, 0, SEEK_END);
     close(fd);
-    if (size > NEO_LOG_MAX) { unlink(NEO_LOG_OLD); rename(NEO_LOG_PATH, NEO_LOG_OLD); }
+    if ((size_t)size > max) { unlink(old); rename(path, old); }
+}
+
+static void file_log(const char *kind, const char *line, size_t n) {
+    char out[1100];
+    size_t k = log_stamp(out, 48);
+    k += (size_t)snprintf(out + k, sizeof(out) - k - 1, "%s%.*s", kind, (int)(n < 900 ? n : 900), line);
+    out[k++] = '\n';
+    append_log(NEO_LOG_PATH, NEO_LOG_OLD, NEO_LOG_MAX, out, k);
 }
 
 /* Every action and its result go to the kernel log (kern.msgbuf) and to NeoEnabler's own log file. */
@@ -797,22 +811,6 @@ static int read_msgbuf(char **out, size_t *len) {
     return 0;
 }
 
-/* Keeps the launch answers of the hook and the crash reports of the kernel log in NeoEnabler's own log. Called about
-   once a second: the kernel log is overwritten in 10 to 25 seconds. */
-static void mirror_emit(void *ctx, const char *line, size_t n) {
-    (void)ctx;
-    char red[1400]; size_t rn = lm_redact(line, n < 1200 ? n : 1200, red, sizeof red);
-    file_log("kernel: ", red, rn);
-}
-
-static void log_mirror_tick(void) {
-    static lm_state st;
-    char *buf; size_t len;
-    if (read_msgbuf(&buf, &len)) return;
-    if (lm_scan(&st, buf, len, mirror_emit, NULL) > 0) log_line("kernel log: lines may have been lost between two reads");
-    free(buf);
-}
-
 static void sb_raw(sbuf *b, const void *p, size_t n) {
     if (b->n + n + 1 > b->cap) {
         size_t cap = b->cap ? b->cap : 16384;
@@ -824,8 +822,50 @@ static void sb_raw(sbuf *b, const void *p, size_t n) {
     memcpy(b->p + b->n, p, n); b->n += n; b->p[b->n] = '\0';
 }
 
-static void sb_file(sbuf *b, const char *title, const char *path) {
-    size_t len = 0; char *data = ps_read(path, NEO_LOG_MAX + 4096, &len);
+/* Polls the kernel log 4 times a second. Every new line goes, without noise and personal ids and with identical
+   runs shortened, to kernel.log (1 MiB, then kernel.log.old). The launch answers of the hook and the crash reports
+   are also copied to neo.log, where they sit with NeoEnabler's own events. The ring is overwritten in 10 to 25
+   seconds when idle and noise is almost all of it, so what is kept lasts much longer. */
+static struct { sbuf out; char last[1200]; size_t last_n, same; } km;
+
+static void km_flush_same(void) {
+    if (!km.same) return;
+    char st[64], note[80];
+    size_t k = log_stamp(st, sizeof st);
+    sb_printf(&km.out, "%.*s(line above repeated %zu more times)\n", (int)k, st, km.same);
+    (void)note; km.same = 0;
+}
+
+static void mirror_emit(void *ctx, const char *line, size_t n) {
+    (void)ctx;
+    if (lm_has(line, n, "[NeoEnabler]") || lm_is_noise(line, n)) return;
+    char red[1400]; size_t rn = lm_redact(line, n < 1200 ? n : 1200, red, sizeof red);
+    if (lm_wanted(line, n)) file_log("kernel: ", red, rn);
+    if (rn == km.last_n && !memcmp(red, km.last, rn)) { km.same++; return; }
+    km_flush_same();
+    char st[64]; size_t k = log_stamp(st, sizeof st);
+    sb_raw(&km.out, st, k); sb_raw(&km.out, red, rn); sb_raw(&km.out, "\n", 1);
+    memcpy(km.last, red, rn); km.last_n = rn;
+}
+
+static void log_mirror_tick(void) {
+    static lm_state st;
+    char *buf; size_t len;
+    if (read_msgbuf(&buf, &len)) return;
+    km.out.n = 0;
+    int gap = lm_scan(&st, buf, len, 1, mirror_emit, NULL);
+    free(buf);
+    km_flush_same();
+    if (gap > 0) {
+        char s[64]; size_t k = log_stamp(s, sizeof s);
+        sb_printf(&km.out, "%.*s-- lines may have been lost here: the kernel log turned over between two reads --\n", (int)k, s);
+        log_line("kernel log: lines may have been lost between two reads");
+    }
+    if (km.out.n) append_log(KLOG_PATH, KLOG_OLD, KLOG_MAX, km.out.p, km.out.n);
+}
+
+static void sb_file(sbuf *b, const char *title, const char *path, size_t max) {
+    size_t len = 0; char *data = ps_read(path, max + 4096, &len);
     sb_printf(b, "\n==== %s ====\n", title);
     if (data) { sb_raw(b, data, len); if (len && data[len - 1] != '\n') sb_raw(b, "\n", 1); }
     else sb_printf(b, "(none)\n");
@@ -869,19 +909,13 @@ static void build_report(sbuf *b) {
     free(settings); games_free(g, n);
 }
 
-static void squeeze_emit(void *ctx, const char *p, size_t n) { sb_raw(ctx, p, n); }
-
 /* One text for Show, Download and Save: report, NeoEnabler's own log and the kernel log. */
 static int build_logs(sbuf *b) {
     build_report(b);
-    sb_file(b, "NeoEnabler log (older)", NEO_LOG_OLD);
-    sb_file(b, "NeoEnabler log", NEO_LOG_PATH);
-    char *k; size_t kl;
-    sb_printf(b, "\n==== Kernel log (last 128 KiB, not complete; repeated and known noise lines are hidden; IPs, MACs, e-mails and account, device ids are removed) ====\n");
-    if (read_msgbuf(&k, &kl)) { sb_printf(b, "kern.msgbuf read failed (errno %d)\n", errno); return -1; }
-    size_t hidden = lm_squeeze(k, kl, squeeze_emit, b);
-    sb_printf(b, "(%zu lines hidden)\n", hidden);
-    free(k);
+    sb_file(b, "NeoEnabler log (older)", NEO_LOG_OLD, NEO_LOG_MAX);
+    sb_file(b, "NeoEnabler log", NEO_LOG_PATH, NEO_LOG_MAX);
+    sb_file(b, "Kernel log kept by NeoEnabler (older; noise hidden, IPs, MACs, e-mails and account, device ids removed)", KLOG_OLD, KLOG_MAX);
+    sb_file(b, "Kernel log kept by NeoEnabler (noise hidden, IPs, MACs, e-mails and account, device ids removed)", KLOG_PATH, KLOG_MAX);
     return 0;
 }
 
@@ -1077,12 +1111,14 @@ int main(void) {
     log_state();
     patches_update();
     time_t last_memory_poll=time(NULL);
-    time_t last_mirror=0;
+    long long last_mirror_ms=0;
     for (;;) {
         launch_poll();
         binary_tick();
         time_t now=time(NULL);
-        if(now!=last_mirror){log_mirror_tick();last_mirror=now;}
+        { struct timespec mt; clock_gettime(CLOCK_MONOTONIC, &mt);
+          long long ms = (long long)mt.tv_sec * 1000 + mt.tv_nsec / 1000000;
+          if (ms - last_mirror_ms >= 250 || ms < last_mirror_ms) { log_mirror_tick(); last_mirror_ms = ms; } }
         if(now<last_memory_poll||now-last_memory_poll>=2){
             launch_attach(-1);
             launch_tick();

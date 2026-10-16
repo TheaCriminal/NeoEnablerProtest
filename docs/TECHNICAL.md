@@ -93,7 +93,7 @@ checksum attached.
   `kPS4Pro` bit of the launch attribute (offset 0x28 of `sceKernelGetAppInfo`, checked on 13.20).
 - The panel has no authentication: any device on the local network can use it.
 - Log: every action and its result go to the kernel log with the prefix `[NeoEnabler]`, followed by a `state:` line
-  (NEO hook, v4 hook, actual and requested 8 GiB state). Show Logs, Download Logs and Save Logs give a report, NeoEnabler's own log (`/data/neo-enabler/neo.log`) and the kernel log; Save Logs writes it to `/data/neo-logs.txt`.
+  (NEO hook, v4 hook, actual and requested 8 GiB state). Show Logs, Download Logs and Save Logs give a report, NeoEnabler's own log (`/data/neo-enabler/neo.log`) and the kernel log it keeps (`kernel.log`, polled four times a second); Save Logs writes it to `/data/neo-logs.txt`.
 
 ## 8 GiB memory budget (0.2.0)
 
