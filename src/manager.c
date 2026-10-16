@@ -529,7 +529,8 @@ static void serve_page(int fd, const char *msg) {
               memory_untested() ? "<br><small>Firmware 13.60: 8 GiB pending testing, please report results</small>" : "",
               running, patches_esc,
               !force_neo, force_neo ? "on" : "off", force_neo ? "on" : "off", force_neo ? "Turn off" : "Turn on",
-              !force_8gib, force_8gib ? "on" : "off", force_8gib ? "on" : "off", mem_ok ? "" : " disabled",
+              !force_8gib, force_8gib && mem_ok ? "on" : "off",
+              !force_8gib ? "off" : mem_ok ? "on" : "requested, not available", !force_8gib && !mem_ok ? " disabled" : "",
               force_8gib ? "Turn off" : "Turn on");
     if (b.p) reply_bytes(fd, "200 OK", "text/html; charset=utf-8", "no-store", b.p, b.n);
     else reply(fd, "500 Internal Server Error", "text/plain", "out of memory\n");
@@ -1031,6 +1032,19 @@ static uint64_t tsc_rate(void) {
     return sec > 0.05 && t1 > t0 ? (uint64_t)((double)(t1 - t0) / sec) : 1600000000ULL;
 }
 
+/* A patch that needs 8 GiB cannot work while 8 GiB is not available (no hypervisor exploit, or an unsupported
+   firmware): turns off the enabled ones, of one game or of every game, and returns how many. */
+static int patches_drop_8gib(const char *only_tid) {
+    if (memory_available()) return 0;
+    int dropped = games_drop_8gib(only_tid, memory_message);
+    if (dropped) {
+        char note[200];
+        snprintf(note, sizeof note, "%d patch%s that need 8 GiB turned off: 8 GiB is not available", dropped, dropped == 1 ? "" : "es");
+        notify(note);
+    }
+    return dropped;
+}
+
 /* Called after the hook changes and every two seconds: questions are only read from a live hook. */
 static void launch_attach(int ask) {
     int was = live_ok;
@@ -1051,6 +1065,7 @@ static void launch_poll(void) {
         last_seq = seq;
         pending.active = 1; pending.seq = seq; pending.since = time(NULL);
         snprintf(pending.tid, sizeof pending.tid, "%s", tid);
+        patches_drop_8gib(tid);
         pending.needs = game_needs(tid);
         if (force_neo) pending.needs |= NEEDS_PRO;
         log_line("launch: %s needs %s%s", tid, pending.needs & NEEDS_PRO ? "Pro mode" : "base mode",
@@ -1058,7 +1073,7 @@ static void launch_poll(void) {
     }
     int pro = (pending.needs & NEEDS_PRO) != 0, ok = 1;
     int mem_ok = memory_available();
-    int want8 = force_8gib || ((pending.needs & NEEDS_8GIB) && mem_ok);
+    int want8 = mem_ok && (force_8gib || (pending.needs & NEEDS_8GIB));
     /* the budget only applies to Pro mode processes */
     if (pro && mem_ok) {
         int rc = memory_request(want8);
@@ -1148,6 +1163,7 @@ int main(void) {
     notify(msg); puts(msg);
     log_state();
     patches_update();
+    patches_drop_8gib(NULL);
     time_t last_memory_poll=time(NULL);
     long long last_mirror_ms=0;
     for (;;) {
@@ -1166,6 +1182,7 @@ int main(void) {
                 if(memory_result==0||memory_result==5||memory_result==6)notify(memory_message);
                 else log_line("8 GiB: %s (result %d)",memory_message,memory_result);
                 log_state();
+                patches_drop_8gib(NULL);
             }
             memory_previous_result=memory_result;last_memory_poll=now;
         }
@@ -1198,7 +1215,7 @@ int main(void) {
             if (!strcmp(path, "/advanced/neo")) {
                 force_neo = value; launch_attach(1);
                 amsg = value ? "Pro mode for every PS4 game: on" : "Pro mode for every PS4 game: off (follows the game patches)";
-            } else if (!memory_available()) {
+            } else if (value && !memory_available()) {
                 amsg = "8 GiB needs firmware 13.20 or 13.60 with the hypervisor exploit enabled; nothing changed";
             } else {
                 force_8gib = value;

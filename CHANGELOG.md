@@ -2,6 +2,11 @@
 
 ## 0.3.2
 
+- A patch that needs 8 GiB is turned off when 8 GiB is not available (no hypervisor exploit, or an unsupported
+  firmware): at start, when the 8 GiB state changes and at the launch of its game, with a notification. Before, the
+  game started in Pro mode with the original memory.
+- **Keep 8 GiB on** no longer shows "on" while 8 GiB is not available. It shows "requested, not available", the
+  button to turn it off works, and launches no longer try to switch 8 GiB on in that state.
 - The kernel log keeps only the last 128 KiB and the system overwrites it within seconds, so reports lost the
   NeoEnabler lines. NeoEnabler now also writes its own log to `/data/neo-enabler/neo.log` (rotated at 256 KiB to
   `neo.log.old`), with the console time, and copies the hook's `[NEO <title ID>]` launch lines and the crash report

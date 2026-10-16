@@ -6,7 +6,9 @@
 #include <sys/stat.h>
 #include "game_patches.h"
 
+#ifndef APPMETA_DIR
 #define APPMETA_DIR "/system_data/priv/appmeta"
+#endif
 #define SETTINGS_XML PS_DIR "/!_settings.xml"
 #define GAME_MAX_PATCHES 128
 
@@ -143,4 +145,26 @@ static int game_set_patch(const char *tid, const char *hash, int on, int memory_
     log_line("patches: %s", msg);
     free(out); free(s); free(p);
     return rc ? -1 : 0;
+}
+
+/* Turns off the enabled patches that need 8 GiB, of one game or, with only_tid NULL, of every game. For use while 8 GiB
+   is not available: such a patch would run the game in Pro mode with the original memory. `why` goes to the log.
+   Returns how many were turned off. */
+static int games_drop_8gib(const char *only_tid, const char *why) {
+    int n, dropped = 0; game_t *g = games_scan(&n);
+    size_t sl; char *settings = settings_read(&sl);
+    for (int i = 0; i < n; i++) {
+        if (only_tid && strcmp(g[i].tid, only_tid)) continue;
+        for (int k = 0; k < g[i].count; k++) {
+            const gp_patch *p = &g[i].patches[k];
+            char msg[256];
+            if (!p->needs_8gib || !settings || gp_setting(settings, sl, p->hash) != 1) continue;
+            if (!game_set_patch(g[i].tid, p->hash, 0, 0, msg, sizeof msg)) {
+                dropped++;
+                log_line("patches: %s: \"%s\" turned off, it needs 8 GiB (%s)", g[i].tid, p->name, why);
+            }
+        }
+    }
+    free(settings); games_free(g, n);
+    return dropped;
 }
