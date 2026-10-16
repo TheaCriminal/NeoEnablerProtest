@@ -5,10 +5,6 @@
 - When the panel reports "unknown code in the hook area", the log now also records where the hook call points
   and what the hook area holds (addresses, read result, first differing byte, older NeoEnabler markers and the
   first bytes). Save Logs includes it, so the cause can be found from a report.
-- The diagnostics guide no longer asks for kernel dumps and now says that kernel and memory dumps must never be
-  posted publicly. A dump is accepted only through direct contact with the maintainer.
-- GitHub issue forms for game problems, test results, firmware reports and manager bugs, and a compatibility
-  table in `docs/COMPATIBILITY.md`.
 
 ## 0.3.0
 
