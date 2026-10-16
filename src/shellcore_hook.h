@@ -18,10 +18,14 @@
 #include "shim_data.h"
 
 #define CAVE_SIZE 512
+/* Shim of NeoEnabler 0.1.x-0.2.x (Pro mode for every PS4 game), same cave: replaced on install. */
+#define V2_PREV 137
+#define V2_MAGIC 158
 #define CAVE_MIN_OFFSET 0x10000 /* ps-patch-system shellcode at the start of eh_frame is far smaller */
 #define PAGE 0x4000
 
 enum {
+    HOOK_OLD = 2,              /* shim of an older NeoEnabler build in the cave; install replaces it */
     HOOK_ON = 1,
     HOOK_OFF = 0,
     HOOK_NO_PATCH_SYSTEM = -1, /* call target outside eh_frame or memory not RWX */
@@ -130,6 +134,17 @@ static int cave_has_shim(pid_t pid, uintptr_t cave) {
     return !memcmp(a, shim_code, SHIM_PREV) && !memcmp(a + SHIM_MAGIC, shim_code + SHIM_MAGIC, sizeof(a) - SHIM_MAGIC);
 }
 
+/* Address of the ps-patch-system hook saved in an older shim (v2, or v3 of another build), 0 if none. */
+static uintptr_t old_shim_prev(const shell_t *s, uintptr_t at) {
+    unsigned char a[CAVE_SIZE]; uint64_t prev = 0;
+    size_t n = s->frame_end - at < sizeof(a) ? s->frame_end - at : sizeof(a);
+    if (kernel_proc_copyout(s->pid, at, a, n)) return 0;
+    if (n >= V2_MAGIC + 8 && !memcmp(a + V2_MAGIC, "NEOENBL2", 8)) memcpy(&prev, a + V2_PREV, 8);
+    for (size_t i = SHIM_MAGIC - SHIM_PREV; !prev && i + 8 <= n; i++)       /* v3: data layout fixed from prev to magic */
+        if (!memcmp(a + i, "NEOENBL3", 8)) memcpy(&prev, a + i - (SHIM_MAGIC - SHIM_PREV), 8);
+    return prev >= s->frame && prev < s->frame_end - CAVE_SIZE ? (uintptr_t)prev : 0;
+}
+
 /* Fills s and returns the hook state. The call site scan (~1 s) runs once per ShellCore pid. */
 static int hook_state(shell_t *s) {
     static pid_t cached_pid = -1; static uintptr_t cached_site; static int cached_four;
@@ -158,7 +173,9 @@ static int hook_state(shell_t *s) {
         kernel_get_vmem_protection(s->pid, s->cave & ~(uintptr_t)(PAGE - 1), PAGE) != 7 ||
         kernel_get_vmem_protection(s->pid, (s->cave + sizeof(shim_code)) & ~(uintptr_t)(PAGE - 1), PAGE) != 7)
         return HOOK_NO_PATCH_SYSTEM;
-    if (s->target == s->cave) return cave_has_shim(s->pid, s->cave) ? HOOK_ON : HOOK_BAD_CAVE;
+    if (s->target == s->cave && cave_has_shim(s->pid, s->cave)) return HOOK_ON;
+    if (s->target == s->cave && old_shim_prev(s, s->target)) return HOOK_OLD;
+    if (s->target == s->cave) return HOOK_BAD_CAVE;
     if (s->target >= s->frame && s->target < s->cave) return HOOK_OFF;
     return HOOK_NO_PATCH_SYSTEM;
 }
@@ -166,6 +183,7 @@ static int hook_state(shell_t *s) {
 static const char *state_text(int st) {
     switch (st) {
     case HOOK_ON: return "enabled";
+    case HOOK_OLD: return "older NeoEnabler hook";
     case HOOK_OFF: return "disabled";
     case HOOK_NO_PATCH_SYSTEM: return "ps-patch-system not loaded";
     case HOOK_BAD_CAVE: return "unknown code in the hook area";
@@ -175,18 +193,23 @@ static const char *state_text(int st) {
 }
 
 /* Enables (shim in the cave, call redirected to it) or disables (call back to the ps-patch-system hook)
-   with ShellCore stopped; every write is read back and the call is restored on failure. */
+   with ShellCore stopped; every write is read back and the call is restored on failure. An older shim is
+   replaced: the call goes back to the ps-patch-system hook it saved, then the new shim is installed. */
 static int hook_set(int enable) {
     shell_t s;
     int st = hook_state(&s);
     if (st == enable) return 0;
-    if (st != !enable) return 3;
+    if (st != !enable && st != HOOK_OLD) return 3;
+    uintptr_t old_prev = st == HOOK_OLD ? old_shim_prev(&s, s.target) : 0;
     if (kill(s.pid, SIGSTOP)) return 5;
     usleep(100000);
     int rc = 0;
     uintptr_t target;
     if (read_call(s.pid, s.site, &target) || target != s.target) rc = 6;
+    else if (old_prev && write_call(s.pid, s.site, old_prev)) rc = 7;
+    else if (old_prev && !enable) rc = 0;
     else if (enable) {
+        if (old_prev) target = old_prev;
         unsigned char code[sizeof(shim_code)], back[sizeof(shim_code)];
         memcpy(code, shim_code, sizeof(code));
         uint64_t prev = target, printf_ptr = (uint64_t)kernel_dynlib_dlsym(s.pid, 0x2, "printf");
@@ -205,4 +228,35 @@ static int hook_set(int enable) {
     }
     if (kill(s.pid, SIGCONT)) rc = rc ? rc : 8;
     return rc;
+}
+
+static int shim_live(shell_t *s) { return hook_state(s) == HOOK_ON; }
+
+/* Launch questions from the installed shim. The shim posts a title ID and waits for answer and ack_seq. */
+static int shim_write(const shell_t *s, size_t off, const void *data, size_t n) {
+    unsigned char back[CAVE_SIZE];
+    if (off + n > CAVE_SIZE || kernel_proc_copyin(s->pid, (void *)data, s->cave + off, n) ||
+        kernel_proc_copyout(s->pid, s->cave + off, back, n) || memcmp(back, data, n)) return -1;
+    return 0;
+}
+
+/* Pro mode for every PS4 game when the manager does not answer, and how long a launch waits for the answer in
+   TSC cycles (0: never ask, as after Quit). */
+static int shim_configure(const shell_t *s, int force_all, uint64_t wait) {
+    unsigned char all = (unsigned char)!!force_all;
+    return shim_write(s, SHIM_FORCE_ALL, &all, 1) || shim_write(s, SHIM_WAIT_CYCLES, &wait, 8) ? -1 : 0;
+}
+
+/* Latest question: sequence number and title ID. */
+static int shim_question(const shell_t *s, uint32_t *seq, char title[10]) {
+    unsigned char b[SHIM_ANSWER - SHIM_REQ_SEQ];
+    if (kernel_proc_copyout(s->pid, s->cave + SHIM_REQ_SEQ, b, sizeof(b))) return -1;
+    memcpy(seq, b, 4);
+    memcpy(title, b + (SHIM_REQ_TITLE - SHIM_REQ_SEQ), 9); title[9] = 0;
+    return 0;
+}
+
+/* Answer (bit 0: launch in Pro mode), then the acknowledgement the shim waits for. */
+static int shim_answer(const shell_t *s, uint32_t seq, unsigned char answer) {
+    return shim_write(s, SHIM_ANSWER, &answer, 1) || shim_write(s, SHIM_ACK_SEQ, &seq, 4) ? -1 : 0;
 }

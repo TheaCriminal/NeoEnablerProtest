@@ -1,7 +1,8 @@
-/* GPL-3.0-only. NEO Enabler manager: installs the generic NEO launch hook in SceShellCore,
-   shows a PS5 notification and stays resident with a web page on port 8765 to enable/disable the hook
-   and show the mode of open PS4 games. Independently manages a guarded 8GiB NEO budget when kernel access allows.
-   Also installs the Media tab shortcut (NEOE00001) when missing. Hook logic in shellcore_hook.h. */
+/* GPL-3.0-only. NEO Enabler manager: installs the NEO launch hook in SceShellCore, shows a PS5 notification and
+   stays resident with a web page on port 8765 that lists the installed games with NeoEnabler patches and switches
+   them in the ps-patch-system settings. At every PS4 launch the hook asks the manager what the game needs: Pro mode
+   and the guarded 8 GiB NEO budget follow the enabled patches, and the budget returns to the original after the
+   game closes. Also installs the Media tab shortcut (NEOE00001) when missing. Hook logic in shellcore_hook.h. */
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -129,6 +130,7 @@ static int write_file(const char *path, const void *data, size_t size) {
 }
 
 #include "patch_sync.h"
+#include "games.h"
 static char patches_message[256] = "Not checked yet";
 
 #define SETTINGS_PATH "/data/neo-settings"
@@ -142,7 +144,8 @@ static uint32_t fw_raw_version(void) {
 static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != NULL; }
 static int memory_untested(void) { return fw_raw_version() == 0x13600000; }
 
-static int settings_neo = 1;
+/* Advanced overrides: Pro mode for every PS4 game, and 8 GiB kept on. */
+static int force_neo, force_8gib;
 
 static void settings_load(void) {
     FILE *f = fopen(SETTINGS_PATH, "rb");
@@ -153,20 +156,21 @@ static void settings_load(void) {
     if (used) {
         neo_settings cfg;
         if (neo_settings_parse(buf, &cfg)) log_line("settings: invalid GPU values; GPU boost disabled");
-        settings_neo = cfg.neo;
+        force_neo = cfg.force_neo;
+        force_8gib = cfg.force_8gib && memory_supported();
         gpu_configure(cfg.gpu_enabled, cfg.gpu_mhz);
         if (cfg.gpu_enabled && !gpu_backend_supported()) log_line("settings: saved GPU boost ignored on unsupported firmware");
-        if (cfg.memory) {
-            if (memory_supported()) memory_request(1);
-            else log_line("settings: memory_8gib=1 ignored, 8 GiB is not supported on firmware %x.%02x",
-                          (fw_raw_version() >> 24) & 0xff, (fw_raw_version() >> 16) & 0xff);
-        }
+        if (cfg.force_8gib && !memory_supported())
+            log_line("settings: force_8gib=1 ignored, 8 GiB is not supported on firmware %x.%02x",
+                     (fw_raw_version() >> 24) & 0xff, (fw_raw_version() >> 16) & 0xff);
+        if (cfg.memory && !cfg.force_8gib) log_line("settings: memory_8gib=1 of an older version ignored; 8 GiB now follows the game patches");
     }
     fclose(f);
 }
 
-static int settings_save(int neo_on) {
-    neo_settings cfg = {neo_on, memory_target, gpu.enabled, gpu.target};
+static int settings_save(void) {
+    neo_settings cfg = {.neo = 1, .memory = force_8gib, .gpu_enabled = gpu.enabled, .gpu_mhz = gpu.target,
+                        .force_neo = force_neo, .force_8gib = force_8gib};
     char buf[128]; int n = neo_settings_format(&cfg, buf, sizeof(buf));
     if (n < 0 || write_file(SETTINGS_PATH ".tmp", buf, (size_t)n)) return -1;
     return rename(SETTINGS_PATH ".tmp", SETTINGS_PATH);
@@ -302,91 +306,160 @@ static void reply(int fd, const char *status, const char *type, const char *body
     send_all(fd, head, (size_t)n); send_all(fd, body, strlen(body));
 }
 
+static void reply_bytes(int fd, const char *status, const char *type, const char *cache, const void *body, size_t n) {
+    char head[320];
+    int h = snprintf(head, sizeof(head), "HTTP/1.1 %s\r\nContent-Type: %s\r\nContent-Length: %zu\r\nCache-Control: %s\r\nConnection: close\r\n\r\n",
+                     status, type, n, cache);
+    send_all(fd, head, (size_t)h); send_all(fd, body, n);
+}
+
+/* Growing text buffer for pages whose size depends on the games installed. */
+typedef struct { char *p; size_t n, cap; } sbuf;
+static void sb_printf(sbuf *b, const char *fmt, ...) {
+    for (;;) {
+        va_list ap; va_start(ap, fmt);
+        int w = b->p ? vsnprintf(b->p + b->n, b->cap - b->n, fmt, ap) : -1;
+        va_end(ap);
+        if (w >= 0 && (size_t)w < b->cap - b->n) { b->n += (size_t)w; return; }
+        size_t cap = b->cap ? b->cap * 2 : 16384;
+        if (w >= 0 && cap < b->n + (size_t)w + 1) cap = b->n + (size_t)w + 1024;
+        char *p = realloc(b->p, cap);
+        if (!p) return;
+        b->p = p; b->cap = cap;
+    }
+}
+static void sb_esc(sbuf *b, const char *s) {
+    char tmp[1536];
+    html_escape(s, tmp, sizeof tmp);
+    sb_printf(b, "%s", tmp);
+}
+
 static const char page_head[] =
     "<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
     "<title>NeoEnabler</title><style>"
-    ":root{--bg:#0e1116;--fg:#e8eaed;--muted:#97a0ab;--card:#171b22;--line:#262c36;--on:#2f9e57;--off:#c2453b;--btn:#262d38}"
+    ":root{color-scheme:dark;--bg:#080b12;--surface:#111722;--surface-2:#171f2d;--line:#263145;--text:#f4f7fb;"
+    "--muted:#95a2b8;--blue:#55a7ff;--blue-strong:#147ee8;--green:#52d39a;--amber:#f2bd5d;--red:#ff6c79;--radius:14px}"
     "*{box-sizing:border-box}"
-    "body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif}"
-    "header{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:12px;align-items:center;"
-    "justify-content:space-between;padding:14px 20px;background:rgba(14,17,22,.95);border-bottom:1px solid var(--line)}"
-    "h1{font-size:20px;margin:0}h1 small{color:var(--muted);font-weight:400;font-size:13px;margin-left:8px}"
-    "main{max-width:900px;margin:0 auto;padding:20px 16px}"
-    ".grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}"
-    "@media(max-width:600px){.grid{grid-template-columns:1fr}}"
-    ".card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}"
-    ".wide{grid-column:1/-1}"
-    ".state{display:inline-block;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:600}"
-    ".on{background:var(--on)}.off{background:var(--off)}.unk{background:var(--btn)}"
-    "button{font:inherit;color:var(--fg);background:var(--btn);border:1px solid var(--line);border-radius:8px;"
-    "padding:8px 14px;margin:8px 8px 0 0;cursor:pointer}"
-    "button:hover{border-color:#3d7bfd}button:disabled{opacity:.45;cursor:default}"
+    "body{margin:0;min-height:100vh;background:radial-gradient(circle at 15% -10%,rgba(20,126,232,.17),transparent 34rem),var(--bg);"
+    "color:var(--text);font:15px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif}"
+    "header{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;"
+    "padding:14px 22px;background:rgba(8,11,18,.94);border-bottom:1px solid var(--line)}"
+    ".brand{display:flex;align-items:center;gap:12px}.mark{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;"
+    "background:linear-gradient(145deg,#147ee8,#74baff);font-weight:800}"
+    "h1{font-size:19px;margin:0}h1 small{color:var(--muted);font-weight:400;font-size:13px;margin-left:8px}"
+    "nav{display:flex;gap:8px}nav a{color:var(--muted);text-decoration:none;padding:8px 14px;border-radius:10px;border:1px solid var(--line)}"
+    "nav a[aria-current=page]{color:var(--text);background:var(--surface-2);border-color:var(--blue)}"
+    "main{width:min(1400px,100%);margin:0 auto;padding:20px 16px}"
+    ".layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}"
+    "@media(max-width:900px){.layout{grid-template-columns:1fr}}"
+    ".card,.game{background:rgba(17,23,34,.96);border:1px solid var(--line);border-radius:var(--radius);padding:16px}"
+    "aside{display:grid;gap:14px}aside h2{font-size:15px;margin:0 0 8px}"
+    ".game{display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;margin-bottom:14px}"
+    ".game img{width:96px;height:96px;border-radius:12px;object-fit:cover;background:var(--surface-2)}"
+    ".game h2{font-size:18px;margin:0}.game h2 span{color:var(--muted);font-weight:400;font-size:14px}"
+    ".ver{color:var(--muted);font-size:13px;margin:2px 0 10px}"
+    ".patches{list-style:none;margin:0;padding:0;display:grid;gap:8px}"
+    ".patch{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;padding:10px 12px;border:1px solid var(--line);"
+    "border-radius:10px;background:var(--surface-2);cursor:pointer}"
+    ".patch input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--blue)}"
+    ".patch:has(input:checked){border-color:var(--blue)}.patch:has(input:disabled){opacity:.5;cursor:default}"
+    ".patch i{display:block;color:var(--muted);font-size:13px;margin-top:2px}"
+    ".tag{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;"
+    "color:var(--amber);border:1px solid rgba(242,189,93,.45);vertical-align:1px}"
+    ".state{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--surface-2)}"
+    ".on{background:rgba(82,211,154,.18);color:var(--green)}.off{color:var(--muted)}"
+    "button{font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;"
+    "padding:7px 13px;margin:8px 8px 0 0;cursor:pointer}button:hover{border-color:var(--blue)}button:disabled{opacity:.45;cursor:default}"
     "button.danger{background:#3a1f1d;border-color:#5c2c28}"
-    "nav{display:flex;gap:8px;margin:0 0 18px}nav a{color:var(--muted);text-decoration:none;"
-    "padding:9px 16px;border-radius:8px;border:1px solid var(--line)}"
-    "nav a[aria-current=page]{color:var(--fg);background:var(--btn);border-color:#3d7bfd}"
+    "details summary{cursor:pointer;color:var(--muted);font-size:13px}details[open] summary{margin-bottom:8px}"
     "input[type=range]{width:100%;margin:20px 0}output{font-size:24px;font-weight:600}"
-    ".metric{font-size:32px;font-weight:600;margin:10px 0}.notice{margin:12px 0;color:var(--muted)}"
-    "ul{margin:8px 0 0;padding-left:20px}small{color:var(--muted)}"
+    ".grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}@media(max-width:600px){.grid{grid-template-columns:1fr}}"
+    ".wide{grid-column:1/-1}.metric{font-size:32px;font-weight:600;margin:10px 0}.notice{margin:12px 0;color:var(--muted)}"
+    ".msg{margin:0 0 14px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}"
+    "ul{margin:6px 0 0;padding-left:18px}small{color:var(--muted)}"
     "</style><script src=/panel.js></script></head><body>";
 
 /* v4 hook still in ShellCore (forces NEO regardless of this manager's hook). */
 static int v4_active(const shell_t *s) { return s->pid > 0 && s->frame && v4_state(s->pid, s->frame) == V4_PRESENT; }
 
+static void page_header(sbuf *b, const char *active) {
+    uint32_t fw_raw = fw_raw_version();
+    sb_printf(b, "%s<header><div class=brand><div class=mark>N</div><h1>NeoEnabler <small>FW %x.%02x</small></h1></div>"
+              "<nav aria-label='Pages'><a href=/%s>Games</a><a href=/gpu%s>GPU clock</a></nav>"
+              "<form method=post><button class=danger formaction=/quit>Quit</button></form></header>",
+              page_head, (fw_raw >> 24) & 0xff, (fw_raw >> 16) & 0xff,
+              !strcmp(active, "games") ? " aria-current=page" : "", !strcmp(active, "gpu") ? " aria-current=page" : "");
+}
+
+/* Games with NeoEnabler patches on the left (icon, name, title ID, version, every patch of that version with a
+   checkbox); status, patch update, logs and the advanced overrides on the right. */
 static void serve_page(int fd, const char *msg) {
+    sbuf b = {0};
+    page_header(&b, "games");
+    sb_printf(&b, "<main>");
+    if (msg) { sb_printf(&b, "<p class=msg>"); sb_esc(&b, msg); sb_printf(&b, "</p>"); }
+    sb_printf(&b, "<div class=layout><section aria-label='Games'>");
+    int n; game_t *g = games_scan(&n);
+    size_t sl; char *settings = settings_read(&sl);
+    int mem_ok = memory_supported();
+    if (!n) sb_printf(&b, "<div class=card><b>No installed game with NeoEnabler patches</b><p><small>Games appear here when "
+                          PS_DIR " has a patch for their installed version that needs PS4 Pro mode. Use Update Patches "
+                          "to download the patches.</small></p></div>");
+    for (int i = 0; i < n; i++) {
+        sb_printf(&b, "<article class=game><img src='/icon/%s' alt='' loading=lazy><div><h2>", g[i].tid);
+        sb_esc(&b, g[i].name[0] ? g[i].name : g[i].tid);
+        sb_printf(&b, " <span>(%s)</span></h2><p class=ver>Version %s%s</p><ul class=patches>", g[i].tid, g[i].version,
+                  g[i].update ? " (update installed)" : "");
+        for (int k = 0; k < g[i].count; k++) {
+            const gp_patch *p = &g[i].patches[k];
+            int on = gp_setting(settings, sl, p->hash) == 1, blocked = p->needs_8gib && !mem_ok && !on;
+            sb_printf(&b, "<li><label class=patch><input type=checkbox data-tid=%s data-hash=%s%s%s><span><b>",
+                      g[i].tid, p->hash, on ? " checked" : "", blocked ? " disabled" : "");
+            sb_esc(&b, p->name);
+            sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8 GiB</span>" : "");
+            if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }
+            sb_printf(&b, "</span></label></li>");
+        }
+        sb_printf(&b, "</ul></div></article>");
+    }
+    free(settings); games_free(g, n);
+
     shell_t s; int st = hook_state(&s);
     if (st == HOOK_OFF && v4_active(&s)) st = HOOK_ON;
-    char games[1024]; games_text(games, sizeof(games), 1);
-    mb_snapshot memory;mb_check(&memory);
-    const char*memory_state=memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled";
-    uint32_t fw_raw = fw_raw_version();
-    int mem_supported = memory_supported();
-    const char *dis = mem_supported ? "" : " disabled";
-    char fw_str[16];
-    snprintf(fw_str, sizeof(fw_str), "%x.%02x", (fw_raw >> 24) & 0xff, (fw_raw >> 16) & 0xff);
+    mb_snapshot memory; mb_check(&memory);
+    char running[1024]; games_text(running, sizeof(running), 1);
     char patches_esc[768]; html_escape(patches_message, patches_esc, sizeof(patches_esc));
-    static char body[12288];
-    snprintf(body, sizeof(body),
-             "%s"
-             "<header><h1>NeoEnabler <small>FW %s</small></h1>"
-             "<div><form method=post style='display:inline'>"
-             "<button formaction=/settings/save>Save Settings</button>"
-             "<button class=danger formaction=/quit>Quit</button>"
-             "</form></div></header>"
-             "<main><nav aria-label='Settings tabs'><a href=/ aria-current=page>Overview</a><a href=/gpu>GPU clock</a></nav>"
-             "%s%s%s<div class=grid>"
-             "<div class=card><b>PS4 Pro (NEO) mode</b> "
-             "<span class='state %s'>%s</span>"
-             "<form method=post><button formaction=/enable>Enable</button>"
-             "<button formaction=/disable>Disable</button></form></div>"
-             "<div class=card><b>8 GiB memory</b> "
-             "<span class='state %s'>%s</span>%s"
-             "<form method=post><button formaction=/memory/enable%s>Enable</button>"
-             "<button formaction=/memory/disable%s>Disable</button></form>"
-             "<br><small>Close every game first. Applies to new launches.</small></div>"
-             "<div class='card wide'><b>Games running</b><ul>%s</ul></div>"
-             "<div class='card wide'><b>Game patches</b><p>%s</p>"
-             "<small>Downloads the patches from the NeoEnabler repository and adds them to every patch file of the same game "
-             "in " PS_DIR ". Changed files are backed up to " PS_BACKUP_ROOT " first.</small>"
-             "<form method=post><button formaction=/patches/update>Update Patches</button></form></div>"
-             "<div class=card><b>Firmware diagnostic</b><br>"
-             "<small>Saves metadata to /data/neo-diagnostic.jsonl</small>"
-             "<form method=post><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
-             "<div class=card><b>System logs</b><br>"
-             "<small>Saves kernel logs to /data/neo-logs.txt</small>"
-             "<form method=post><a href=/logs target=_blank><button type=button>Show Logs</button></a>"
-             "<button formaction=/logs/save>Save Logs</button></form></div>"
-             "</div><small style='display:block;margin-top:16px;text-align:center'>With the hook enabled, every PS4 game without "
-             "native Pro support launches in Pro mode. Rebooting disables it.<br>" VERSION "</small>"
-             "</main></body></html>",
-             page_head, fw_str,
-             msg ? "<p>" : "", msg ? msg : "", msg ? "</p>" : "",
-             st == 1 ? "on" : st == 0 ? "off" : "unk", state_text(st),
-             memory.state==MB_8GIB?"on":memory.state==MB_UNKNOWN?"unk":"off",memory_state,
-             !mem_supported ? "<br><small>Not available on this firmware (supported: 13.20; 13.60 pending testing)</small>"
-             : memory_untested() ? "<br><small>Firmware 13.60: pending testing, please report results</small>" : "",
-             dis, dis, games, patches_esc);
-    reply(fd, "200 OK", "text/html; charset=utf-8", body);
+    sb_printf(&b, "</section><aside>"
+              "<div class=card><h2>Status</h2>"
+              "<div>Launch hook <span class='state %s'>%s</span></div>"
+              "<div style='margin-top:6px'>8 GiB memory <span class='state %s'>%s</span>%s</div>"
+              "<p><small>Pro mode and 8 GiB follow the enabled patches of each game. 8 GiB returns to the original "
+              "memory when the game closes.</small></p><b>Games running</b><ul>%s</ul></div>"
+              "<div class=card><h2>Game patches</h2><p>%s</p><small>Downloads the patches from the NeoEnabler repository "
+              "into " PS_DIR ". Changed files are backed up to " PS_BACKUP_ROOT " first.</small>"
+              "<form method=post><button formaction=/patches/update>Update Patches</button></form></div>"
+              "<div class=card><h2>Logs</h2><small>Kernel logs, including every NeoEnabler step.</small>"
+              "<form method=post><a href=/logs target=_blank><button type=button>Show Logs</button></a>"
+              "<button formaction=/logs/save>Save Logs</button><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
+              "<details class=card><summary>Advanced</summary>"
+              "<form method=post><input type=hidden name=on value=%d><b>Pro mode for every PS4 game</b> "
+              "<span class='state %s'>%s</span><br><small>Ignores the patch selection.</small><br>"
+              "<button formaction=/advanced/neo>%s</button></form>"
+              "<form method=post style='margin-top:12px'><input type=hidden name=on value=%d><b>Keep 8 GiB on</b> "
+              "<span class='state %s'>%s</span><br><small>For every Pro mode launch, until turned off.</small><br>"
+              "<button formaction=/advanced/memory%s>%s</button></form></details>"
+              "<small style='text-align:center'>" VERSION "</small></aside></div></main></body></html>",
+              st == HOOK_ON ? "on" : "off", state_text(st),
+              memory.state == MB_8GIB ? "on" : "off",
+              memory.state == MB_8GIB ? "enabled" : memory.state == MB_UNKNOWN ? (mem_ok ? "unavailable" : "not supported") : "disabled",
+              memory_untested() ? "<br><small>Firmware 13.60: 8 GiB pending testing, please report results</small>" : "",
+              running, patches_esc,
+              !force_neo, force_neo ? "on" : "off", force_neo ? "on" : "off", force_neo ? "Turn off" : "Turn on",
+              !force_8gib, force_8gib ? "on" : "off", force_8gib ? "on" : "off", mem_ok ? "" : " disabled",
+              force_8gib ? "Turn off" : "Turn on");
+    if (b.p) reply_bytes(fd, "200 OK", "text/html; charset=utf-8", "no-store", b.p, b.n);
+    else reply(fd, "500 Internal Server Error", "text/plain", "out of memory\n");
+    free(b.p);
 }
 
 static void serve_gpu_status(int fd) {
@@ -415,13 +488,11 @@ static void serve_gpu_page(int fd, const char *msg) {
     if (gpu.reading_valid) snprintf(current, sizeof current, "%u MHz", gpu.actual);
     if (gpu.baseline_valid) snprintf(previous, sizeof previous, "%u MHz", gpu.baseline);
     const char *dis = gpu_backend_supported() ? "" : " disabled";
-    static char body[12288];
+    sbuf hb = {0};
+    page_header(&hb, "gpu");
+    static char body[16384];
     snprintf(body, sizeof body,
-        "%s<header><h1>NeoEnabler <small>FW %s</small></h1>"
-        "<div><form method=post style='display:inline'><input type=hidden name=view value=gpu>"
-        "<button formaction=/settings/save>Save Settings</button><button class=danger formaction=/quit>Quit</button>"
-        "</form></div></header><main>"
-        "<nav aria-label='Settings tabs'><a href=/>Overview</a><a href=/gpu aria-current=page>GPU clock</a></nav>"
+        "%s<main>"
         "%s%s%s<div class=grid>"
         "<div class=card><b>Current GPU clock</b><div class=metric id=gpu-current>%s</div>"
         "<small>Live SMU reading. Updates every two seconds.</small></div>"
@@ -436,6 +507,7 @@ static void serve_gpu_page(int fd, const char *msg) {
         "Actual frequency may be lower. Power and thermal controls remain active.</p>"
         "<small>Applies to PS4 games in base or NEO mode. A saved target is requested on the next PS4 launch. "
         "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
+        "<form method=post><input type=hidden name=view value=gpu><button formaction=/settings/save>Save Settings</button></form>"
         "%s</div></div><p><small>GPU boost is independent of NEO and 8 GiB. Quitting restores the captured GPU clock.<br>"
         VERSION "</small></p></main>"
         "<script>(function(){const r=document.getElementById('gpu-target'),o=document.getElementById('gpu-value');"
@@ -448,10 +520,11 @@ static void serve_gpu_page(int fd, const char *msg) {
         "document.getElementById('gpu-detail').textContent=s.detail;"
         "}catch(e){document.getElementById('gpu-current').textContent='Disconnected';}}window.neoGpuTimer=setInterval(refresh,2000);})();</script>"
         "</body></html>",
-        page_head, fw, msg ? "<p>" : "", msg ? msg : "", msg ? "</p>" : "", current,
+        hb.p ? hb.p : "", msg ? "<p class=msg>" : "", msg ? msg : "", msg ? "</p>" : "", current,
         gpu.applied && !gpu.blocked ? "on" : gpu.enabled ? "unk" : "off", gpu_state_text(), gpu.message, previous,
         gpu.target, GPU_MIN_MHZ, GPU_MAX_MHZ, gpu.target, dis, dis, dis,
         gpu_backend_supported() ? "" : "<p>GPU clock control is available on firmware 13.20 only.</p>");
+    free(hb.p);
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
 }
 
@@ -632,6 +705,112 @@ static void gpu_tick(void) {
     }
 }
 
+/* Launch questions. The hook posts the title ID of every PS4 launch and waits up to LAUNCH_WAIT_S seconds; the
+   manager answers Pro mode when an enabled patch of that game needs it, after switching the 8 GiB budget to what
+   the launch needs (the kernel reads it when it creates the game process). 8 GiB switched on for a launch returns
+   to the original budget once the game has closed. */
+#define LAUNCH_WAIT_S 5
+static shell_t live;
+static int live_ok;
+static uint32_t last_seq;
+static uint64_t tsc_hz = 1600000000ULL;
+static struct { int active, needs; uint32_t seq; char tid[10]; time_t since; } pending;
+static struct { int active, seen_game; char tid[10]; time_t since; } auto8;
+
+static uint64_t rdtsc(void) { uint32_t lo, hi; __asm__ volatile("rdtsc" : "=a"(lo), "=d"(hi)); return ((uint64_t)hi << 32) | lo; }
+
+static uint64_t tsc_rate(void) {
+    struct timespec a, c;
+    clock_gettime(CLOCK_MONOTONIC, &a); uint64_t t0 = rdtsc();
+    usleep(100000);
+    clock_gettime(CLOCK_MONOTONIC, &c); uint64_t t1 = rdtsc();
+    double sec = (double)(c.tv_sec - a.tv_sec) + (double)(c.tv_nsec - a.tv_nsec) / 1e9;
+    return sec > 0.05 && t1 > t0 ? (uint64_t)((double)(t1 - t0) / sec) : 1600000000ULL;
+}
+
+/* Called after the hook changes and every two seconds: questions are only read from a live hook. */
+static void launch_attach(int ask) {
+    int was = live_ok;
+    live_ok = shim_live(&live);
+    if (!live_ok) return;
+    if (!was) {
+        char tid[10];
+        if (shim_question(&live, &last_seq, tid)) { live_ok = 0; return; }   /* earlier questions are not ours */
+    }
+    if (!was || ask >= 0) shim_configure(&live, force_neo, ask == 0 ? 0 : tsc_hz * LAUNCH_WAIT_S);
+}
+
+static void launch_poll(void) {
+    if (!live_ok) return;
+    if (!pending.active) {
+        uint32_t seq; char tid[10];
+        if (shim_question(&live, &seq, tid) || seq == last_seq) return;
+        last_seq = seq;
+        pending.active = 1; pending.seq = seq; pending.since = time(NULL);
+        snprintf(pending.tid, sizeof pending.tid, "%s", tid);
+        pending.needs = game_needs(tid);
+        if (force_neo) pending.needs |= NEEDS_PRO;
+        log_line("launch: %s needs %s%s", tid, pending.needs & NEEDS_PRO ? "Pro mode" : "base mode",
+                 pending.needs & NEEDS_8GIB ? " and 8 GiB" : "");
+    }
+    int pro = (pending.needs & NEEDS_PRO) != 0, ok = 1;
+    int want8 = force_8gib || ((pending.needs & NEEDS_8GIB) && memory_supported());
+    /* the budget only applies to Pro mode processes */
+    if (pro && memory_supported()) {
+        int rc = memory_request(want8);
+        ok = rc == 0;
+        if (!ok && time(NULL) - pending.since < LAUNCH_WAIT_S - 1) return;   /* e.g. the previous game still closing */
+        if (!ok) {
+            mb_snapshot m;   /* keep the budget as it is instead of switching it later, after this game */
+            if (!mb_check(&m)) memory_target = m.state == MB_8GIB;
+            log_line("launch: %s: memory not switched (%s)", pending.tid, memory_message);
+        }
+        else if (want8 && !force_8gib) {
+            auto8.active = 1; auto8.seen_game = 0; auto8.since = time(NULL);
+            snprintf(auto8.tid, sizeof auto8.tid, "%s", pending.tid);
+        } else if (!want8) auto8.active = 0;
+    }
+    shim_answer(&live, pending.seq, (unsigned char)pro);
+    pending.active = 0;
+    log_line("launch: %s starts in %s mode%s", pending.tid, pro ? "Pro" : "base",
+             pro && memory_supported() && ok ? (want8 ? " with 8 GiB" : " with the original memory") : "");
+}
+
+/* 8 GiB switched on for a launch goes back to the original budget when no game runs any more. */
+static void launch_tick(void) {
+    if (!auto8.active || force_8gib) return;
+    int games = mb_games();
+    if (games > 0) { auto8.seen_game = 1; return; }
+    if (games < 0 || (!auto8.seen_game && time(NULL) - auto8.since < 60)) return;
+    auto8.active = 0;
+    memory_request(0);
+    log_line("8 GiB: %s closed: %s", auto8.tid, memory_message);
+}
+
+/* Value of key in an x-www-form-urlencoded body, letters, digits and '.' only. */
+static int form_value(const char *body, const char *key, char *out, size_t cap) {
+    size_t kl = strlen(key);
+    for (const char *p = body; p && *p; p = strchr(p, '&') ? strchr(p, '&') + 1 : NULL) {
+        if (strncmp(p, key, kl) || p[kl] != '=') continue;
+        const char *v = p + kl + 1; size_t n = strcspn(v, "&");
+        if (!n || n >= cap) return -1;
+        for (size_t i = 0; i < n; i++) if (!isalnum((unsigned char)v[i]) && v[i] != '.') return -1;
+        memcpy(out, v, n); out[n] = 0;
+        return 0;
+    }
+    return -1;
+}
+
+static void serve_icon(int fd, const char *tid) {
+    char path[96]; size_t n;
+    if (!game_tid(tid)) { reply(fd, "404 Not Found", "text/plain", "not found\n"); return; }
+    snprintf(path, sizeof path, "/user/appmeta/%s/icon0.png", tid);
+    char *png = ps_read(path, 4 << 20, &n);
+    if (!png) { reply(fd, "404 Not Found", "text/plain", "not found\n"); return; }
+    reply_bytes(fd, "200 OK", "image/png", "max-age=86400", png, n);
+    free(png);
+}
+
 int main(void) {
     signal(SIGPIPE, SIG_IGN);
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -648,9 +827,14 @@ int main(void) {
     }
     log_line("%s started", VERSION);
     settings_load();
-    log_line("settings: neo=%d memory_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u",
-             settings_neo, memory_target, gpu.enabled, gpu.target);
-    do_set(settings_neo, msg, sizeof(msg), 0);
+    log_line("settings: force_neo=%d force_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u",
+             force_neo, force_8gib, gpu.enabled, gpu.target);
+    do_set(1, msg, sizeof(msg), 0);
+    tsc_hz = tsc_rate();
+    launch_attach(1);
+    log_line("launch: questions %s (TSC %llu Hz, wait %d s)", live_ok ? "enabled" : "unavailable, hook not installed",
+             (unsigned long long)tsc_hz, LAUNCH_WAIT_S);
+    if (force_8gib) memory_request(1);
     int memory_previous_result=memory_poll();
     log_line("8 GiB: %s", memory_message);
     gpu_tick();
@@ -662,8 +846,11 @@ int main(void) {
     patches_update();
     time_t last_memory_poll=time(NULL);
     for (;;) {
+        launch_poll();
         time_t now=time(NULL);
         if(now<last_memory_poll||now-last_memory_poll>=2){
+            launch_attach(-1);
+            launch_tick();
             gpu_tick();
             int memory_result=memory_poll();
             if(memory_result!=memory_previous_result){
@@ -673,7 +860,8 @@ int main(void) {
             }
             memory_previous_result=memory_result;last_memory_poll=now;
         }
-        fd_set ready;FD_ZERO(&ready);FD_SET(srv,&ready);struct timeval wait={1,0};
+        /* short wait: launch questions are answered between requests */
+        fd_set ready;FD_ZERO(&ready);FD_SET(srv,&ready);struct timeval wait={0,pending.active?2000:20000};
         int selected=select(srv+1,&ready,NULL,NULL,&wait);
         if(selected<=0)continue;
         int fd = accept(srv, NULL, NULL);
@@ -687,20 +875,30 @@ int main(void) {
         char method[8] = "", path[64] = "";
         sscanf(req, "%7s %63s", method, path);
         int post = !strcmp(method, "POST");
-        if (post && (!strcmp(path, "/enable") || !strcmp(path, "/disable"))) {
-            log_line("panel: NEO %s requested", !strcmp(path, "/enable") ? "enable" : "disable");
-            do_set(!strcmp(path, "/enable"), msg, sizeof(msg), 1);
-            log_state();
-            serve_page(fd, msg);
-        } else if(post&&(!strcmp(path,"/memory/enable")||!strcmp(path,"/memory/disable"))){
-            log_line("panel: 8 GiB %s requested",!strcmp(path,"/memory/enable")?"enable":"disable");
-            if(!memory_supported()){
-                const char*umsg="8 GiB is not supported on this firmware (supported: 13.20; 13.60 pending testing); nothing changed";
-                notify(umsg);serve_page(fd,umsg);
-            }else{
-                memory_request(!strcmp(path,"/memory/enable"));
-                notify(memory_message);log_state();serve_page(fd,memory_message);
+        if (post && !strcmp(path, "/patches/set")) {
+            char tid[16], hash[16], on[4], pmsg[256];
+            if (form_value(form_body, "tid", tid, sizeof tid) || form_value(form_body, "hash", hash, sizeof hash) ||
+                form_value(form_body, "on", on, sizeof on) || (strcmp(on, "0") && strcmp(on, "1"))) {
+                reply(fd, "400 Bad Request", "text/plain", "Invalid patch request\n");
+            } else if (game_set_patch(tid, hash, on[0] == '1', memory_supported(), pmsg, sizeof pmsg)) {
+                reply(fd, "409 Conflict", "text/plain; charset=utf-8", pmsg);
+            } else reply(fd, "200 OK", "text/plain; charset=utf-8", pmsg);
+        } else if (post && (!strcmp(path, "/advanced/neo") || !strcmp(path, "/advanced/memory"))) {
+            char on[4]; int value = !form_value(form_body, "on", on, sizeof on) && !strcmp(on, "1");
+            const char *amsg;
+            if (!strcmp(path, "/advanced/neo")) {
+                force_neo = value; launch_attach(1);
+                amsg = value ? "Pro mode for every PS4 game: on" : "Pro mode for every PS4 game: off (follows the game patches)";
+            } else if (!memory_supported()) {
+                amsg = "8 GiB is not supported on this firmware; nothing changed";
+            } else {
+                force_8gib = value;
+                if (value) memory_request(1); else if (!auto8.active) memory_request(0);
+                amsg = value ? "Keep 8 GiB on: on" : "Keep 8 GiB on: off (8 GiB follows the game patches)";
             }
+            int saved = !settings_save();
+            log_line("panel: %s%s", amsg, saved ? "" : " (settings not saved)");
+            notify(amsg); log_state(); serve_page(fd, amsg);
         } else if (post && (!strcmp(path, "/gpu/enable") || !strcmp(path, "/gpu/disable"))) {
             int enable = !strcmp(path, "/gpu/enable"); unsigned target = gpu.target;
             if (enable && gpu_form_mhz(form_body, &target) != 1) {
@@ -716,12 +914,10 @@ int main(void) {
             patches_update();
             serve_page(fd, patches_message);
         } else if (post && !strcmp(path, "/settings/save")) {
-            shell_t ss; int sst = hook_state(&ss);
-            if (sst == HOOK_OFF && v4_active(&ss)) sst = HOOK_ON;
-            int ok = !settings_save(sst == HOOK_ON);
+            int ok = !settings_save();
             const char *smsg = ok ? "Settings saved" : "Failed to save settings";
-            log_line("panel: save settings neo=%d memory_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u",
-                     sst == HOOK_ON, memory_target, gpu.enabled, gpu.target);
+            log_line("panel: save settings force_neo=%d force_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u",
+                     force_neo, force_8gib, gpu.enabled, gpu.target);
             notify(smsg);
             if (!strcmp(form_body, "view=gpu")) serve_gpu_page(fd, smsg); else serve_page(fd, smsg);
         } else if (post && !strcmp(path, "/quit")) {
@@ -729,16 +925,18 @@ int main(void) {
                 notify(gpu.message); serve_gpu_page(fd, "Clock restoration failed. Retry Disable before quitting."); close(fd); continue;
             }
             reply(fd, "200 OK", "text/html; charset=utf-8", "<!doctype html><meta charset=utf-8><title>NeoEnabler</title>"
-                  "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. NEO and memory settings were kept. GPU clock restore requested.</body>");
+                  "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. Games no longer ask for Pro mode "
+                  "or 8 GiB until the manager runs again. GPU clock restore requested.</body>");
             close(fd);
-            notify("NeoEnabler: panel stopped (NEO and memory kept, GPU boost stopped)");
+            launch_attach(0);
+            notify("NeoEnabler: panel stopped (per-game Pro mode and 8 GiB stopped, GPU boost stopped)");
             log_state();
             break;
         } else if (!strcmp(path, "/status")) {
             shell_t s; int st = hook_state(&s);
             char games[1024]; games_text(games, sizeof(games), 0);
             char body[3200];mb_snapshot memory;mb_check(&memory);gpu_refresh();
-            snprintf(body, sizeof(body), "build: " VERSION "\nmemory_8gib: %s\nmemory_auto: %s\nmemory_detail: %s\nmemory_last_result: %s\nhook: %s\nv4 hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
+            snprintf(body, sizeof(body), "build: " VERSION "\nmemory_8gib: %s\nmemory_requested: %s\nmemory_detail: %s\nmemory_last_result: %s\nhook: %s\nv4 hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
                      memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled",
                      memory_target?"enabled":"disabled",memory.detail,memory_message,
                      state_text(st), v4_active(&s) ? "present" : "absent", fw_major(), s.site, s.target, s.cave, s.frame, s.frame_end,
@@ -747,11 +945,17 @@ int main(void) {
             snprintf(body + used, sizeof body - used,
                      "gpu_clock: %s\ngpu_clock_enabled: %d\ngpu_target_mhz: %u\ngpu_actual_mhz: %s%u\ngpu_detail: %s\n",
                      gpu_state_text(), gpu.enabled, gpu.target, gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
+            used = strlen(body);
+            snprintf(body + used, sizeof body - used,
+                     "force_neo: %d\nforce_8gib: %d\nlaunch_questions: %s\nlast_question: %u\n8gib_for_launch: %s\n",
+                     force_neo, force_8gib, live_ok ? "enabled" : "unavailable", last_seq, auto8.active ? auto8.tid : "none");
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/panel.js")) {
             char script[sizeof panel_js + 1];
             memcpy(script, panel_js, sizeof panel_js); script[sizeof panel_js] = 0;
             reply(fd, "200 OK", "application/javascript; charset=utf-8", script);
+        } else if (!strcmp(method, "GET") && !strncmp(path, "/icon/", 6)) {
+            serve_icon(fd, path + 6);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/gpu")) {
             serve_gpu_page(fd, NULL);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/gpu/status")) {

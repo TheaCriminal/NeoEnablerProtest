@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-typedef struct{int neo,memory,gpu_enabled;unsigned gpu_mhz;} neo_settings;
-static neo_settings neo_settings_default(void){return(neo_settings){1,0,0,GPU_DEFAULT_MHZ};}
+/* neo and memory_8gib are the keys of managers before per-game patches; force_neo and force_8gib are the
+ * advanced overrides (Pro mode for every PS4 game, 8 GiB kept on). */
+typedef struct{int neo,memory,gpu_enabled;unsigned gpu_mhz;int force_neo,force_8gib;} neo_settings;
+static neo_settings neo_settings_default(void){return(neo_settings){1,0,0,GPU_DEFAULT_MHZ,0,0};}
 static int neo_settings_parse(const char*text,neo_settings*out){
  *out=neo_settings_default();int invalid_gpu=0;
  for(const char*p=text;*p;){
@@ -18,6 +20,10 @@ static int neo_settings_parse(const char*text,neo_settings*out){
    if(!strcmp(line,"neo=1"))out->neo=1;
    if(!strcmp(line,"memory_8gib=0"))out->memory=0;
    if(!strcmp(line,"memory_8gib=1"))out->memory=1;
+   if(!strcmp(line,"force_neo=0"))out->force_neo=0;
+   if(!strcmp(line,"force_neo=1"))out->force_neo=1;
+   if(!strcmp(line,"force_8gib=0"))out->force_8gib=0;
+   if(!strcmp(line,"force_8gib=1"))out->force_8gib=1;
    if(!strncmp(line,"gpu_clock_enabled=",18)){
     if(!strcmp(line+18,"0"))out->gpu_enabled=0;
     else if(!strcmp(line+18,"1"))out->gpu_enabled=1;
@@ -34,6 +40,7 @@ static int neo_settings_parse(const char*text,neo_settings*out){
  return invalid_gpu?-1:0;
 }
 static int neo_settings_format(const neo_settings*s,char*out,size_t cap){
- int n=snprintf(out,cap,"neo=%d\nmemory_8gib=%d\ngpu_clock_enabled=%d\ngpu_clock_mhz=%u\n",!!s->neo,!!s->memory,!!s->gpu_enabled,s->gpu_mhz);
+ int n=snprintf(out,cap,"neo=%d\nmemory_8gib=%d\ngpu_clock_enabled=%d\ngpu_clock_mhz=%u\nforce_neo=%d\nforce_8gib=%d\n",
+  !!s->neo,!!s->memory,!!s->gpu_enabled,s->gpu_mhz,!!s->force_neo,!!s->force_8gib);
  return n>=0&&(size_t)n<cap?n:-1;
 }

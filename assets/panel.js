@@ -29,6 +29,28 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Request interrupted. Check the current status before trying again.');
         });
     });
+    // Patch checkboxes write the patch system settings at once; nothing to save.
+    document.addEventListener('change', function (event) {
+        var box = event.target;
+        if (!box.dataset || !box.dataset.hash) return;
+        var wanted = box.checked;
+        box.disabled = true;
+        fetch('/patches/set', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'tid=' + box.dataset.tid + '&hash=' + box.dataset.hash + '&on=' + (wanted ? '1' : '0'),
+            cache: 'no-store'
+        }).then(function (response) {
+            return response.text().then(function (text) {
+                if (!response.ok) throw new Error(text);
+            });
+        }).catch(function (error) {
+            box.checked = !wanted;
+            alert(error.message || 'Request interrupted. Check the current status before trying again.');
+        }).then(function () {
+            box.disabled = false;
+        });
+    });
     document.addEventListener('click', function (event) {
         var link = event.target.closest('nav a');
         if (!link) return;
