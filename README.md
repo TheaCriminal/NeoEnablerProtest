@@ -37,23 +37,29 @@ Pro mode stays on until you turn it off or reboot the console. It applies to gam
 
 Open `http://<PS5 IP>:8765` in a browser on your network, or the **NeoEnabler** shortcut in the PS5 Media tab.
 
-- Turn PS4 Pro mode on or off.
-- Turn 8 GiB on or off independently of NEO.
-- **Save Settings**: saves NEO, 8 GiB and GPU clock settings to `/data/neo-settings` on the PS5. Restored on next startup.
-- **Save Diagnostic**: writes firmware metadata to `/data/neo-diagnostic.jsonl` for extraction via FTP.
-- See the firmware version, running PS4 games and their DMEM budget.
+![Games page](docs/panel-games.jpg)
 
-**Close every game before changing the memory budget.** A memory change requested while a game is open is
-applied after games close. Disabling 8 GiB stops automatic enabling; enabling it resumes. NEO and 8 GiB are
-independent. Quitting the manager keeps both patches but stops automatic checks. Rebooting removes both patches.
+- **Games**: every installed PS4 game that has a NeoEnabler patch for its installed version, with its icon, title
+  ID, version and all of its patches. Tick a patch to enable it; the change goes straight to the ps-patch-system
+  settings, there is nothing to save. Only one NeoEnabler resolution entry per game can be on: ticking one turns
+  the others off. Patches that need 8 GiB are marked and cannot be enabled on firmwares without 8 GiB support.
+  Use the search bar to find a game by name or title ID.
+- **PS4 Pro mode and 8 GiB are automatic.** When a PS4 game starts, NeoEnabler checks its enabled patches: the
+  game starts in PS4 Pro mode only when one of them needs it, and 8 GiB is switched on before the game starts
+  only when one of them needs it. 8 GiB returns to the original 5.25 GiB budget after the game closes.
+- **Status**: PS4 Pro mode of the running game, 8 GiB state and the running game.
+- **Game patches**: Update Patches downloads the patches from this repository (also done at startup).
+- **Logs**: Show Logs, Save Logs and Save Diagnostic.
+- **Advanced** (collapsed): Pro mode for every PS4 game, or 8 GiB kept on, regardless of the patches.
 
-The 8 GiB setting changes the budget for new PS4 Pro launches. Existing games keep their launch budget. It does
-not change resolution or force memory pools to grow. Restoring the original budget selects the captured 5.25 GiB
-NEO configuration. A failed kernel-write recovery requires a console reboot before launching games.
+Quitting the manager stops the automatic Pro mode and 8 GiB until it runs again. Rebooting removes the hook.
+A failed kernel-write recovery of the memory budget requires a console reboot before launching games.
 
 Anyone on your local network can open the panel.
 
 ### GPU clock tab (0.3.0)
+
+![GPU clock tab](docs/panel-gpu.jpg)
 
 Panel actions update the document without adding POST entries to browser history; switching tabs also replaces
 the current entry. Circle/Back requests closing the console web interface instead of revisiting earlier actions.
