@@ -13,6 +13,9 @@ body:
     attributes:
       label: Game and resolution entry
       options:
+        - Batman Arkham Knight - 1620p
+        - Batman Arkham Knight - 1800p
+        - Batman Arkham Knight - Native 4K
         - Battlefield 4 - 1440p
         - Battlefield 4 - 1620p
         - Battlefield 4 - 1800p

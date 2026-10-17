@@ -26,6 +26,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Resident Evil 6 (01.01) | 1440p, 4K | Validated |
 | The Order: 1886 (01.02) | 4K, 4K up to 60 fps | Validated |
 | Dark Souls III: The Fire Fades Edition (01.03) | 1440p, 1620p, 1800p | Validated |
+| Batman: Arkham Knight (01.15) | 1620p, 1800p, Native 4K | Native 4K validated; 1620p and 1800p not tested yet |
 
 ## Other firmwares
 

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA00133</ID>
+  </TitleID>
+  <Metadata Title="Batman: Arkham Knight" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode." Author="gasb07" PatchVer="1.0" AppVer="01.15" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x009f9fda" Value="e921e0bb01" />
+      <Line Type="bytes" Address="0x009fa288" Value="e983ddbb01" />
+      <Line Type="bytes" Address="0x025b8000" Value="e8dbe4f8fd4d89f241bbdf9f9f00eb10e8cbe4f8fd4d89ea41bb8da29f00eb00e9eb000000000000000000000000000000000000000000000000000000000000418d407f83e080890424488d5d80e9fb2444fe0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000e80b09f9fd41814d1800000001e9422044fe0000000000000000000000000000e8eb08f9fd41814d1800000001e9d32244fe000000000000000000000000000057564883ec08e89505f9fd4883c4085e5ff74610000000807407814f1800000001c30000000000000000000000000000418b4a0481e1ff070000ffc1c1e10383c17f83e18089cac1ea03ffca4189d141c1e1144409ca41895204410fb7521a83c27f83e2800fafcac1e906ffc941894a0841814a100000008041816210ffdfffff4889c248c1ea203d000087007707b800008700eb0c3d000040027305b80000400281fa000001007305ba0000010089c048c1e2204809d041ffe3" />
+      <Line Type="bytes" Address="0x009ea246" Value="31c9ffc1" />
+      <Line Type="bytes" Address="0x00546904" Value="0d00000000" />
+      <Line Type="bytes" Address="0x005417c2" Value="41804f0300" />
+      <Line Type="bytes" Address="0x009fa0ef" Value="e9acdfbb01" />
+      <Line Type="bytes" Address="0x009fa3a0" Value="e91bddbb01" />
+      <Line Type="bytes" Address="0x009f5d4b" Value="e89023bc01" />
+      <Line Type="bytes" Address="0x009fa0e0" Value="e8fbdfbb01" />
+      <Line Type="bytes" Address="0x009fa391" Value="e84addbb01" />
+      <Line Type="bytes" Address="0x00c65fd2" Value="e809219501" />
+      <Line Type="bytes" Address="0x009fa546" Value="e9f5dabb01909090" />
+      <Line Type="bytes" Address="0x009f5ecf" Value="be00000000" />
+      <Line Type="bytes32" Address="0x02b04014" Value="0x00000b40" />
+      <Line Type="bytes32" Address="0x02b04018" Value="0x00000654" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Batman: Arkham Knight" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode." Author="gasb07" PatchVer="1.0" AppVer="01.15" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x009f9fda" Value="e921e0bb01" />
+      <Line Type="bytes" Address="0x009fa288" Value="e983ddbb01" />
+      <Line Type="bytes" Address="0x025b8000" Value="e8dbe4f8fd4d89f241bbdf9f9f00eb10e8cbe4f8fd4d89ea41bb8da29f00eb00e9eb000000000000000000000000000000000000000000000000000000000000418d407f83e080890424488d5d80e9fb2444fe0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000e80b09f9fd41814d1800000001e9422044fe0000000000000000000000000000e8eb08f9fd41814d1800000001e9d32244fe000000000000000000000000000057564883ec08e89505f9fd4883c4085e5ff74610000000807407814f1800000001c30000000000000000000000000000418b4a0481e1ff070000ffc1c1e10383c17f83e18089cac1ea03ffca4189d141c1e1144409ca41895204410fb7521a83c27f83e2800fafcac1e906ffc941894a0841814a100000008041816210ffdfffff4889c248c1ea203d000087007707b800008700eb0c3d000040027305b80000400281fa000001007305ba0000010089c048c1e2204809d041ffe3" />
+      <Line Type="bytes" Address="0x009ea246" Value="31c9ffc1" />
+      <Line Type="bytes" Address="0x00546904" Value="0d00000000" />
+      <Line Type="bytes" Address="0x005417c2" Value="41804f0300" />
+      <Line Type="bytes" Address="0x009fa0ef" Value="e9acdfbb01" />
+      <Line Type="bytes" Address="0x009fa3a0" Value="e91bddbb01" />
+      <Line Type="bytes" Address="0x009f5d4b" Value="e89023bc01" />
+      <Line Type="bytes" Address="0x009fa0e0" Value="e8fbdfbb01" />
+      <Line Type="bytes" Address="0x009fa391" Value="e84addbb01" />
+      <Line Type="bytes" Address="0x00c65fd2" Value="e809219501" />
+      <Line Type="bytes" Address="0x009fa546" Value="e9f5dabb01909090" />
+      <Line Type="bytes" Address="0x009f5ecf" Value="be00000000" />
+      <Line Type="bytes32" Address="0x02b04014" Value="0x00000c80" />
+      <Line Type="bytes32" Address="0x02b04018" Value="0x00000708" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Batman: Arkham Knight" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode." Author="gasb07" PatchVer="1.0" AppVer="01.15" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x009f9fda" Value="e921e0bb01" />
+      <Line Type="bytes" Address="0x009fa288" Value="e983ddbb01" />
+      <Line Type="bytes" Address="0x025b8000" Value="e8dbe4f8fd4d89f241bbdf9f9f00eb10e8cbe4f8fd4d89ea41bb8da29f00eb00e9eb000000000000000000000000000000000000000000000000000000000000418d407f83e080890424488d5d80e9fb2444fe0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000e80b09f9fd41814d1800000001e9422044fe0000000000000000000000000000e8eb08f9fd41814d1800000001e9d32244fe000000000000000000000000000057564883ec08e89505f9fd4883c4085e5ff74610000000807407814f1800000001c30000000000000000000000000000418b4a0481e1ff070000ffc1c1e10383c17f83e18089cac1ea03ffca4189d141c1e1144409ca41895204410fb7521a83c27f83e2800fafcac1e906ffc941894a0841814a100000008041816210ffdfffff4889c248c1ea203d000087007707b800008700eb0c3d000040027305b80000400281fa000001007305ba0000010089c048c1e2204809d041ffe3" />
+      <Line Type="bytes" Address="0x009ea246" Value="31c9ffc1" />
+      <Line Type="bytes" Address="0x00546904" Value="0d00000000" />
+      <Line Type="bytes" Address="0x005417c2" Value="41804f0300" />
+      <Line Type="bytes" Address="0x009fa0ef" Value="e9acdfbb01" />
+      <Line Type="bytes" Address="0x009fa3a0" Value="e91bddbb01" />
+      <Line Type="bytes" Address="0x009f5d4b" Value="e89023bc01" />
+      <Line Type="bytes" Address="0x009fa0e0" Value="e8fbdfbb01" />
+      <Line Type="bytes" Address="0x009fa391" Value="e84addbb01" />
+      <Line Type="bytes" Address="0x00c65fd2" Value="e809219501" />
+      <Line Type="bytes" Address="0x009fa546" Value="e9f5dabb01909090" />
+      <Line Type="bytes" Address="0x009f5ecf" Value="be00000000" />
+      <Line Type="bytes32" Address="0x02b04014" Value="0x00000f00" />
+      <Line Type="bytes32" Address="0x02b04018" Value="0x00000870" />
+    </PatchList>
+  </Metadata>
+</Patch>
