@@ -2,6 +2,10 @@
 
 ## 0.3.2
 
+- The patch sync now also uses the title IDs listed in each repository file (regions and special editions): the file
+  of every listed title ID gets the patches, even when it names the game differently, and is created when missing.
+  Before, a game whose file had another Title, or that had no file, only got a file under the repository file's own
+  title ID, so the patch loader did not find the patches for other regions.
 - A patch that needs 8 GiB is turned off when 8 GiB is not available (no hypervisor exploit, or an unsupported
   firmware): at start, when the 8 GiB state changes and at the launch of its game, with a notification. Before, the
   game started in Pro mode with the original memory.

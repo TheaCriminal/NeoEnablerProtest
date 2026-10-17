@@ -228,13 +228,17 @@ int main(int argc, char **argv) {
     size_t orig_len[2]; char *orig[2];
     for (int i = 0; i < 2; i++) orig[i] = get(test_dir, names[i], &orig_len[i]);
 
-    /* First run: both files of the first game merged and backed up, the other games created. */
+    /* Every title ID listed by every repository file. */
+    char ids[64][64][16]; int nids[64], total_ids = 0;
+    for (int i = 0; i < repo_count; i++) { nids[i] = ps_listed_ids(repo[i].xml, repo[i].len, repo[i].name, ids[i], 64); assert(nids[i] > 0); total_ids += nids[i]; }
+
+    /* First run: both files of the first game merged and backed up, a file created for every listed title ID. */
     ps_result r;
     patch_sync(&r);
     puts(r.message);
     assert(downloads == repo_count);
     assert(r.games == repo_count && r.errors == 0);
-    assert(r.files_updated == 2 && r.files_created == repo_count - 1 && r.files_unchanged == 0);
+    assert(r.files_updated == 2 && r.files_created == total_ids && r.files_unchanged == 0);
     assert(r.backup_dir[0] && strstr(r.message, r.backup_dir));
     assert(backups() == PS_MAX_BACKUPS);
     for (int i = 1; i <= 6; i++) {
@@ -256,11 +260,12 @@ int main(int argc, char **argv) {
         }
         free(now); free(bak);
     }
-    for (int i = 1; i < repo_count; i++) {
-        size_t n; char *now = get(test_dir, repo[i].id, &n);
-        assert(now && n == repo[i].len && !memcmp(now, repo[i].xml, n));               /* created as downloaded */
-        free(now);
-    }
+    for (int i = 0; i < repo_count; i++)
+        for (int k = 0; k < nids[i]; k++) {
+            size_t n; char *now = get(test_dir, ids[i][k], &n);
+            assert(now && n == repo[i].len && !memcmp(now, repo[i].xml, n));           /* created as downloaded */
+            free(now);
+        }
     size_t n; char *s = get(test_dir, "CUSA90003.xml", &n);
     assert(!strcmp(s, unrelated)); free(s);
     assert(!get(r.backup_dir, "CUSA90003.xml", &n) && !get(test_dir, "CUSA90001.xml.neo-tmp", &n));
@@ -270,7 +275,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < 2; i++) { s = get(test_dir, names[i], &before_len[i]); assert(before_len[i] < sizeof(before[i])); memcpy(before[i], s, before_len[i]); free(s); }
     patch_sync(&r);
     puts(r.message);
-    assert(r.files_updated == 0 && r.files_created == 0 && r.files_unchanged == repo_count + 1 && r.errors == 0);
+    assert(r.files_updated == 0 && r.files_created == 0 && r.files_unchanged == 2 + total_ids && r.errors == 0);
     assert(!r.backup_dir[0] && !strstr(r.message, "Backup"));
     assert(backups() == PS_MAX_BACKUPS);
     for (int i = 0; i < 2; i++) { s = get(test_dir, names[i], &n); assert(n == before_len[i] && !memcmp(s, before[i], n)); free(s); }
@@ -328,9 +333,21 @@ int main(int argc, char **argv) {
     assert(s && !strcmp(s, settings));
     free(s); free(dev);
 
+    /* A listed title ID whose file names the game differently (another region's community file): merged anyway. */
+    char other[512];
+    snprintf(other, sizeof other, "<Patch>\n  <Metadata Title=\"Some Other Name\" Name=\"Regional entry\" AppVer=\"01.00\">\n"
+             "    <PatchList><Line Type=\"bytes\" Address=\"0x30\" Value=\"0x90\"/></PatchList>\n  </Metadata>\n</Patch>\n");
+    put(ids[0][0], other);
+    patch_sync(&r);
+    puts(r.message);
+    assert(r.errors == 0 && r.files_updated >= 1);
+    s = get(test_dir, ids[0][0], &n);
+    assert(strstr(s, "Name=\"Regional entry\"") && count_of(s, n, "<Metadata") == 1 + count_of(g->xml, g->len, "<Metadata"));
+    free(s);
+
     char cmd[600]; snprintf(cmd, sizeof(cmd), "rm -rf '%s'", root);
     assert(!system(cmd));
-    printf("PASS patch sync: %d repository XMLs, GitHub listing filter, merge by Title, same patch lines renamed with their settings, backups (at most 5), idempotent, download failures\n",
+    printf("PASS patch sync: %d repository XMLs, GitHub listing filter, merge by Title and by listed title ID, same patch lines renamed with their settings, backups (at most 5), idempotent, download failures\n",
            repo_count);
     return 0;
 }

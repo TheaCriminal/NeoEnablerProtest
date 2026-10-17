@@ -1,7 +1,7 @@
 /* GPL-3.0-only. Game patch sync: downloads the XMLs in xml/ of the NeoEnabler repository and merges their entries
-   into every ps-patch-system file (/data/user/patches/xml_orbis/<TITLE ID>.xml) of the same game, matched by the
-   entry Title. Files are backed up before the first change of each run; a game without a file gets the
-   repository file under its title ID. Needs log_line() and write_file() from the manager. With PS_NO_HTTP
+   into every ps-patch-system file (/data/user/patches/xml_orbis/<TITLE ID>.xml) of the same game: the files whose
+   entry Title matches, and the file of every title ID listed in the repository file's <TitleID> (regions and
+   editions), which is created when missing. Files are backed up before the first change of each run. Needs log_line() and write_file() from the manager. With PS_NO_HTTP
    (host tests) the includer provides ps_get(). */
 #pragma once
 #include <stdio.h>
@@ -211,6 +211,52 @@ static void ps_move_settings(ps_result *r, const char *dir) {
     free(now); free(cur);
 }
 
+/* Title IDs in the <TitleID> block of a repository file; without one, the title ID in the file name. */
+static int ps_listed_ids(const char *xml, size_t len, const char *repo_name, char ids[][16], int cap) {
+    int n = 0;
+    const char *a = xm_find(xml, len, "<TitleID>"), *m = xm_find(xml, len, "<Metadata");
+    const char *b = a ? xm_find(a, len - (size_t)(a - xml), "</TitleID>") : NULL;
+    if (a && b && (!m || b < m)) {
+        for (const char *p = a; n < cap && (p = xm_find(p, (size_t)(b - p), "<ID>")); p += 4) {
+            const char *v = p + 4, *e = xm_find(v, (size_t)(b - v), "</ID>");
+            if (!e) break;
+            while (v < e && (*v == ' ' || *v == '\t' || *v == '\r' || *v == '\n')) v++;
+            while (e > v && (e[-1] == ' ' || e[-1] == '\t' || e[-1] == '\r' || e[-1] == '\n')) e--;
+            snprintf(ids[n], 16, "%.*s.xml", (int)(e - v), v);
+            if ((size_t)(e - v) == 9 && ps_title_file(ids[n])) {
+                int dup = 0;
+                for (int k = 0; k < n; k++) dup |= !strcmp(ids[k], ids[n]);
+                if (!dup) n++;
+            }
+        }
+    }
+    const char *us = strrchr(repo_name, '_');
+    if (!n && us && ps_title_file(us + 1)) snprintf(ids[n++], 16, "%s", us + 1);
+    return n;
+}
+
+/* Merges a repository file into one title ID file, with a backup before the first change. */
+static void ps_merge_into(ps_result *r, const char *dir, const char *name, const char *repo_name,
+                          const char *xml, size_t xml_len) {
+    char path[160]; size_t len, out_len; char *out = NULL; int added, replaced, renamed;
+    snprintf(path, sizeof(path), "%s/%.15s", dir, name);
+    char *cur = ps_read(path, PS_MAX_FILE, &len);
+    if (!cur || xm_merge_ex(cur, len, xml, xml_len, &out, &out_len, &added, &replaced, &renamed, ps_on_rename, (void *)name)) {
+        log_line("patches: %s unreadable or malformed, skipped", name); r->errors++; free(cur); return;
+    }
+    r->renamed += renamed;
+    if (!added && !replaced && !renamed) { log_line("patches: %s already up to date with %s", name, repo_name); r->files_unchanged++; }
+    else if (ps_backup(r, dir, name, cur, len)) {
+        log_line("patches: backup of %s failed, file not changed", name); r->errors++;
+    } else if (ps_write(dir, name, out, out_len)) {
+        log_line("patches: writing %s failed (errno %d)", name, errno); r->errors++;
+    } else {
+        log_line("patches: %s <- %s: %d added, %d replaced, %d renamed", name, repo_name, added, replaced, renamed);
+        r->files_updated++;
+    }
+    free(out); free(cur);
+}
+
 static void ps_apply(ps_result *r, const char *dir, const ps_file *files, int count,
                      const char *repo_name, const char *xml, size_t xml_len) {
     xm_block first;
@@ -218,36 +264,25 @@ static void ps_apply(ps_result *r, const char *dir, const ps_file *files, int co
         log_line("patches: %s has no entries, skipped", repo_name); r->errors++; return;
     }
     r->games++;
-    int matched = 0;
+    char ids[64][16];
+    int nids = ps_listed_ids(xml, xml_len, repo_name, ids, 64), done[64] = {0};
+    /* Files of the same game by Title, under any title ID. */
     for (int i = 0; i < count; i++) {
         if (!xm_title_is(xml, xml_len, files[i].title, strlen(files[i].title))) continue;
-        matched++;
-        char path[160]; size_t len, out_len; char *out; int added, replaced, renamed;
-        snprintf(path, sizeof(path), "%s/%.15s", dir, files[i].name);
-        char *cur = ps_read(path, PS_MAX_FILE, &len);
-        if (!cur || xm_merge_ex(cur, len, xml, xml_len, &out, &out_len, &added, &replaced, &renamed, ps_on_rename, (void *)files[i].name)) {
-            log_line("patches: %s unreadable or malformed, skipped", files[i].name); r->errors++; free(cur); continue;
-        }
-        r->renamed += renamed;
-        if (!added && !replaced && !renamed) { log_line("patches: %s already up to date with %s", files[i].name, repo_name); r->files_unchanged++; }
-        else if (ps_backup(r, dir, files[i].name, cur, len)) {
-            log_line("patches: backup of %s failed, file not changed", files[i].name); r->errors++;
-        } else if (ps_write(dir, files[i].name, out, out_len)) {
-            log_line("patches: writing %s failed (errno %d)", files[i].name, errno); r->errors++;
-        } else {
-            log_line("patches: %s <- %s: %d added, %d replaced, %d renamed", files[i].name, repo_name, added, replaced, renamed);
-            r->files_updated++;
-        }
-        free(out); free(cur);
+        for (int k = 0; k < nids; k++) done[k] |= !strcmp(ids[k], files[i].name);
+        ps_merge_into(r, dir, files[i].name, repo_name, xml, xml_len);
     }
-    if (matched) return;
-    const char *us = strrchr(repo_name, '_');
-    char name[16];
-    if (!us || !ps_title_file(us + 1)) { log_line("patches: %s has no title ID in its name, skipped", repo_name); r->errors++; return; }
-    snprintf(name, sizeof(name), "%s", us + 1);
-    if (ps_write(dir, name, xml, xml_len)) { log_line("patches: creating %s failed (errno %d)", name, errno); r->errors++; return; }
-    log_line("patches: %s created from %s (no file for \"%.*s\")", name, repo_name, (int)first.title_len, first.title);
-    r->files_created++;
+    /* Every listed title ID: merged when its file exists with another Title, created when missing. */
+    for (int k = 0; k < nids; k++) {
+        if (done[k]) continue;
+        char path[160]; struct stat st;
+        snprintf(path, sizeof(path), "%s/%s", dir, ids[k]);
+        if (!stat(path, &st)) { ps_merge_into(r, dir, ids[k], repo_name, xml, xml_len); continue; }
+        if (ps_write(dir, ids[k], xml, xml_len)) { log_line("patches: creating %s failed (errno %d)", ids[k], errno); r->errors++; continue; }
+        log_line("patches: %s created from %s", ids[k], repo_name);
+        r->files_created++;
+    }
+    if (!nids) { log_line("patches: %s has no title ID, skipped", repo_name); r->errors++; }
 }
 
 #ifndef PS_NO_HTTP
