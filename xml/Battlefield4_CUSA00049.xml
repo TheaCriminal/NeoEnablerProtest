@@ -2,6 +2,8 @@
 <Patch>
   <TitleID>
     <ID>CUSA00049</ID>
+    <ID>CUSA00110</ID>
+    <ID>CUSA00157</ID>
   </TitleID>
   <Metadata Title="Battlefield 4" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.24" AppElf="eboot.bin">
     <PatchList>

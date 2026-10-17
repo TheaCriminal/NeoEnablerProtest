@@ -2,6 +2,11 @@
 <Patch>
   <TitleID>
     <ID>CUSA00190</ID>
+    <ID>CUSA00002</ID>
+    <ID>CUSA00008</ID>
+    <ID>CUSA00065</ID>
+    <ID>CUSA00085</ID>
+    <ID>CUSA00191</ID>
   </TitleID>
   <Metadata Title="KILLZONE SHADOW FALL" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Slight darkening on some surfaces (e.g. the bottom of doors); clean in native 4K. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.81" AppElf="eboot.bin">
     <PatchList>

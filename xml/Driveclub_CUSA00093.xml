@@ -2,6 +2,10 @@
 <Patch>
   <TitleID>
     <ID>CUSA00093</ID>
+    <ID>CUSA00003</ID>
+    <ID>CUSA00064</ID>
+    <ID>CUSA00066</ID>
+    <ID>CUSA00879</ID>
   </TitleID>
   <Metadata Title="Driveclub" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.28" AppElf="eboot.bin">
     <PatchList>

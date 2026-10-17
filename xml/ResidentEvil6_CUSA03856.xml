@@ -2,6 +2,8 @@
 <Patch>
   <TitleID>
     <ID>CUSA03856</ID>
+    <ID>CUSA03840</ID>
+    <ID>CUSA09846</ID>
   </TitleID>
   <Metadata Title="RESIDENT EVIL 6" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
     <PatchList>

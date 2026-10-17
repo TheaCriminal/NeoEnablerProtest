@@ -2,6 +2,8 @@
 <Patch>
   <TitleID>
     <ID>CUSA00168</ID>
+    <ID>CUSA00113</ID>
+    <ID>CUSA00156</ID>
   </TitleID>
   <Metadata Title="Need for Speed: Rivals" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode, same fixes as 4K. Enable only one resolution entry. Requires NEO Enabler and &quot;Resolution Patch&quot; disabled." Author="Local experiment" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
     <PatchList>

@@ -2,6 +2,9 @@
 <Patch>
   <TitleID>
     <ID>CUSA00133</ID>
+    <ID>CUSA00135</ID>
+    <ID>CUSA01089</ID>
+    <ID>CUSA01764</ID>
   </TitleID>
   <Metadata Title="Batman: Arkham Knight" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode." Author="gasb07" PatchVer="1.0" AppVer="01.15" AppElf="eboot.bin">
     <PatchList>

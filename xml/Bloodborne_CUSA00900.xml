@@ -3,11 +3,13 @@
   <TitleID>
     <ID>CUSA00900</ID>
     <ID>CUSA00207</ID>
-    <ID>CUSA03173</ID>
     <ID>CUSA00208</ID>
+    <ID>CUSA00299</ID>
     <ID>CUSA01363</ID>
     <ID>CUSA03014</ID>
     <ID>CUSA03023</ID>
+    <ID>CUSA03173</ID>
+    <ID>CUSA03179</ID>
   </TitleID>
   <Metadata Title="Bloodborne" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Based on Kyo's resolution patch. Enable only one resolution entry. Requires NEO Enabler." Author="Kyo (resolution), gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
     <PatchList>

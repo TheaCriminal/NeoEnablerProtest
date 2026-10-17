@@ -2,6 +2,9 @@
 <Patch>
   <TitleID>
     <ID>CUSA07439</ID>
+    <ID>CUSA07339</ID>
+    <ID>CUSA07453</ID>
+    <ID>CUSA08155</ID>
   </TitleID>
   <Metadata Title="Dark Souls III: The Fire Fades Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Based on DanielSvoboda's resolution patch. Enable only one resolution entry. Requires NEO Enabler." Author="DanielSvoboda (resolution), gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
     <PatchList>

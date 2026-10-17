@@ -2,6 +2,11 @@
 <Patch>
   <TitleID>
     <ID>CUSA00785</ID>
+    <ID>CUSA00035</ID>
+    <ID>CUSA00070</ID>
+    <ID>CUSA00076</ID>
+    <ID>CUSA00100</ID>
+    <ID>CUSA00670</ID>
   </TitleID>
   <Metadata Title="The Order 1886" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Local experiment" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
     <PatchList>
