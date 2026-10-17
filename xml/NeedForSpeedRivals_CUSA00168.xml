@@ -47,4 +47,46 @@
       <Line Type="bytes" Address="0x2951100" Value="488b042550c704034885c074404531db4e8b94d8900200004d85d274274d8b52504d85d2741e4d8b92b00000004d85d2741241817a1028a80200750841814a100000008041ffc34183fb0372c3e9eeeac3fe" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Need for Speed: Rivals" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode, same fixes as 4K. Enable only one resolution entry. Requires NEO Enabler and &quot;Resolution Patch&quot; disabled." Author="Local experiment" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="mask" Address="18 48 83 c4 18 5b 41 5c 41 5d 41 5e 41 5f 5d c3 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 49 89 fe 48 8d" Offset="16" Value="ba01000000e9d48a530190909090" />
+      <Line Type="mask" Address="41 5f 5d e9 a7 e6 fc ff 0f 1f 80 00 00 00 00 c3 66 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 48 83 ec 60 c5" Offset="16" Value="83fe020f84e8420000e9a234000090" />
+      <Line Type="mask" Address="81 45 39 ea 75 c8 5b 41 5c 41 5d 41 5e 41 5f c3 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 55 41 54 53 48 81 ec" Offset="16" Value="c7070d00000031c0c39090909090" />
+      <Line Type="mask" Address="08 01 20 00 00 48 8d 49 10 75 e4 8b 44 08 f8 c3 66 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 48 63 d6 be 01 20 00 00 e9 33 73 b0 00 0f 1f 00" Offset="16" Value="83fe040f85b64a9900c6070531c0c3" />
+      <Line Type="mask" Address="08 00 00 00 48 8d bd e4 fe ff ff b9 01 00 00 00 e8 d6 f5 91 00 f6 85 78 ff ff ff 03 75 06 80 7d 9d 00 74 1a 48" Offset="16" Value="e86776f8ff" />
+      <Line Type="mask" Address="c8 8a 46 59 88 45 c9 8a 46 5a 88 45 ca 48 85 db 8a 46 5b 88 45 cb 74 0d 48 89 df e8 16 d4 00 00 e9 e4 00" Offset="16" Value="b00090" />
+      <Line Type="mask" Address="24 a0 00 00 00 c5 f8 57 c0 48 8d b5 70 ff ff ff 8b 41 0c 41 89 44 24 40 8b 49 10 41 89 4c 24 44 41 89 44 24 48 41 89 4c 24 4c 41 c6 44 24 58 00" Offset="16" Value="e98c91cd019090909090909090909090" />
+      <Line Type="mask" Address="00 48 c7 43 28 00 00 00 00 48 c7 43 38 00 00 00 04 48 c7 43 40 00 00 20 00 4c 8d 7d b0 48 8d 35 c9" Offset="16" Value="10" />
+      <Line Type="mask" Address="48 8b 3d 66 66 e0 01 48 8d 75 a0 ba 01 00 00 00 e8 a0 9e ff ff cd 41 eb 0f 48 8b 7d 98 e8 33 c1 73 00 85 c0 74" Offset="16" Value="4189c49090" />
+      <Line Type="mask" Address="03 c7 43 0c 02 00 00 00 eb 60 0f ae f8 0f ae f8 41 8d 86 ff 7f 00 00 25 00 80 ff ff 48 03 05 bf 6a 3d 02 48 89 05 b8 6a 3d 02 48 89" Offset="16" Value="418d86ffff0000250000ffff" />
+      <Line Type="mask" Address="0f 97 c0 0f b6 c0 ff c0 c3 90 0f ae f8 0f ae f8 81 c6 ff 7f 00 00 81 e6 00 80 ff ff 48 03 35 77 8d 3c 02 48 89 35 70 8d 3c 02 48 89" Offset="16" Value="81c6ffff000081e60000ffff" />
+      <Line Type="mask" Address="ff 41 8b bc 24 b8 02 00 00 31 f6 b9 03 00 00 00 e8 1a 40 4c 01 48 8d b5 40 fd ff ff 41 8b bc 24 b8 02 00 00 e8" Offset="16" Value="e8ba8acd01" />
+      <Line Type="mask" Address="24 08 8b 45 90 89 04 24 48 8b 7d 98 44 8b 4d 94 e8 69 c1 73 00 85 c0 74 28 48 8b 3d 66 66 e0 01 48 8d 75 a0 ba" Offset="16" Value="e829d6af01" />
+      <Line Type="mask" Address="24 a8 00 00 00 8b 8d a8 fe ff ff 39 c8 0f 47 c8 41 89 8c 24 a8 00 00 00 41 c6 84 24 82 00 00 00 01 0f b6 85 2c fe ff ff 48 8d bd 90 fe ff ff 48" Offset="16" Value="e94c6acd01909090" />
+      <Line Type="bytes" Address="0x2951000" Value="b8000a00004189442440b9a005000041894c2444e9666e32fe" />
+      <Line Type="bytes" Address="0x2951040" Value="4883ec08e8c7000000e852b57eff4883c40885c079054189c5cd41c3" />
+      <Line Type="bytes" Address="0x2951100" Value="51e80a00000059e934ebc3fe900f1f0051488b042550c704034885c074614531db4e8b94d8900200004d85d274484d8b52504d85d2743f4d8b92b00000004d85d27433418b4a1081e1ffdfff7f81f928880200752141c742102888028041c74208ffef0000418b0a81c100f0000041894a1c41894a2441ffc34183fb0372a259c3" />
+      <Line Type="bytes" Address="0x2951080" Value="81f90000e100720d81f90000f0007305b90000f40041898c24a8000000e9959532fe" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Need for Speed: Rivals" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler loaded before launching the game, &quot;Resolution Patch&quot; disabled and the PS5 set to 2160p." Author="Local experiment" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="mask" Address="18 48 83 c4 18 5b 41 5c 41 5d 41 5e 41 5f 5d c3 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 49 89 fe 48 8d" Offset="16" Value="ba01000000e9d48a530190909090" />
+      <Line Type="mask" Address="41 5f 5d e9 a7 e6 fc ff 0f 1f 80 00 00 00 00 c3 66 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 48 83 ec 60 c5" Offset="16" Value="83fe020f84e8420000e9a234000090" />
+      <Line Type="mask" Address="81 45 39 ea 75 c8 5b 41 5c 41 5d 41 5e 41 5f c3 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 55 41 54 53 48 81 ec" Offset="16" Value="c7070d00000031c0c39090909090" />
+      <Line Type="mask" Address="08 01 20 00 00 48 8d 49 10 75 e4 8b 44 08 f8 c3 66 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 48 63 d6 be 01 20 00 00 e9 33 73 b0 00 0f 1f 00" Offset="16" Value="83fe040f85b64a9900c6070531c0c3" />
+      <Line Type="mask" Address="08 00 00 00 48 8d bd e4 fe ff ff b9 01 00 00 00 e8 d6 f5 91 00 f6 85 78 ff ff ff 03 75 06 80 7d 9d 00 74 1a 48" Offset="16" Value="e86776f8ff" />
+      <Line Type="mask" Address="c8 8a 46 59 88 45 c9 8a 46 5a 88 45 ca 48 85 db 8a 46 5b 88 45 cb 74 0d 48 89 df e8 16 d4 00 00 e9 e4 00" Offset="16" Value="b00090" />
+      <Line Type="mask" Address="24 a0 00 00 00 c5 f8 57 c0 48 8d b5 70 ff ff ff 8b 41 0c 41 89 44 24 40 8b 49 10 41 89 4c 24 44 41 89 44 24 48 41 89 4c 24 4c 41 c6 44 24 58 00" Offset="16" Value="e98c91cd019090909090909090909090" />
+      <Line Type="mask" Address="00 48 c7 43 28 00 00 00 00 48 c7 43 38 00 00 00 04 48 c7 43 40 00 00 20 00 4c 8d 7d b0 48 8d 35 c9" Offset="16" Value="10" />
+      <Line Type="mask" Address="48 8b 3d 66 66 e0 01 48 8d 75 a0 ba 01 00 00 00 e8 a0 9e ff ff cd 41 eb 0f 48 8b 7d 98 e8 33 c1 73 00 85 c0 74" Offset="16" Value="4189c49090" />
+      <Line Type="mask" Address="03 c7 43 0c 02 00 00 00 eb 60 0f ae f8 0f ae f8 41 8d 86 ff 7f 00 00 25 00 80 ff ff 48 03 05 bf 6a 3d 02 48 89 05 b8 6a 3d 02 48 89" Offset="16" Value="418d86ffff0000250000ffff" />
+      <Line Type="mask" Address="0f 97 c0 0f b6 c0 ff c0 c3 90 0f ae f8 0f ae f8 81 c6 ff 7f 00 00 81 e6 00 80 ff ff 48 03 35 77 8d 3c 02 48 89 35 70 8d 3c 02 48 89" Offset="16" Value="81c6ffff000081e60000ffff" />
+      <Line Type="mask" Address="ff 41 8b bc 24 b8 02 00 00 31 f6 b9 03 00 00 00 e8 1a 40 4c 01 48 8d b5 40 fd ff ff 41 8b bc 24 b8 02 00 00 e8" Offset="16" Value="e8ba8acd01" />
+      <Line Type="mask" Address="24 08 8b 45 90 89 04 24 48 8b 7d 98 44 8b 4d 94 e8 69 c1 73 00 85 c0 74 28 48 8b 3d 66 66 e0 01 48 8d 75 a0 ba" Offset="16" Value="e829d6af01" />
+      <Line Type="bytes" Address="0x2951000" Value="b8000f00004189442440b97008000041894c2444e9666e32fe" />
+      <Line Type="bytes" Address="0x2951040" Value="4883ec08e857b57eff4883c40885c079054189c5cd41c3" />
+      <Line Type="bytes" Address="0x2951100" Value="488b042550c704034885c074404531db4e8b94d8900200004d85d274274d8b52504d85d2741e4d8b92b00000004d85d2741241817a1028a80200750841814a100000008041ffc34183fb0372c3e9eeeac3fe" />
+    </PatchList>
+  </Metadata>
 </Patch>

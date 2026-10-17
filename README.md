@@ -114,7 +114,7 @@ game needs at launch. ps-patch-system ignores this attribute.
 
 | Game (version) | Resolutions | Notes |
 | --- | --- | --- |
-| Need for Speed Rivals (01.04) | 1440p, 4K | If your existing patch file for the game has "Resolution Patch", keep it off. |
+| Need for Speed Rivals (01.04, 01.03) | 1440p, 4K | If your existing patch file for the game has "Resolution Patch", keep it off. |
 | Resident Evil 6 (01.01) | 1440p, 4K | Small Capcom logo in 4K. |
 | Bloodborne (01.09) | 1440p, 1620p, 1800p, native 4K | Native 4K needs the 8 GiB memory budget. **Tested on firmware 13.20 only.** |
 | Just Cause 3 (01.05) | 1440p, 4K | Also enable "Offline mode", or the game keeps trying to log in. |
