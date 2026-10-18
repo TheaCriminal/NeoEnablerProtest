@@ -119,11 +119,23 @@ static int game_needs(const char *tid) {
     return needs;
 }
 
+/* Sets one entry in a settings text being edited; logs why. Returns gp_setting_set's result. */
+static int game_flip(char **out, size_t *ol, const char *tid, const gp_patch *p, int on, const char *why) {
+    char *next; size_t next_len;
+    if (gp_setting_set(*out, *ol, p->hash, on, &next, &next_len)) return -1;
+    free(*out); *out = next; *ol = next_len;
+    log_line("patches: %s: %s %s (%s)", tid, p->name, on ? "enabled" : "disabled", why);
+    return 0;
+}
+
 /* Enables or disables one patch of a game. Enabling a NeoEnabler resolution entry disables the other NeoEnabler
    resolution entries of that game for the same AppElf, so at most one is on per executable (a collection gets one per
-   game it contains); other patches are not affected. Refuses hashes that are not an entry of the game's installed version, and 8 GiB
-   patches when 8 GiB is unavailable (unsupported firmware or no hypervisor exploit). Returns 0, or -1 with a
-   reason in msg. */
+   game it contains); other patches are not affected. In a collection the title ID starts in eboot.bin, which sets
+   PS4 Pro mode: enabling a resolution of another executable also enables the eboot.bin resolution of the same
+   resolution (gp_same_resolution; the first one listed when none matches) when no eboot.bin resolution is on, and disabling the last eboot.bin
+   resolution also disables the resolutions of the other executables. Refuses hashes that are not an entry of the
+   game's installed version, and 8 GiB patches when 8 GiB is unavailable (unsupported firmware or no hypervisor
+   exploit). Returns 0, or -1 with a reason in msg. */
 static int game_set_patch(const char *tid, const char *hash, int on, int memory_ok, char *msg, size_t cap) {
     char name[128], ver[16];
     if (!game_tid(tid) || game_info(tid, name, sizeof name, ver, sizeof ver)) { snprintf(msg, cap, "Unknown game"); return -1; }
@@ -132,17 +144,49 @@ static int game_set_patch(const char *tid, const char *hash, int on, int memory_
     if (!hit) { free(p); snprintf(msg, cap, "This patch is not available for %s %s", tid, ver); return -1; }
     if (on && hit->needs_8gib && !memory_ok) { free(p); snprintf(msg, cap, "This patch needs 8 GiB: firmware 13.20 or 13.60 with the hypervisor exploit enabled"); return -1; }
     size_t sl, ol; char *s = settings_read(&sl), *out = NULL;
-    int rc = gp_setting_set(s, sl, hash, on, &out, &ol), others = 0;
+    int rc = gp_setting_set(s, sl, hash, on, &out, &ol), others = 0, k = (int)(hit - p), main_i = gp_main_entry(p, n, k);
+    char extra[640] = "";
     for (int i = 0; !rc && on && hit->resolution && i < n; i++) {
         if (&p[i] == hit || !p[i].resolution || strcasecmp(p[i].elf, hit->elf) || gp_setting(out, ol, p[i].hash) != 1) continue;
-        char *next; size_t next_len;
-        rc = gp_setting_set(out, ol, p[i].hash, 0, &next, &next_len);
-        if (!rc) { free(out); out = next; ol = next_len; others++; log_line("patches: %s: %s disabled (one resolution per executable)", tid, p[i].name); }
+        rc = game_flip(&out, &ol, tid, &p[i], 0, "one resolution per executable");
+        others++;
     }
-    if (rc) snprintf(msg, cap, "The patch system settings file is malformed; nothing changed");
+    int main_on = 0;
+    for (int i = 0; i < n; i++) main_on |= p[i].resolution && gp_main_elf(&p[i]) && gp_setting(out, ol, p[i].hash) == 1;
+    if (!rc && on && main_i >= 0 && !main_on) {
+        /* the eboot.bin resolution of the same name, else the first one listed; never an 8 GiB one without 8 GiB */
+        int pick = -1;
+        for (int i = 0; i < n; i++) {
+            if (!p[i].resolution || !gp_main_elf(&p[i]) || (p[i].needs_8gib && !memory_ok)) continue;
+            if (gp_same_resolution(p[i].name, hit->name)) { pick = i; break; }
+            if (pick < 0) pick = i;
+        }
+        if (pick < 0) rc = -2;
+        else if (!(rc = game_flip(&out, &ol, tid, &p[pick], 1, "the collection starts in eboot.bin")))
+            snprintf(extra, sizeof extra, ". A PS4 Pro patch for %s is required for %s, so %s was enabled too",
+                     p[pick].title, hit->title, p[pick].name);
+    }
+    if (!rc && !on && hit->resolution && gp_main_elf(hit) && !main_on) {
+        int dropped = 0;
+        for (int i = 0; !rc && i < n; i++) {
+            if (gp_main_entry(p, n, i) < 0 || gp_setting(out, ol, p[i].hash) != 1) continue;
+            if ((rc = game_flip(&out, &ol, tid, &p[i], 0, "no eboot.bin resolution is on"))) break;
+            int seen = 0;               /* each game once: "... is required for <game> and <game>" */
+            for (int j = 0; j < i && !seen; j++)
+                seen = gp_main_entry(p, n, j) >= 0 && !strcmp(p[j].title, p[i].title) && gp_setting(s, sl, p[j].hash) == 1;
+            if (seen) continue;
+            size_t at = strlen(extra);
+            if (!dropped++) snprintf(extra + at, sizeof extra - at, ". A PS4 Pro patch for %s is required for %s",
+                                     hit->title, p[i].title);
+            else snprintf(extra + at, sizeof extra - at, " and %s", p[i].title);
+        }
+    }
+    if (rc == -2) snprintf(msg, cap, "%s: %s not enabled. A PS4 Pro patch for %s is required for %s, and none can be enabled",
+                           tid, hit->name, p[main_i].title, hit->title);
+    else if (rc) snprintf(msg, cap, "The patch system settings file is malformed; nothing changed");
     else if (ps_write(PS_DIR, "!_settings.xml", out, ol)) { snprintf(msg, cap, "Writing the settings failed (errno %d)", errno); rc = -1; }
-    else snprintf(msg, cap, "%s: %s %s%s", tid, hit->name, on ? "enabled" : "disabled",
-                  others ? "; the other resolution was disabled" : "");
+    else snprintf(msg, cap, "%s: %s %s%s%s", tid, hit->name, on ? "enabled" : "disabled",
+                  others ? "; the other resolution was disabled" : "", extra);
     log_line("patches: %s", msg);
     free(out); free(s); free(p);
     return rc ? -1 : 0;
@@ -158,7 +202,7 @@ static int games_drop_8gib(const char *only_tid, const char *why) {
         if (only_tid && strcmp(g[i].tid, only_tid)) continue;
         for (int k = 0; k < g[i].count; k++) {
             const gp_patch *p = &g[i].patches[k];
-            char msg[256];
+            char msg[2048];
             if (!p->needs_8gib || !settings || gp_setting(settings, sl, p->hash) != 1) continue;
             if (!game_set_patch(g[i].tid, p->hash, 0, 0, msg, sizeof msg)) {
                 dropped++;

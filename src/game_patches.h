@@ -18,6 +18,7 @@ typedef struct {
     char note[640];
     char hash[9];
     char elf[64];               /* AppElf: the executable the entry patches (eboot.bin when missing) */
+    char title[160];
     int needs_pro, needs_8gib;
     int resolution;             /* NeoEnabler resolution entry (needs Pro mode): at most one per game and AppElf is enabled */
 } gp_patch;
@@ -144,6 +145,7 @@ static int gp_list(const char *xml, size_t len, const char *file, const char *ve
         gp_attr(xml, &b, "NeoRequires", req, sizeof req);
         gp_attr(xml, &b, "Note", p->note, sizeof p->note);
         snprintf(p->name, sizeof p->name, "%s", name);
+        snprintf(p->title, sizeof p->title, "%s", title);
         snprintf(p->elf, sizeof p->elf, "%s", elf[0] ? elf : "eboot.bin");   /* missing: the main executable */
         uint32_t h = gp_sid(GP_FOLDER) ^ gp_sid(file) ^ gp_sid(name) ^ gp_sid(title) ^ gp_sid(elf) ^ gp_sid(matched);
         snprintf(p->hash, sizeof p->hash, "%08x", h);
@@ -151,6 +153,28 @@ static int gp_list(const char *xml, size_t len, const char *file, const char *ve
         p->resolution = p->needs_pro;
     }
     return n;
+}
+
+/* 1 for an entry of the main executable, the one a title ID starts with. */
+static inline int gp_main_elf(const gp_patch *p) { return !strcasecmp(p->elf, "eboot.bin"); }
+
+/* Resolution part of an entry name: the text before " (PS4 Pro mode", after a "<game> - " prefix when there is one
+   ("Uncharted 2: Among Thieves - 1440p (PS4 Pro mode)" -> "1440p"), so entries of two games of a collection pair up. */
+static inline int gp_same_resolution(const char *a, const char *b) {
+    const char *ea = strstr(a, " (PS4 Pro mode"), *eb = strstr(b, " (PS4 Pro mode");
+    if (!ea || !eb) return !strcmp(a, b);
+    for (const char *s = a; (s = strstr(s, " - ")) && s < ea; s += 3) a = s + 3;
+    for (const char *s = b; (s = strstr(s, " - ")) && s < eb; s += 3) b = s + 3;
+    return ea - a == eb - b && !memcmp(a, b, (size_t)(ea - a));
+}
+
+/* Collection rule: the title ID starts in eboot.bin, which sets PS4 Pro mode for the executables it starts. A
+   resolution entry of another executable needs a resolution entry of eboot.bin when the file has one. Index of the
+   first eboot.bin resolution entry, or -1 when the rule does not apply to entry k. */
+static inline int gp_main_entry(const gp_patch *p, int n, int k) {
+    if (!p[k].resolution || gp_main_elf(&p[k])) return -1;
+    for (int i = 0; i < n; i++) if (p[i].resolution && gp_main_elf(&p[i])) return i;
+    return -1;
 }
 
 /* Next <Patch .../> element of a settings file at or after pos: tag range and its hash and enabled values. */

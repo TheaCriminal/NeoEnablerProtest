@@ -490,6 +490,8 @@ static void serve_page(int fd, const char *msg) {
             sb_printf(&b, "%s%s><span><b>", on ? " checked" : "", blocked ? " disabled" : "");
             sb_esc(&b, p->name);
             sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8 GiB</span>" : "");
+            int main_i = gp_main_entry(g[i].patches, g[i].count, k);
+            if (main_i >= 0) { sb_printf(&b, "<span class=tag>Needs a "); sb_esc(&b, g[i].patches[main_i].title); sb_printf(&b, " resolution</span>"); }
             if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }
             sb_printf(&b, "</span></label></li>");
         }
@@ -1215,13 +1217,24 @@ int main(void) {
         sscanf(req, "%7s %63s", method, path);
         int post = !strcmp(method, "POST");
         if (post && !strcmp(path, "/patches/set")) {
-            char tid[16], hash[16], on[4], pmsg[256];
+            char tid[16], hash[16], on[4], pmsg[2048];
             if (form_value(form_body, "tid", tid, sizeof tid) || form_value(form_body, "hash", hash, sizeof hash) ||
                 form_value(form_body, "on", on, sizeof on) || (strcmp(on, "0") && strcmp(on, "1"))) {
                 reply(fd, "400 Bad Request", "text/plain", "Invalid patch request\n");
             } else if (game_set_patch(tid, hash, on[0] == '1', memory_available(), pmsg, sizeof pmsg)) {
                 reply(fd, "409 Conflict", "text/plain; charset=utf-8", pmsg);
-            } else reply(fd, "200 OK", "text/plain; charset=utf-8", pmsg);
+            } else {
+                /* message, then "state" and every entry of the game as hash=0/1: the panel shows what changed */
+                char name[128], ver[16]; int pn = 0; size_t sl = 0;
+                gp_patch *pp = game_info(tid, name, sizeof name, ver, sizeof ver) ? NULL : game_patches(tid, ver, &pn);
+                char *st = settings_read(&sl);
+                size_t at = strlen(pmsg);
+                at += (size_t)snprintf(pmsg + at, sizeof pmsg - at, "\nstate");
+                for (int i = 0; i < pn && at < sizeof pmsg; i++)
+                    at += (size_t)snprintf(pmsg + at, sizeof pmsg - at, " %s=%d", pp[i].hash, gp_setting(st, sl, pp[i].hash) == 1);
+                free(pp); free(st);
+                reply(fd, "200 OK", "text/plain; charset=utf-8", pmsg);
+            }
         } else if (post && (!strcmp(path, "/advanced/neo") || !strcmp(path, "/advanced/memory"))) {
             char on[4]; int value = !form_value(form_body, "on", on, sizeof on) && !strcmp(on, "1");
             const char *amsg;
