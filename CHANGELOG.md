@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0
+
+- On firmware 13.20, 8 GiB no longer needs the hypervisor exploit. NeoEnabler holds each PS4 game launch for a
+  moment in ShellCore, writes one byte to a kernel data value that extends the game's memory budget, and lets the
+  launch continue. The kernel code is not changed. The byte is restored when the game closes or the manager quits.
+  8 GiB now applies per launch, only to the games that need it (or to every Pro mode launch with **Keep 8 GiB on**).
+- On firmware 13.60, 8 GiB still uses the kernel code patch and needs the hypervisor exploit. NeoEnabler picks the
+  method by itself: the per-launch method when it is available for the firmware, the code patch otherwise.
+- Patches that need 8 GiB are still turned off while 8 GiB is not available, now checked for the method in use.
+- GPU clock control is no longer limited to firmware 13.20. It is offered on any firmware where the system's
+  power management driver answers the clock read with a valid value.
+
 ## 0.3.2
 
 - The patch sync now also uses the title IDs listed in each repository file (regions and special editions): the file
