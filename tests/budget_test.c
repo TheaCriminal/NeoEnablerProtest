@@ -17,8 +17,10 @@ static int mb_games(void){return games;}
 #define MB_DATA() mock_data
 #define MB_READ(a,p,n) mock_read(a,p,n)
 #define MB_WRITE(p,a,n) mock_write(p,a,n)
+#define MB_KREAD(a,p,n) mock_read(a,p,n)
+#define MB_KWRITE(p,a,n) mock_write(p,a,n)
 #include "../src/memory_control.h"
-static const mb_layout*cur_layout;
+static const mb_text_layout*cur_layout;
 static int mock_read(uint64_t a,void*p,size_t n){
  reads++;
  if(!cur_layout)return -1;
@@ -56,69 +58,73 @@ static int mock_write(const void*p,uint64_t a,size_t n){
  memcpy(code,p,n);return 0;
 }
 static void reset_for(uint32_t fw){
- const mb_layout*L=mb_find_layout(fw);
+ const mb_text_layout*L=mb_find_text_layout(fw);
  cur_layout=L;firmware=fw;
  mock_data=L?text+L->data_delta:text+0xcb0000;
  memcpy(code,mb_original,12);
  games=active_area=bad_relay=writes=fail_write=fail_rollback=race=code_reads=reads=text_reads=0;
  bad_root=page_read_error=fail_code_read=write_corrupt=readback_error=0;
  locked_level=readonly_level=missing_level=large_level=-1;
- memory_target=1;memory_retry_blocked=0;memory_message[0]=0;
+ memory_text_target=1;memory_text_blocked=0;memory_message[0]=0;
 }
 static void reset(void){reset_for(0x13200000);}
 static void test_core(uint32_t fw){
- char msg[256];mb_snapshot s;
- reset_for(fw);assert(!mb_check(&s)&&s.state==MB_STOCK&&s.access_ready);
- assert(!mb_set(1,msg,sizeof msg)&&writes==1&&!memcmp(code,mb_eight,12));
- assert(!mb_set(1,msg,sizeof msg)&&writes==1);
- games=1;assert(!mb_set(1,msg,sizeof msg)&&writes==1);games=0;
- assert(!mb_set(0,msg,sizeof msg)&&writes==2&&!memcmp(code,mb_original,12));
- reset_for(fw);code[6]=0x38;assert(!mb_set(1,msg,sizeof msg)&&!memcmp(code,mb_eight,12));
- reset_for(fw);games=1;assert(mb_set(1,msg,sizeof msg)==2&&writes==0);
- reset_for(fw);games=-1;assert(mb_set(1,msg,sizeof msg)==2&&writes==0);
- reset_for(fw);active_area=2;assert(mb_set(1,msg,sizeof msg)==3&&writes==0);
- reset_for(fw);code[0]=0;assert(mb_set(1,msg,sizeof msg)==1&&writes==0);
- reset_for(fw);mock_data++;assert(mb_set(1,msg,sizeof msg)&&writes==0&&reads==0);
+ char msg[256];mb_text_snapshot s;
+ reset_for(fw);assert(!mb_text_check(&s)&&s.state==MB_STOCK&&s.access_ready);
+ assert(!mb_text_set(1,msg,sizeof msg)&&writes==1&&!memcmp(code,mb_eight,12));
+ assert(!mb_text_set(1,msg,sizeof msg)&&writes==1);
+ games=1;assert(!mb_text_set(1,msg,sizeof msg)&&writes==1);games=0;
+ assert(!mb_text_set(0,msg,sizeof msg)&&writes==2&&!memcmp(code,mb_original,12));
+ reset_for(fw);code[6]=0x38;assert(!mb_text_set(1,msg,sizeof msg)&&!memcmp(code,mb_eight,12));
+ reset_for(fw);games=1;assert(mb_text_set(1,msg,sizeof msg)==2&&writes==0);
+ reset_for(fw);games=-1;assert(mb_text_set(1,msg,sizeof msg)==2&&writes==0);
+ reset_for(fw);active_area=2;assert(mb_text_set(1,msg,sizeof msg)==3&&writes==0);
+ reset_for(fw);code[0]=0;assert(mb_text_set(1,msg,sizeof msg)==1&&writes==0);
+ reset_for(fw);mock_data++;assert(mb_text_set(1,msg,sizeof msg)&&writes==0&&reads==0);
  for(int level=0;level<4;level++){
-  reset_for(fw);locked_level=level;assert(mb_set(1,msg,sizeof msg)&&writes==0&&text_reads==0);
-  reset_for(fw);readonly_level=level;assert(mb_set(1,msg,sizeof msg)&&writes==0&&text_reads==0);
-  reset_for(fw);missing_level=level;assert(mb_set(1,msg,sizeof msg)&&writes==0&&text_reads==0);
+  reset_for(fw);locked_level=level;assert(mb_text_set(1,msg,sizeof msg)&&writes==0&&text_reads==0);
+  reset_for(fw);readonly_level=level;assert(mb_text_set(1,msg,sizeof msg)&&writes==0&&text_reads==0);
+  reset_for(fw);missing_level=level;assert(mb_text_set(1,msg,sizeof msg)&&writes==0&&text_reads==0);
  }
- reset_for(fw);bad_root=1;assert(mb_set(1,msg,sizeof msg)&&writes==0&&text_reads==0);
- reset_for(fw);page_read_error=1;assert(mb_set(1,msg,sizeof msg)&&writes==0&&text_reads==0);
- reset_for(fw);fail_code_read=1;assert(mb_set(1,msg,sizeof msg)&&writes==0);
- for(int level=1;level<3;level++){reset_for(fw);large_level=level;assert(!mb_set(1,msg,sizeof msg)&&writes==1);}
- reset_for(fw);large_level=0;assert(mb_set(1,msg,sizeof msg)&&text_reads==0&&writes==0);
- reset_for(fw);bad_relay=1;assert(mb_set(1,msg,sizeof msg)&&writes==0);
- reset_for(fw);fail_write=1;assert(mb_set(1,msg,sizeof msg)==5&&writes==2&&!memcmp(code,mb_original,12)&&strstr(msg,"verified"));
- reset_for(fw);fail_write=fail_rollback=1;assert(mb_set(1,msg,sizeof msg)==6&&writes==2&&strstr(msg,"FAILED"));
- reset_for(fw);write_corrupt=1;assert(mb_set(1,msg,sizeof msg)==5&&writes==2&&!memcmp(code,mb_original,12));
- reset_for(fw);readback_error=1;assert(mb_set(1,msg,sizeof msg)==5&&writes==2&&!memcmp(code,mb_original,12));
- reset_for(fw);race=1;assert(mb_set(1,msg,sizeof msg)==4&&writes==0);
+ reset_for(fw);bad_root=1;assert(mb_text_set(1,msg,sizeof msg)&&writes==0&&text_reads==0);
+ reset_for(fw);page_read_error=1;assert(mb_text_set(1,msg,sizeof msg)&&writes==0&&text_reads==0);
+ reset_for(fw);fail_code_read=1;assert(mb_text_set(1,msg,sizeof msg)&&writes==0);
+ for(int level=1;level<3;level++){reset_for(fw);large_level=level;assert(!mb_text_set(1,msg,sizeof msg)&&writes==1);}
+ reset_for(fw);large_level=0;assert(mb_text_set(1,msg,sizeof msg)&&text_reads==0&&writes==0);
+ reset_for(fw);bad_relay=1;assert(mb_text_set(1,msg,sizeof msg)&&writes==0);
+ reset_for(fw);fail_write=1;assert(mb_text_set(1,msg,sizeof msg)==5&&writes==2&&!memcmp(code,mb_original,12)&&strstr(msg,"verified"));
+ reset_for(fw);fail_write=fail_rollback=1;assert(mb_text_set(1,msg,sizeof msg)==6&&writes==2&&strstr(msg,"FAILED"));
+ reset_for(fw);write_corrupt=1;assert(mb_text_set(1,msg,sizeof msg)==5&&writes==2&&!memcmp(code,mb_original,12));
+ reset_for(fw);readback_error=1;assert(mb_text_set(1,msg,sizeof msg)==5&&writes==2&&!memcmp(code,mb_original,12));
+ reset_for(fw);race=1;assert(mb_text_set(1,msg,sizeof msg)==4&&writes==0);
 }
 int main(void){
  char msg[256];
- for(unsigned i=0;i<MB_LAYOUT_COUNT;i++){
-  uint32_t fw=mb_layouts[i].fw;
+ for(unsigned i=0;i<MB_TEXT_LAYOUT_COUNT;i++){
+  uint32_t fw=mb_text_layouts[i].fw;
   printf("Testing firmware 0x%08x...\n",fw);
   test_core(fw);
  }
  /* Unknown firmware rejected */
- reset();firmware=0x14000000;assert(mb_set(1,msg,sizeof msg)&&writes==0&&reads==0);
+ reset();firmware=0x14000000;assert(mb_text_set(1,msg,sizeof msg)&&writes==0&&reads==0);
  /* Memory control policy (tested on 13.20 layout) */
- reset();locked_level=3;assert(memory_poll()==1&&writes==0);locked_level=-1;
- assert(!memory_poll()&&!memcmp(code,mb_eight,12));
- reset();games=1;assert(memory_poll()==2&&writes==0);games=0;
- assert(!memory_poll()&&writes==1);
- games=1;assert(memory_request(0)==2&&!memory_target&&writes==1);games=0;
- assert(!memory_poll()&&!memcmp(code,mb_original,12)&&writes==2);
- for(int i=0;i<4;i++)assert(!memory_poll()&&writes==2);
- assert(!memory_request(1)&&writes==3);
- reset();assert(!memory_request(0)&&!memory_target&&writes==0);assert(!memory_poll()&&writes==0);
- reset();fail_write=1;assert(memory_poll()==5&&memory_retry_blocked&&writes==2);
- fail_write=0;assert(memory_poll()==5&&writes==2);assert(!memory_request(1)&&writes==3);
- reset();fail_write=fail_rollback=1;assert(memory_poll()==6&&memory_retry_blocked==2&&writes==2);
- fail_write=fail_rollback=0;assert(memory_request(1)==6&&writes==2);assert(memory_request(0)==6&&writes==2);
+ reset();locked_level=3;assert(memory_text_poll()==1&&writes==0);locked_level=-1;
+ assert(!memory_text_poll()&&!memcmp(code,mb_eight,12));
+ reset();games=1;assert(memory_text_poll()==2&&writes==0);games=0;
+ assert(!memory_text_poll()&&writes==1);
+ games=1;assert(memory_text_request(0)==2&&!memory_text_target&&writes==1);games=0;
+ assert(!memory_text_poll()&&!memcmp(code,mb_original,12)&&writes==2);
+ for(int i=0;i<4;i++)assert(!memory_text_poll()&&writes==2);
+ assert(!memory_text_request(1)&&writes==3);
+ reset();assert(!memory_text_request(0)&&!memory_text_target&&writes==0);assert(!memory_text_poll()&&writes==0);
+ reset();fail_write=1;assert(memory_text_poll()==5&&memory_text_blocked&&writes==2);
+ fail_write=0;assert(memory_text_poll()==5&&writes==2);assert(!memory_text_request(1)&&writes==3);
+ reset();fail_write=fail_rollback=1;assert(memory_text_poll()==6&&memory_text_blocked==2&&writes==2);
+ fail_write=fail_rollback=0;assert(memory_text_request(1)==6&&writes==2);assert(memory_text_request(0)==6&&writes==2);
  puts("PASS: all firmware layouts, access/page guards, enable/restore/rollback, auto/deferred/manual-off/retry policy.");
+ (void)memory_apply;(void)memory_restore;(void)memory_active;(void)memory_text_request;
+ (void)mb_read_snapshot;(void)mb_state;(void)mb_eligible;(void)mb_apply;(void)mb_restore;
+ (void)mb_find_layout;(void)mb_heap_pointer;(void)mb_tx_read_global;(void)mb_tx_write_byte;
+ (void)mock_read;(void)mock_write;
  return 0;
 }
