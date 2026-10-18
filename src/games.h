@@ -124,12 +124,12 @@ static int game_needs(const char *tid) {
    patches when 8 GiB is unavailable (unsupported firmware or no hypervisor exploit). Returns 0, or -1 with a
    reason in msg. */
 static int game_set_patch(const char *tid, const char *hash, int on, int memory_ok, char *msg, size_t cap) {
-    (void)memory_ok;
     char name[128], ver[16];
     if (!game_tid(tid) || game_info(tid, name, sizeof name, ver, sizeof ver)) { snprintf(msg, cap, "Unknown game"); return -1; }
     int n; gp_patch *p = game_patches(tid, ver, &n), *hit = NULL;
     for (int i = 0; i < n; i++) if (!strcmp(p[i].hash, hash)) hit = &p[i];
     if (!hit) { free(p); snprintf(msg, cap, "This patch is not available for %s %s", tid, ver); return -1; }
+    if (on && hit->needs_8gib && !memory_ok) { free(p); snprintf(msg, cap, "This patch needs 8 GiB: firmware 13.20 or 13.60 with the hypervisor exploit enabled"); return -1; }
     size_t sl, ol; char *s = settings_read(&sl), *out = NULL;
     int rc = gp_setting_set(s, sl, hash, on, &out, &ol), others = 0;
     for (int i = 0; !rc && on && hit->resolution && i < n; i++) {
@@ -147,3 +147,24 @@ static int game_set_patch(const char *tid, const char *hash, int on, int memory_
     return rc ? -1 : 0;
 }
 
+/* Turns off the enabled patches that need 8 GiB, of one game or, with only_tid NULL, of every game. For use while 8 GiB
+   is not available: such a patch would run the game in Pro mode with the original memory. `why` goes to the log.
+   Returns how many were turned off. */
+static int games_drop_8gib(const char *only_tid, const char *why) {
+    int n, dropped = 0; game_t *g = games_scan(&n);
+    size_t sl; char *settings = settings_read(&sl);
+    for (int i = 0; i < n; i++) {
+        if (only_tid && strcmp(g[i].tid, only_tid)) continue;
+        for (int k = 0; k < g[i].count; k++) {
+            const gp_patch *p = &g[i].patches[k];
+            char msg[256];
+            if (!p->needs_8gib || !settings || gp_setting(settings, sl, p->hash) != 1) continue;
+            if (!game_set_patch(g[i].tid, p->hash, 0, 0, msg, sizeof msg)) {
+                dropped++;
+                log_line("patches: %s: \"%s\" turned off, it needs 8 GiB (%s)", g[i].tid, p->name, why);
+            }
+        }
+    }
+    free(settings); games_free(g, n);
+    return dropped;
+}

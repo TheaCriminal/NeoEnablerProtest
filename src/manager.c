@@ -201,6 +201,13 @@ static int gpu_available(void) { unsigned mhz; return gpu_backend_supported() &&
 static int force_neo, force_8gib;
 static const mb_layout *budget_layout;
 
+/* 8 GiB can be applied now: step hook installed (DATA), or kernel TEXT writable (HV unlock). */
+static int memory_available(void) {
+    if (memory_mode == MEM_MODE_DATA) return step.attached;
+    if (memory_mode == MEM_MODE_TEXT) { mb_text_snapshot ts; return !mb_text_check(&ts); }
+    return 0;
+}
+
 static int memory_query_state(void) {
     if (memory_mode == MEM_MODE_DATA && budget_layout) return mb_state(budget_layout);
     if (memory_mode == MEM_MODE_TEXT) {
@@ -473,7 +480,7 @@ static void serve_page(int fd, const char *msg) {
     sb_printf(&b, "<div class=layout><section aria-label='Games'>");
     int n; game_t *g = games_scan(&n);
     size_t sl; char *settings = settings_read(&sl);
-    int mem_ok = memory_supported();
+    int mem_ok = memory_available();
     if (n) sb_printf(&b, "<input type=search id=game-search class=search placeholder='Search by name or title ID' "
                          "autocomplete=off aria-label='Search games'><p id=no-match class=card hidden>No game matches the search.</p>");
     if (!n) sb_printf(&b, "<div class=card><b>No installed game with NeoEnabler patches</b><p><small>Games appear here when "
@@ -533,7 +540,7 @@ static void serve_page(int fd, const char *msg) {
               running, patches_esc,
               !force_neo, force_neo ? "on" : "off", force_neo ? "on" : "off", force_neo ? "Turn off" : "Turn on",
               !force_8gib, force_8gib ? "on" : "off",
-              force_8gib ? "on" : "off", !memory_supported() ? " disabled" : "",
+              force_8gib ? "on" : "off", !memory_available() ? " disabled" : "",
               force_8gib ? "Turn off" : "Turn on");
     if (b.p) reply_bytes(fd, "200 OK", "text/html; charset=utf-8", "no-store", b.p, b.n);
     else reply(fd, "500 Internal Server Error", "text/plain", "out of memory\n");
@@ -1114,11 +1121,24 @@ static uint64_t tsc_rate(void) {
     return sec > 0.05 && t1 > t0 ? (uint64_t)((double)(t1 - t0) / sec) : 1600000000ULL;
 }
 
+/* A patch that needs 8 GiB cannot work while 8 GiB is not available (unsupported firmware, or the TEXT method
+   without the hypervisor exploit): turns off the enabled ones, of one game or of every game, and returns how many. */
+static int patches_drop_8gib(const char *only_tid) {
+    if (memory_available()) return 0;
+    int dropped = games_drop_8gib(only_tid, memory_message);
+    if (dropped) {
+        char note[200];
+        snprintf(note, sizeof note, "%d patch%s that need 8 GiB turned off: 8 GiB is not available", dropped, dropped == 1 ? "" : "es");
+        notify(note);
+    }
+    return dropped;
+}
+
 static void drop_8gib_request(void) {
-    if (!force_8gib || memory_supported()) return;
+    if (!force_8gib || memory_available()) return;
     force_8gib = 0;
     int saved = !settings_save();
-    log_line("Keep 8 GiB on: cleared, firmware not supported%s", saved ? "" : " (settings not saved)");
+    log_line("Keep 8 GiB on: cleared, 8 GiB is not available%s", saved ? "" : " (settings not saved)");
 }
 
 /* Called after the hook changes and every two seconds: questions are only read from a live hook. */
@@ -1141,13 +1161,14 @@ static void launch_poll(void) {
         last_seq = seq;
         pending.active = 1; pending.seq = seq; pending.since = time(NULL);
         snprintf(pending.tid, sizeof pending.tid, "%s", tid);
+        patches_drop_8gib(tid);
         pending.needs = game_needs(tid);
         if (force_neo) pending.needs |= NEEDS_PRO;
         log_line("launch: %s needs %s%s", tid, pending.needs & NEEDS_PRO ? "Pro mode" : "base mode",
                  pending.needs & NEEDS_8GIB ? " and 8 GiB" : "");
     }
     int pro = (pending.needs & NEEDS_PRO) != 0;
-    int want8 = memory_supported() && (force_8gib || (pending.needs & NEEDS_8GIB));
+    int want8 = memory_available() && (force_8gib || (pending.needs & NEEDS_8GIB));
     if (pro && want8 && memory_mode == MEM_MODE_DATA) step_enable(1);
     if (pro && want8 && memory_mode == MEM_MODE_TEXT) memory_text_request(1);
     shim_answer(&live, pending.seq, (unsigned char)pro);
@@ -1241,6 +1262,7 @@ int main(void) {
     notify(msg); puts(msg);
     log_state();
     patches_update();
+    patches_drop_8gib(NULL);
     time_t last_tick=time(NULL);
     long long last_mirror_ms=0;
     for (;;) {
@@ -1279,7 +1301,7 @@ int main(void) {
             if (form_value(form_body, "tid", tid, sizeof tid) || form_value(form_body, "hash", hash, sizeof hash) ||
                 form_value(form_body, "on", on, sizeof on) || (strcmp(on, "0") && strcmp(on, "1"))) {
                 reply(fd, "400 Bad Request", "text/plain", "Invalid patch request\n");
-            } else if (game_set_patch(tid, hash, on[0] == '1', memory_supported(), pmsg, sizeof pmsg)) {
+            } else if (game_set_patch(tid, hash, on[0] == '1', memory_available(), pmsg, sizeof pmsg)) {
                 reply(fd, "409 Conflict", "text/plain; charset=utf-8", pmsg);
             } else reply(fd, "200 OK", "text/plain; charset=utf-8", pmsg);
         } else if (post && (!strcmp(path, "/advanced/neo") || !strcmp(path, "/advanced/memory"))) {
@@ -1288,8 +1310,8 @@ int main(void) {
             if (!strcmp(path, "/advanced/neo")) {
                 force_neo = value; launch_attach(1);
                 amsg = value ? "Pro mode for every PS4 game: on" : "Pro mode for every PS4 game: off (follows the game patches)";
-            } else if (value && !memory_supported()) {
-                amsg = "8 GiB is not supported on this firmware";
+            } else if (value && !memory_available()) {
+                amsg = "8 GiB is not available (unsupported firmware or no hypervisor exploit)";
             } else {
                 force_8gib = value;
                 if (memory_mode == MEM_MODE_DATA) {
