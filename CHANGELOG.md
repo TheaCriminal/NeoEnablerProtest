@@ -10,7 +10,8 @@
   method by itself: the per-launch method when it is available for the firmware, the code patch otherwise.
 - Patches that need 8 GiB are still turned off while 8 GiB is not available, now checked for the method in use.
 - GPU clock control is no longer limited to firmware 13.20. It is offered on any firmware where the system's
-  power management driver answers the clock read with a valid value.
+  power management driver answers the clock read with a valid value. **It is tested on 13.20 only.** If you have a
+  problem on another firmware, please open an issue with your firmware and the log from **Download Logs**.
 
 ## 0.3.2
 
