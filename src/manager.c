@@ -33,7 +33,7 @@
 #include "log_mirror.h"
 
 #define PORT 8765
-#define VERSION "NeoEnabler 0.4.0"
+#define VERSION "NeoEnabler 0.3.2"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -189,33 +189,21 @@ static char patches_message[256] = "Not checked yet";
 
 #define SETTINGS_PATH "/data/neo-settings"
 
+/* 8 GiB is offered only on firmwares with a verified budget layout (mb_layouts): 13.20 tested, 13.60 pending testing. */
 static uint32_t fw_raw_version(void) {
     uint32_t v = 0; size_t n = sizeof(v);
     sysctlbyname("machdep.upd_version", &v, &n, NULL, 0);
     return v;
 }
-static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != NULL || mb_find_text_layout(fw_raw_version()) != NULL; }
-/* GPU clock page and boost: any firmware where /dev/mp1 responds to the clock ioctl. */
+static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != NULL; }
+static int memory_untested(void) { return fw_raw_version() == 0x13600000; }
+/* 8 GiB can be used: supported firmware and kernel code access confirmed (hypervisor exploit enabled). */
+static int memory_available(void) { mb_snapshot m; return memory_supported() && !mb_check(&m); }
+/* GPU clock page and boost: firmware with the MP1 backend (13.20) and the driver answering a clock read. */
 static int gpu_available(void) { unsigned mhz; return gpu_backend_supported() && !gpu_backend_read(&mhz); }
 
+/* Advanced overrides: Pro mode for every PS4 game, and 8 GiB kept on. */
 static int force_neo, force_8gib;
-static const mb_layout *budget_layout;
-
-/* 8 GiB can be applied now: step hook installed (DATA), or kernel TEXT writable (HV unlock). */
-static int memory_available(void) {
-    if (memory_mode == MEM_MODE_DATA) return step.attached;
-    if (memory_mode == MEM_MODE_TEXT) { mb_text_snapshot ts; return !mb_text_check(&ts); }
-    return 0;
-}
-
-static int memory_query_state(void) {
-    if (memory_mode == MEM_MODE_DATA && budget_layout) return mb_state(budget_layout);
-    if (memory_mode == MEM_MODE_TEXT) {
-        mb_text_snapshot ts;
-        if (!mb_text_check(&ts)) return ts.state;
-    }
-    return MB_UNKNOWN;
-}
 
 static void settings_load(void) {
     FILE *f = fopen(SETTINGS_PATH, "rb");
@@ -231,8 +219,9 @@ static void settings_load(void) {
         gpu_configure(cfg.gpu_enabled, cfg.gpu_mhz);
         if (cfg.gpu_enabled && !gpu_backend_supported()) log_line("settings: saved GPU boost ignored on unsupported firmware");
         if (cfg.force_8gib && !memory_supported())
-            log_line("settings: force_8gib=1 ignored on firmware %x.%02x",
+            log_line("settings: force_8gib=1 ignored, 8 GiB is not supported on firmware %x.%02x",
                      (fw_raw_version() >> 24) & 0xff, (fw_raw_version() >> 16) & 0xff);
+        if (cfg.memory && !cfg.force_8gib) log_line("settings: memory_8gib=1 of an older version ignored; 8 GiB now follows the game patches");
     }
     fclose(f);
 }
@@ -509,13 +498,13 @@ static void serve_page(int fd, const char *msg) {
 
     shell_t s; int st = hook_state(&s);
     if (st == HOOK_OFF && v4_active(&s)) st = HOOK_ON;
-    int mem_state = memory_query_state();
+    mb_snapshot memory; mb_check(&memory);
     char running[1024]; games_text(running, sizeof(running), 1);
     char patches_esc[768]; html_escape(patches_message, patches_esc, sizeof(patches_esc));
     sb_printf(&b, "</section><aside>"
               "<div class=card><h2>Status</h2>"
               "<div>PS4 Pro mode <span class='state %s'>%s</span></div>"
-              "<div style='margin-top:6px'>8 GiB memory <span class='state %s'>%s</span></div>"
+              "<div style='margin-top:6px'>8 GiB memory <span class='state %s'>%s</span>%s</div>"
               "<p><small>Pro mode and 8 GiB follow the enabled patches of each game. 8 GiB returns to the original "
               "memory when the game closes.</small></p><b>Game running</b><ul>%s</ul></div>"
               "<div class=card><h2>Game patches</h2><p>%s</p><small>Downloads the patches from the NeoEnabler repository "
@@ -535,12 +524,13 @@ static void serve_page(int fd, const char *msg) {
               "<small style='text-align:center'>" VERSION "</small></aside></div></main></body></html>",
               st == HOOK_ON && running_pro == 1 ? "on" : "off",
               st != HOOK_ON ? state_text(st) : running_pro == 1 ? "enabled" : running_pro == 0 ? "disabled" : "ready",
-              mem_state == MB_8GIB ? "on" : "off",
-              mem_state == MB_8GIB ? "enabled" : mem_state == MB_UNKNOWN ? "not supported" : "disabled",
+              memory.state == MB_8GIB ? "on" : "off",
+              memory.state == MB_8GIB ? "enabled" : memory.state == MB_UNKNOWN ? (mem_ok ? "unavailable" : "not supported") : "disabled",
+              memory_untested() ? "<br><small>Firmware 13.60: 8 GiB pending testing, please report results</small>" : "",
               running, patches_esc,
               !force_neo, force_neo ? "on" : "off", force_neo ? "on" : "off", force_neo ? "Turn off" : "Turn on",
-              !force_8gib, force_8gib ? "on" : "off",
-              force_8gib ? "on" : "off", !memory_available() ? " disabled" : "",
+              !force_8gib, force_8gib && mem_ok ? "on" : "off",
+              !force_8gib ? "off" : mem_ok ? "on" : "requested, not available", !force_8gib && !mem_ok ? " disabled" : "",
               force_8gib ? "Turn off" : "Turn on");
     if (b.p) reply_bytes(fd, "200 OK", "text/html; charset=utf-8", "no-store", b.p, b.n);
     else reply(fd, "500 Internal Server Error", "text/plain", "out of memory\n");
@@ -608,7 +598,7 @@ static void serve_gpu_page(int fd, const char *msg) {
         hb.p ? hb.p : "", msg ? "<p class=msg>" : "", msg ? msg : "", msg ? "</p>" : "", current,
         gpu.applied && !gpu.blocked ? "on" : gpu.enabled ? "unk" : "off", gpu_state_text(), gpu.message, previous,
         gpu.target, GPU_MIN_MHZ, GPU_MAX_MHZ, gpu.target, dis, dis, dis,
-        gpu_backend_supported() ? "" : "<p>GPU clock control unavailable (MP1 driver not responding).</p>");
+        gpu_backend_supported() ? "" : "<p>GPU clock control is available on firmware 13.20 only.</p>");
     free(hb.p);
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
 }
@@ -728,96 +718,17 @@ static int do_set(int enable, char *msg, size_t cap, int show) {
     return rc;
 }
 
+/* State after an action: NEO hook, legacy v4 hook, actual 8 GiB budget and the requested one. */
 static void log_state(void) {
     shell_t s; int st = hook_state(&s);
     if (st == HOOK_BAD_CAVE) { char d[400]; bad_cave_text(&s, d, sizeof(d)); log_line("%s", d); }
-    int mem_state = memory_query_state();
-    log_line("state: NEO hook %s, v4 hook %s, step hook %s, 8 GiB %s: %s", state_text(st),
+    mb_snapshot m; mb_check(&m);
+    log_line("state: NEO hook %s, v4 hook %s, 8 GiB %s (requested %s): %s", state_text(st),
              v4_active(&s) ? "present" : "absent",
-             step.attached ? "installed" : "not installed",
-             mem_state == MB_8GIB ? "enabled" : mem_state == MB_UNKNOWN ? "unavailable" : "disabled",
-             memory_message);
+             m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
+             memory_target ? "on" : "off", m.detail);
     log_line("state: GPU %s, requested %u MHz, SMU %s%u MHz, owner PID %d: %s",
              gpu_state_text(), gpu.target, gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.owner_pid, gpu.message);
-}
-
-static uint32_t step_last_seq;
-static int step_constructor_seen;
-static struct { int active, seen_game; char tid[10]; time_t since; } auto8;
-
-static void step_poll(void) {
-    if (!step.attached || !budget_layout) return;
-    step_mailbox mbox;
-    if (step_read_mailbox(&mbox)) return;
-    if (mbox.seq == step_last_seq || mbox.seq <= step_last_seq) return;
-
-    mb_snapshot snap;
-    int snap_rc = mb_read_snapshot(budget_layout, &snap);
-    char title[11] = {0};
-    memcpy(title, mbox.title, 10);
-
-    int target = !snap_rc && mbox.result >= 0 && mbox.category == 0xf000 && snap.mode == 2;
-
-    if (target && mbox.phase == 1 && !(snap.flags & 0x40)) {
-        uint32_t cmd = 1;
-        if (step_send_command(cmd, mbox.seq)) {
-            log_line("step: claim write failed for %s", title);
-            step_last_seq = mbox.seq;
-            return;
-        }
-        log_line("step: claimed seq %u for %s", mbox.seq, title);
-
-        int held = 0;
-        for (int i = 0; i < 10000 && !held; i++) {
-            if (step_read_mailbox(&mbox)) break;
-            if (mbox.phase == 2 && mbox.gate == 1 && mbox.active > 0) held = 1;
-            else if (mbox.phase >= 4) break;
-            else usleep(500);
-        }
-
-        if (!held) {
-            log_line("step: held not confirmed (phase=%u)", mbox.phase);
-            step_send_command(2, mbox.seq);
-            step_last_seq = mbox.seq;
-            return;
-        }
-
-        snap_rc = mb_read_snapshot(budget_layout, &snap);
-        if (!snap_rc && mb_eligible(&snap)) {
-            int rc = memory_apply(budget_layout, &snap);
-            log_line("step: apply rc=%d touched=%d owned=%d", rc, memory_tx.touched, memory_tx.owned);
-
-            if (rc == MB_TX_OK && memory_tx.owned) {
-                uint32_t dirty = 1;
-                step_write_field(MS_DIRTY, &dirty, 4);
-                step_send_command(3, mbox.seq);
-                step_constructor_seen = 0;
-                auto8.active = 1; auto8.seen_game = 0; auto8.since = time(NULL);
-                snprintf(auto8.tid, sizeof auto8.tid, "%s", title);
-                log_line("step: extension applied for %s", title);
-            } else {
-                step_send_command(2, mbox.seq);
-                log_line("step: apply refused for %s", title);
-            }
-        } else {
-            step_send_command(2, mbox.seq);
-            log_line("step: not eligible for %s (snap_rc=%d)", title, snap_rc);
-        }
-    } else {
-        step_send_command(2, mbox.seq);
-    }
-    step_last_seq = mbox.seq;
-}
-
-static void step_constructor_tick(void) {
-    if (!memory_active() || step_constructor_seen || !budget_layout) return;
-    mb_snapshot snap;
-    if (mb_read_snapshot(budget_layout, &snap)) return;
-    if (snap.flags & 0x40) {
-        step_constructor_seen = 1;
-        step_release_gate();
-        log_line("step: constructor seen, f38=0x%lx, gate released", (unsigned long)snap.field38);
-    }
 }
 
 /* Identity of the eboot.bin of every game seen mounted, so a report shows whether two title IDs run the same binary
@@ -1006,10 +917,9 @@ static void build_report(sbuf *b) {
     sb_printf(b, "==== Report ====\n%s\nfirmware %x.%02x\nconsole time %s (UTC, may be wrong; each log line also has +seconds since the manager started)\n"
               "manager running since %lds\nhook: %s\n", VERSION, fw >> 8, fw & 0xff, now, (long)(mono.tv_sec - manager_start.tv_sec), state_text(st));
     if (st == HOOK_BAD_CAVE) { char d[400]; bad_cave_text(&s, d, sizeof d); sb_printf(b, "%s\n", d); }
-    int mem_s = memory_query_state();
-    sb_printf(b, "8 GiB: %s, step hook %s: %s\n",
-              mem_s == MB_8GIB ? "enabled" : mem_s == MB_UNKNOWN ? "unavailable" : "disabled",
-              step.attached ? "installed" : "not installed", memory_message);
+    mb_snapshot m; mb_check(&m);
+    sb_printf(b, "8 GiB: %s (requested %s): %s\n", m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
+              memory_target ? "on" : "off", m.detail);
     sb_printf(b, "GPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", gpu_state_text(), gpu.target,
               gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
     sb_printf(b, "patches: %s\n", patches_message);
@@ -1109,6 +1019,7 @@ static int live_ok;
 static uint32_t last_seq;
 static uint64_t tsc_hz = 1600000000ULL;
 static struct { int active, needs; uint32_t seq; char tid[10]; time_t since; } pending;
+static struct { int active, seen_game; char tid[10]; time_t since; } auto8;
 
 static uint64_t rdtsc(void) { uint32_t lo, hi; __asm__ volatile("rdtsc" : "=a"(lo), "=d"(hi)); return ((uint64_t)hi << 32) | lo; }
 
@@ -1121,8 +1032,8 @@ static uint64_t tsc_rate(void) {
     return sec > 0.05 && t1 > t0 ? (uint64_t)((double)(t1 - t0) / sec) : 1600000000ULL;
 }
 
-/* A patch that needs 8 GiB cannot work while 8 GiB is not available (unsupported firmware, or the TEXT method
-   without the hypervisor exploit): turns off the enabled ones, of one game or of every game, and returns how many. */
+/* A patch that needs 8 GiB cannot work while 8 GiB is not available (no hypervisor exploit, or an unsupported
+   firmware): turns off the enabled ones, of one game or of every game, and returns how many. */
 static int patches_drop_8gib(const char *only_tid) {
     if (memory_available()) return 0;
     int dropped = games_drop_8gib(only_tid, memory_message);
@@ -1134,11 +1045,14 @@ static int patches_drop_8gib(const char *only_tid) {
     return dropped;
 }
 
+/* "Keep 8 GiB on" is a request for the budget. Without 8 GiB (no hypervisor exploit, or an unsupported firmware) there
+   is nothing to request: it is cleared and saved, so it does not stay on and come back at the next unlock. */
 static void drop_8gib_request(void) {
     if (!force_8gib || memory_available()) return;
     force_8gib = 0;
     int saved = !settings_save();
-    log_line("Keep 8 GiB on: cleared, 8 GiB is not available%s", saved ? "" : " (settings not saved)");
+    log_line("Keep 8 GiB on: cleared, 8 GiB is not available (needs firmware 13.20 or 13.60 with the hypervisor exploit)%s",
+             saved ? "" : " (settings not saved)");
 }
 
 /* Called after the hook changes and every two seconds: questions are only read from a live hook. */
@@ -1167,25 +1081,39 @@ static void launch_poll(void) {
         log_line("launch: %s needs %s%s", tid, pending.needs & NEEDS_PRO ? "Pro mode" : "base mode",
                  pending.needs & NEEDS_8GIB ? " and 8 GiB" : "");
     }
-    int pro = (pending.needs & NEEDS_PRO) != 0;
-    int want8 = memory_available() && (force_8gib || (pending.needs & NEEDS_8GIB));
-    if (pro && want8 && memory_mode == MEM_MODE_DATA) step_enable(1);
-    if (pro && want8 && memory_mode == MEM_MODE_TEXT) memory_text_request(1);
+    int pro = (pending.needs & NEEDS_PRO) != 0, ok = 1;
+    int mem_ok = memory_available();
+    int want8 = mem_ok && (force_8gib || (pending.needs & NEEDS_8GIB));
+    /* the budget only applies to Pro mode processes */
+    if (pro && mem_ok) {
+        int rc = memory_request(want8);
+        ok = rc == 0;
+        if (!ok && time(NULL) - pending.since < LAUNCH_WAIT_S - 1) return;   /* e.g. the previous game still closing */
+        if (!ok) {
+            mb_snapshot m;   /* keep the budget as it is instead of switching it later, after this game */
+            if (!mb_check(&m)) memory_target = m.state == MB_8GIB;
+            log_line("launch: %s: memory not switched (%s)", pending.tid, memory_message);
+        }
+        else if (want8 && !force_8gib) {
+            auto8.active = 1; auto8.seen_game = 0; auto8.since = time(NULL);
+            snprintf(auto8.tid, sizeof auto8.tid, "%s", pending.tid);
+        } else if (!want8) auto8.active = 0;
+    }
     shim_answer(&live, pending.seq, (unsigned char)pro);
     pending.active = 0;
     log_line("launch: %s starts in %s mode%s", pending.tid, pro ? "Pro" : "base",
-             want8 ? ", 8 GiB enabled" : "");
+             pro && mem_ok && ok ? (want8 ? " with 8 GiB" : " with the original memory") : "");
 }
 
+/* 8 GiB switched on for a launch goes back to the original budget when no game runs any more. */
 static void launch_tick(void) {
-    if (!memory_active() || force_8gib) return;
+    if (!auto8.active || force_8gib) return;
     int games = mb_games();
     if (games > 0) { auto8.seen_game = 1; return; }
     if (games < 0 || (!auto8.seen_game && time(NULL) - auto8.since < 60)) return;
     auto8.active = 0;
-    if (memory_mode == MEM_MODE_DATA) step_enable(0);
-    int rc = memory_restore();
-    log_line("8 GiB: %s closed: %s (rc=%d)", auto8.tid, memory_message, rc);
+    memory_request(0);
+    log_line("8 GiB: %s closed: %s", auto8.tid, memory_message);
 }
 
 /* Value of key in an x-www-form-urlencoded body, letters, digits and '.' only. */
@@ -1235,25 +1163,9 @@ int main(void) {
     launch_attach(1);
     log_line("launch: questions %s (TSC %llu Hz, wait %d s)", live_ok ? "enabled" : "unavailable, hook not installed",
              (unsigned long long)tsc_hz, LAUNCH_WAIT_S);
-    budget_layout = mb_find_layout(fw_raw_version());
-    if (budget_layout) {
-        int src = step_install(fw_raw_version());
-        if (step.attached) {
-            memory_mode = MEM_MODE_DATA;
-            log_line("step hook: installed (rc=%d)", src);
-            if (force_8gib) step_enable(1);
-        } else {
-            log_line("step hook: %s (rc=%d)", src == -100 ? "no ShellCore offsets" : "failed", src);
-        }
-    }
-    if (!step.attached && mb_find_text_layout(fw_raw_version())) {
-        memory_mode = MEM_MODE_TEXT;
-        log_line("8 GiB: using TEXT/HV method");
-        if (force_8gib) memory_text_request(1);
-    } else if (!step.attached && !budget_layout) {
-        log_line("8 GiB: firmware not supported");
-    }
     drop_8gib_request();
+    if (force_8gib) memory_request(1);
+    int memory_previous_result=memory_poll();
     log_line("8 GiB: %s", memory_message);
     gpu_tick();
     int li = install_launcher();
@@ -1263,23 +1175,28 @@ int main(void) {
     log_state();
     patches_update();
     patches_drop_8gib(NULL);
-    time_t last_tick=time(NULL);
+    time_t last_memory_poll=time(NULL);
     long long last_mirror_ms=0;
     for (;;) {
         launch_poll();
-        step_poll();
-        step_constructor_tick();
         binary_tick();
         time_t now=time(NULL);
         { struct timespec mt; clock_gettime(CLOCK_MONOTONIC, &mt);
           long long ms = (long long)mt.tv_sec * 1000 + mt.tv_nsec / 1000000;
           if (ms - last_mirror_ms >= 250 || ms < last_mirror_ms) { log_mirror_tick(); last_mirror_ms = ms; } }
-        if(now<last_tick||now-last_tick>=2){
+        if(now<last_memory_poll||now-last_memory_poll>=2){
             launch_attach(-1);
             launch_tick();
-            if (memory_mode == MEM_MODE_TEXT) memory_text_poll();
             gpu_tick();
-            last_tick=now;
+            int memory_result=memory_poll();
+            if(memory_result!=memory_previous_result){
+                if(memory_result==0||memory_result==5||memory_result==6)notify(memory_message);
+                else log_line("8 GiB: %s (result %d)",memory_message,memory_result);
+                drop_8gib_request();
+                log_state();
+                patches_drop_8gib(NULL);
+            }
+            memory_previous_result=memory_result;last_memory_poll=now;
         }
         /* short wait: launch questions are answered between requests */
         fd_set ready;FD_ZERO(&ready);FD_SET(srv,&ready);struct timeval wait={0,pending.active?2000:20000};
@@ -1311,16 +1228,10 @@ int main(void) {
                 force_neo = value; launch_attach(1);
                 amsg = value ? "Pro mode for every PS4 game: on" : "Pro mode for every PS4 game: off (follows the game patches)";
             } else if (value && !memory_available()) {
-                amsg = "8 GiB is not available (unsupported firmware or no hypervisor exploit)";
+                amsg = "8 GiB needs firmware 13.20 or 13.60 with the hypervisor exploit enabled; nothing changed";
             } else {
                 force_8gib = value;
-                if (memory_mode == MEM_MODE_DATA) {
-                    if (value) step_enable(1);
-                    else if (!auto8.active) step_enable(0);
-                } else if (memory_mode == MEM_MODE_TEXT) {
-                    if (value) memory_text_request(1);
-                    else if (!auto8.active) memory_text_request(0);
-                }
+                if (value) memory_request(1); else if (!auto8.active) memory_request(0);
                 amsg = value ? "Keep 8 GiB on: on" : "Keep 8 GiB on: off (8 GiB follows the game patches)";
             }
             int saved = !settings_save();
@@ -1357,8 +1268,6 @@ int main(void) {
                   "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. Games no longer ask for Pro mode "
                   "or 8 GiB until the manager runs again. GPU clock restore requested.</body>");
             close(fd);
-            if (memory_active()) memory_restore();
-            step_remove();
             launch_attach(0);
             notify("NeoEnabler: panel stopped (per-game Pro mode and 8 GiB stopped, GPU boost stopped)");
             log_state();
@@ -1366,11 +1275,10 @@ int main(void) {
         } else if (!strcmp(path, "/status")) {
             shell_t s; int st = hook_state(&s);
             char games[1024]; games_text(games, sizeof(games), 0);
-            int mem_st = memory_query_state();
-            char body[3200];gpu_refresh();
-            snprintf(body, sizeof(body), "build: " VERSION "\nmemory_8gib: %s\nmemory_detail: %s\nstep_hook: %s\nhook: %s\nv4 hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
-                     mem_st==MB_8GIB?"enabled":mem_st==MB_UNKNOWN?"unavailable":"disabled",
-                     memory_message, step.attached?"installed":"not installed",
+            char body[3200];mb_snapshot memory;mb_check(&memory);gpu_refresh();
+            snprintf(body, sizeof(body), "build: " VERSION "\nmemory_8gib: %s\nmemory_requested: %s\nmemory_detail: %s\nmemory_last_result: %s\nhook: %s\nv4 hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
+                     memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled",
+                     memory_target?"enabled":"disabled",memory.detail,memory_message,
                      state_text(st), v4_active(&s) ? "present" : "absent", fw_major(), s.site, s.target, s.cave, s.frame, s.frame_end,
                      s.attr_off, s.four_args, games);
             size_t used = strlen(body);
@@ -1379,9 +1287,8 @@ int main(void) {
                      gpu_state_text(), gpu.enabled, gpu.target, gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
             used = strlen(body);
             snprintf(body + used, sizeof body - used,
-                     "force_neo: %d\nforce_8gib: %d\nlaunch_questions: %s\nlast_question: %u\n8gib_for_launch: %s\nstep_cave: %lx\n",
-                     force_neo, force_8gib, live_ok ? "enabled" : "unavailable", last_seq, auto8.active ? auto8.tid : "none",
-                     (unsigned long)step.cave);
+                     "force_neo: %d\nforce_8gib: %d\nlaunch_questions: %s\nlast_question: %u\n8gib_for_launch: %s\n",
+                     force_neo, force_8gib, live_ok ? "enabled" : "unavailable", last_seq, auto8.active ? auto8.tid : "none");
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/panel.js")) {
             char script[sizeof panel_js + 1];
