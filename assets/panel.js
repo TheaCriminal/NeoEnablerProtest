@@ -58,10 +58,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }).then(function (response) {
             return response.text().then(function (text) {
                 if (!response.ok) throw new Error(text);
-                // One resolution entry per game: the manager turned the others off.
-                if (wanted && box.dataset.res) {
+                // One resolution entry per game executable: the manager turned the others off.
+                if (wanted && box.dataset.res !== undefined) {
                     document.querySelectorAll('input[data-res][data-tid="' + box.dataset.tid + '"]').forEach(function (other) {
-                        if (other !== box) other.checked = false;
+                        if (other !== box && other.dataset.res.toLowerCase() === box.dataset.res.toLowerCase()) other.checked = false;
                     });
                 }
             });

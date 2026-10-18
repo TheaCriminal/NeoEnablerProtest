@@ -33,7 +33,7 @@
 #include "log_mirror.h"
 
 #define PORT 8765
-#define VERSION "NeoEnabler 0.3.2"
+#define VERSION "NeoEnabler 0.3.3"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -485,8 +485,9 @@ static void serve_page(int fd, const char *msg) {
         for (int k = 0; k < g[i].count; k++) {
             const gp_patch *p = &g[i].patches[k];
             int on = gp_setting(settings, sl, p->hash) == 1, blocked = p->needs_8gib && !mem_ok && !on;
-            sb_printf(&b, "<li><label class=patch><input type=checkbox data-tid=%s data-hash=%s%s%s%s><span><b>",
-                      g[i].tid, p->hash, p->resolution ? " data-res=1" : "", on ? " checked" : "", blocked ? " disabled" : "");
+            sb_printf(&b, "<li><label class=patch><input type=checkbox data-tid=%s data-hash=%s", g[i].tid, p->hash);
+            if (p->resolution) { sb_printf(&b, " data-res='"); sb_esc(&b, p->elf); sb_printf(&b, "'"); }
+            sb_printf(&b, "%s%s><span><b>", on ? " checked" : "", blocked ? " disabled" : "");
             sb_esc(&b, p->name);
             sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8 GiB</span>" : "");
             if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }

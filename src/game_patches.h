@@ -17,8 +17,9 @@ typedef struct {
     char name[160];
     char note[640];
     char hash[9];
+    char elf[64];               /* AppElf: the executable the entry patches (eboot.bin when missing) */
     int needs_pro, needs_8gib;
-    int resolution;             /* NeoEnabler resolution entry (needs Pro mode): at most one per game is enabled */
+    int resolution;             /* NeoEnabler resolution entry (needs Pro mode): at most one per game and AppElf is enabled */
 } gp_patch;
 
 /* Value of a string key of a param.sfo; 0 when found. */
@@ -143,6 +144,7 @@ static int gp_list(const char *xml, size_t len, const char *file, const char *ve
         gp_attr(xml, &b, "NeoRequires", req, sizeof req);
         gp_attr(xml, &b, "Note", p->note, sizeof p->note);
         snprintf(p->name, sizeof p->name, "%s", name);
+        snprintf(p->elf, sizeof p->elf, "%s", elf[0] ? elf : "eboot.bin");   /* missing: the main executable */
         uint32_t h = gp_sid(GP_FOLDER) ^ gp_sid(file) ^ gp_sid(name) ^ gp_sid(title) ^ gp_sid(elf) ^ gp_sid(matched);
         snprintf(p->hash, sizeof p->hash, "%08x", h);
         gp_requirements(req, name, &p->needs_pro, &p->needs_8gib);

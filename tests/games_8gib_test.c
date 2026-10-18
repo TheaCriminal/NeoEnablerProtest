@@ -1,5 +1,6 @@
 /* Host-only: patches that need 8 GiB are turned off while 8 GiB is not available, other patches stay on, and the
-   game filter works. Uses the Bloodborne XML of the repository in a fake ps-patch-system folder. */
+   game filter works. Uses the Bloodborne XML of the repository in a fake ps-patch-system folder. Also checks that a
+   collection keeps one resolution entry on per executable (AppElf). */
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -93,6 +94,27 @@ int main(int argc, char **argv) {
     s = settings_read(&sl);
     assert(gp_setting(s, sl, big->hash) == 0 && gp_setting(s, sl, small->hash) == 1); free(s);
     free(bb); free(kz);
-    puts("PASS 8 GiB patches turned off while 8 GiB is unavailable, other patches kept");
+
+    /* A collection: one resolution per AppElf; enabling one turns off only the other entry of the same executable. */
+    const char *col = "<Patch>\n"
+        "<Metadata Title=\"C\" Name=\"1440p (PS4 Pro mode)\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C\" Name=\"1800p (PS4 Pro mode)\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C\" Name=\"1440p (PS4 Pro mode)\" AppVer=\"01.00\" AppElf=\"game2.elf\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C\" Name=\"1800p (PS4 Pro mode)\" AppVer=\"01.00\" AppElf=\"GAME2.elf\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C\" Name=\"Offline mode\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n</Patch>\n";
+    put(PS_DIR "/col.xml", col, strlen(col));
+    install_game("CUSA99998", "C", "01.00", PS_DIR, "col.xml");
+    int nc; gp_patch *c = game_patches("CUSA99998", "01.00", &nc);
+    assert(nc == 5 && !strcmp(c[0].elf, "eboot.bin") && !strcmp(c[2].elf, "game2.elf") && !c[4].resolution);
+    for (int i = 0; i < 5; i++) assert(!game_set_patch("CUSA99998", c[i].hash, 1, 1, msg, sizeof msg));
+    s = settings_read(&sl);
+    assert(!gp_setting(s, sl, c[0].hash) && gp_setting(s, sl, c[1].hash) == 1);       /* eboot.bin: the last one */
+    assert(!gp_setting(s, sl, c[2].hash) && gp_setting(s, sl, c[3].hash) == 1);       /* AppElf compared ignoring case */
+    assert(gp_setting(s, sl, c[4].hash) == 1); free(s);                               /* not a resolution entry */
+    assert(!game_set_patch("CUSA99998", c[0].hash, 1, 1, msg, sizeof msg));
+    s = settings_read(&sl);
+    assert(gp_setting(s, sl, c[0].hash) == 1 && !gp_setting(s, sl, c[1].hash) && gp_setting(s, sl, c[3].hash) == 1); free(s);
+    free(c);
+    puts("PASS 8 GiB patches turned off while 8 GiB is unavailable, other patches kept, one resolution per executable");
     return 0;
 }

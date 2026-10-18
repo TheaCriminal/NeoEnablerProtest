@@ -120,7 +120,8 @@ static int game_needs(const char *tid) {
 }
 
 /* Enables or disables one patch of a game. Enabling a NeoEnabler resolution entry disables the other NeoEnabler
-   resolution entries of that game, so at most one is on; other patches are not affected. Refuses hashes that are not an entry of the game's installed version, and 8 GiB
+   resolution entries of that game for the same AppElf, so at most one is on per executable (a collection gets one per
+   game it contains); other patches are not affected. Refuses hashes that are not an entry of the game's installed version, and 8 GiB
    patches when 8 GiB is unavailable (unsupported firmware or no hypervisor exploit). Returns 0, or -1 with a
    reason in msg. */
 static int game_set_patch(const char *tid, const char *hash, int on, int memory_ok, char *msg, size_t cap) {
@@ -133,10 +134,10 @@ static int game_set_patch(const char *tid, const char *hash, int on, int memory_
     size_t sl, ol; char *s = settings_read(&sl), *out = NULL;
     int rc = gp_setting_set(s, sl, hash, on, &out, &ol), others = 0;
     for (int i = 0; !rc && on && hit->resolution && i < n; i++) {
-        if (&p[i] == hit || !p[i].resolution || gp_setting(out, ol, p[i].hash) != 1) continue;
+        if (&p[i] == hit || !p[i].resolution || strcasecmp(p[i].elf, hit->elf) || gp_setting(out, ol, p[i].hash) != 1) continue;
         char *next; size_t next_len;
         rc = gp_setting_set(out, ol, p[i].hash, 0, &next, &next_len);
-        if (!rc) { free(out); out = next; ol = next_len; others++; log_line("patches: %s: %s disabled (one resolution at a time)", tid, p[i].name); }
+        if (!rc) { free(out); out = next; ol = next_len; others++; log_line("patches: %s: %s disabled (one resolution per executable)", tid, p[i].name); }
     }
     if (rc) snprintf(msg, cap, "The patch system settings file is malformed; nothing changed");
     else if (ps_write(PS_DIR, "!_settings.xml", out, ol)) { snprintf(msg, cap, "Writing the settings failed (errno %d)", errno); rc = -1; }
