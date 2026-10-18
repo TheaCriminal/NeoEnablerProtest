@@ -5,6 +5,11 @@
 - Collections: the Games page allows one resolution entry for each game of a collection, told apart by the
   executable it patches (AppElf). Before, ticking a resolution of one game turned off the resolution of the other
   games of the same title ID. An entry without AppElf counts as `eboot.bin`.
+- A collection starts in `eboot.bin`, which sets PS4 Pro mode for the other games it starts, so a resolution of
+  another game crashed without a resolution of the `eboot.bin` game. Ticking one now also ticks the `eboot.bin`
+  resolution with the same resolution in its name ("Game - 1440p (PS4 Pro mode)" matches "1440p (PS4 Pro mode)"),
+  or the first one listed, when none is on. Unticking the last `eboot.bin` resolution also unticks the other games'
+  ones. The panel says what else changed, and those entries are tagged with the game they need.
 - The patch sync matches entries by Name, AppVer and AppElf, so two games of a collection with an entry of the
   same name keep their own entry. Before, the entry of one game replaced the other's.
 
