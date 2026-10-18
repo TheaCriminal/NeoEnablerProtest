@@ -83,8 +83,11 @@ Open **GPU clock** in the panel, select a target from **1800 to 2200 MHz** in 50
 are saved with **Save Settings** and requested again when a PS4 game starts. This works independently of NEO and
 8 GiB, including PS4 base mode.
 
-GPU boost is **off by default**, with 2200 MHz selected. It supports **firmware 13.20 only** and uses the stock
-`/dev/mp1` driver, without patching the kernel or needing a hypervisor exploit. The sustained frequency may be
+GPU boost is **off by default**, with 2200 MHz selected. It uses the stock `/dev/mp1` driver, without patching
+the kernel or needing a hypervisor exploit, and is offered on any firmware where that driver answers the clock read.
+
+**GPU boost is tested on firmware 13.20 only.** On other firmwares it is untested. If you have a problem, please
+[open an issue](https://github.com/gasb07/NeoEnabler/issues/new) with your firmware and the log from **Download Logs**. The sustained frequency may be
 lower than the target. A short gameplay test at 2200 MHz read around 2155-2200 MHz. FPS gains and long-term
 stability have not been established.
 
@@ -93,8 +96,8 @@ manages the clocks again, and the next PS4 launch starts from a new baseline. If
 while the game runs, the manager restores the target up to three times. If a request or restoration fails, the
 panel shows the error and stops retrying: use Disable to retry the restoration before enabling again.
 
-Boost does not change CPU clocks, thermal or power limits, memory bandwidth or ROPs. On other firmwares, or when
-the MP1 driver does not answer, the GPU clock tab is not shown.
+Boost does not change CPU clocks, thermal or power limits, memory bandwidth or ROPs. When the MP1 driver does not
+answer, the GPU clock tab is not shown.
 
 ## Game patches
 
