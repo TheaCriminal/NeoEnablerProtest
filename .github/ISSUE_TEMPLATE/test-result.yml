@@ -55,6 +55,15 @@ body:
         - Sleeping Dogs - Native 4K up to 60 fps
         - The Order 1886 - 4K
         - The Order 1886 - 4K up to 60 fps
+        - Uncharted 1 - 1440p
+        - Uncharted 1 - 1620p
+        - Uncharted 1 - 1800p
+        - Uncharted 2 - 1440p
+        - Uncharted 2 - 1620p
+        - Uncharted 2 - 1800p
+        - Uncharted 3 - 1440p
+        - Uncharted 3 - 1620p
+        - Uncharted 3 - 1800p
     validations:
       required: true
   - type: dropdown
@@ -89,7 +98,7 @@ body:
     id: setup
     attributes:
       label: Console, jailbreak and NeoEnabler version
-      placeholder: Slim, y2jb + etaHEN, v0.3.2
+      placeholder: Slim, y2jb + etaHEN, v0.3.3
     validations:
       required: true
   - type: input

@@ -1,5 +1,6 @@
 /* Host-only: patches that need 8 GiB are turned off while 8 GiB is not available, other patches stay on, and the
-   game filter works. Uses the Bloodborne XML of the repository in a fake ps-patch-system folder. */
+   game filter works. Uses the Bloodborne XML of the repository in a fake ps-patch-system folder. Also checks that a
+   collection keeps one resolution entry on per executable (AppElf), with an eboot.bin resolution under the others. */
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -72,7 +73,7 @@ int main(int argc, char **argv) {
     gp_patch *kz = game_patches("CUSA00190", ver, &nk);
     const gp_patch *big = pick(bb, nb, 1), *small = pick(kz, nk, 0);
     assert(big && small);
-    char msg[256];
+    char msg[2048];
     assert(!game_set_patch("CUSA00900", big->hash, 1, 1, msg, sizeof msg));
     assert(!game_set_patch("CUSA00190", small->hash, 1, 1, msg, sizeof msg));
     assert(game_set_patch("CUSA00900", big->hash, 1, 0, msg, sizeof msg) == -1);   /* refused when 8 GiB is unavailable */
@@ -93,6 +94,47 @@ int main(int argc, char **argv) {
     s = settings_read(&sl);
     assert(gp_setting(s, sl, big->hash) == 0 && gp_setting(s, sl, small->hash) == 1); free(s);
     free(bb); free(kz);
-    puts("PASS 8 GiB patches turned off while 8 GiB is unavailable, other patches kept");
+
+    /* A collection: one resolution per AppElf; enabling one turns off only the other entry of the same executable. */
+    const char *col = "<Patch>\n"
+        "<Metadata Title=\"C\" Name=\"1440p (PS4 Pro mode)\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C\" Name=\"1800p (PS4 Pro mode)\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C2\" Name=\"Game 2 - 1440p (PS4 Pro mode)\" AppVer=\"01.00\" AppElf=\"game2.elf\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C2\" Name=\"Game 2 - 1800p (PS4 Pro mode)\" AppVer=\"01.00\" AppElf=\"GAME2.elf\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C\" Name=\"Offline mode\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n</Patch>\n";
+    put(PS_DIR "/col.xml", col, strlen(col));
+    install_game("CUSA99998", "C", "01.00", PS_DIR, "col.xml");
+    int nc; gp_patch *c = game_patches("CUSA99998", "01.00", &nc);
+    assert(nc == 5 && !strcmp(c[0].elf, "eboot.bin") && !strcmp(c[2].elf, "game2.elf") && !c[4].resolution);
+    for (int i = 0; i < 5; i++) assert(!game_set_patch("CUSA99998", c[i].hash, 1, 1, msg, sizeof msg));
+    s = settings_read(&sl);
+    assert(!gp_setting(s, sl, c[0].hash) && gp_setting(s, sl, c[1].hash) == 1);       /* eboot.bin: the last one */
+    assert(!gp_setting(s, sl, c[2].hash) && gp_setting(s, sl, c[3].hash) == 1);       /* AppElf compared ignoring case */
+    assert(gp_setting(s, sl, c[4].hash) == 1); free(s);                               /* not a resolution entry */
+    assert(!game_set_patch("CUSA99998", c[0].hash, 1, 1, msg, sizeof msg));
+    s = settings_read(&sl);
+    assert(gp_setting(s, sl, c[0].hash) == 1 && !gp_setting(s, sl, c[1].hash) && gp_setting(s, sl, c[3].hash) == 1); free(s);
+
+    /* The collection starts in eboot.bin: turning off its last resolution turns off the other executables' ones, and
+       a resolution of another executable turns on the eboot.bin one of the same name (else the first listed). */
+    assert(gp_main_entry(c, nc, 3) == 0 && gp_main_entry(c, nc, 0) == -1 && gp_main_entry(c, nc, 4) == -1);
+    assert(!game_set_patch("CUSA99998", c[0].hash, 0, 1, msg, sizeof msg) && strstr(msg, ". A PS4 Pro patch for C is required for C2") && !strstr(msg, "C2 and"));
+    s = settings_read(&sl);
+    assert(!gp_setting(s, sl, c[0].hash) && !gp_setting(s, sl, c[3].hash) && gp_setting(s, sl, c[4].hash) == 1); free(s);
+    assert(!game_set_patch("CUSA99998", c[2].hash, 1, 1, msg, sizeof msg) && strstr(msg, ". A PS4 Pro patch for C is required for C2, so 1440p (PS4 Pro mode) was enabled too"));
+    s = settings_read(&sl);
+    assert(gp_setting(s, sl, c[0].hash) == 1 && !gp_setting(s, sl, c[1].hash) && gp_setting(s, sl, c[2].hash) == 1); free(s);
+    assert(!game_set_patch("CUSA99998", c[3].hash, 1, 1, msg, sizeof msg) && !strstr(msg, "also"));   /* eboot.bin already on */
+    s = settings_read(&sl);
+    assert(gp_setting(s, sl, c[0].hash) == 1 && !gp_setting(s, sl, c[2].hash) && gp_setting(s, sl, c[3].hash) == 1); free(s);
+    assert(!game_set_patch("CUSA99998", c[1].hash, 1, 1, msg, sizeof msg) && !strstr(msg, "Also"));   /* eboot.bin switch */
+    s = settings_read(&sl);
+    assert(!gp_setting(s, sl, c[0].hash) && gp_setting(s, sl, c[1].hash) == 1 && gp_setting(s, sl, c[3].hash) == 1); free(s);
+    assert(!game_set_patch("CUSA99998", c[1].hash, 0, 1, msg, sizeof msg));
+    assert(!game_set_patch("CUSA99998", c[3].hash, 1, 1, msg, sizeof msg));                            /* 1800p: same resolution */
+    assert(gp_same_resolution("A - 1440p (PS4 Pro mode)", "1440p (PS4 Pro mode, x)") && !gp_same_resolution("A - 1440p (PS4 Pro mode)", "B - 1800p (PS4 Pro mode)"));
+    s = settings_read(&sl); assert(gp_setting(s, sl, c[1].hash) == 1 && !gp_setting(s, sl, c[0].hash)); free(s);
+    free(c);
+    puts("PASS 8 GiB patches turned off while 8 GiB is unavailable, other patches kept, one resolution per executable");
     return 0;
 }

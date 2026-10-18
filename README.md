@@ -57,7 +57,9 @@ Open `http://<PS5 IP>:8765` in a browser on your network, or the **NeoEnabler** 
 - **Games**: every installed PS4 game that has a NeoEnabler patch for its installed version, with its icon, title
   ID, version and all of its patches. Tick a patch to enable it; the change goes straight to the ps-patch-system
   settings, there is nothing to save. Only one NeoEnabler resolution entry per game can be on: ticking one turns
-  the others off. Patches that need 8 GiB are marked and greyed out when 8 GiB is not available.
+  the others off. In a collection, each game in it can have one resolution on. The collection starts in its
+  first game, so the other games' resolutions need one of the first game: the panel ticks it for you. Patches
+  that need 8 GiB are marked and greyed out when 8 GiB is not available.
   Use the search bar to find a game by name or title ID.
 - **PS4 Pro mode and 8 GiB are automatic.** When a PS4 game starts, NeoEnabler checks its enabled patches: the
   game starts in PS4 Pro mode only when one of them needs it, and 8 GiB is switched on before the game starts
@@ -83,11 +85,8 @@ Open **GPU clock** in the panel, select a target from **1800 to 2200 MHz** in 50
 are saved with **Save Settings** and requested again when a PS4 game starts. This works independently of NEO and
 8 GiB, including PS4 base mode.
 
-GPU boost is **off by default**, with 2200 MHz selected. It uses the stock `/dev/mp1` driver, without patching
-the kernel or needing a hypervisor exploit, and is offered on any firmware where that driver answers the clock read.
-
-**GPU boost is tested on firmware 13.20 only.** On other firmwares it is untested. If you have a problem, please
-[open an issue](https://github.com/gasb07/NeoEnabler/issues/new) with your firmware and the log from **Download Logs**. The sustained frequency may be
+GPU boost is **off by default**, with 2200 MHz selected. It supports **firmware 13.20 only** and uses the stock
+`/dev/mp1` driver, without patching the kernel or needing a hypervisor exploit. The sustained frequency may be
 lower than the target. A short gameplay test at 2200 MHz read around 2155-2200 MHz. FPS gains and long-term
 stability have not been established.
 
@@ -96,8 +95,8 @@ manages the clocks again, and the next PS4 launch starts from a new baseline. If
 while the game runs, the manager restores the target up to three times. If a request or restoration fails, the
 panel shows the error and stops retrying: use Disable to retry the restoration before enabling again.
 
-Boost does not change CPU clocks, thermal or power limits, memory bandwidth or ROPs. When the MP1 driver does not
-answer, the GPU clock tab is not shown.
+Boost does not change CPU clocks, thermal or power limits, memory bandwidth or ROPs. On other firmwares, or when
+the MP1 driver does not answer, the GPU clock tab is not shown.
 
 ## Game patches
 
@@ -129,6 +128,7 @@ game needs at launch. ps-patch-system ignores this attribute.
 | Batman: Arkham Knight (01.15) | 1620p, 1800p, native 4K | |
 | Sleeping Dogs: Definitive Edition (01.01) | 1440p, 1620p, 1800p, native 4K, each also up to 60 fps | The 60 fps entries use triple buffering: no tearing, slight stutter. 1800p up to 60 fps runs at 53-57 fps, native 4K up to 60 fps at 41-44 fps. |
 | Driveclub (01.28) | 1440p, 4K (1620p render), 4K (1800p render), native 4K | 4K needs the 8 GiB memory budget. **Tested on firmware 13.20 only.** 4K with 1800p render runs close to 60 fps; native 4K is below 60 fps in races. 4K with 1620p or 1800p render may show blocky artifacts in the clouds and on other surfaces. Native 4K: snow can show inside the car. |
+| Uncharted: The Nathan Drake Collection (01.02) | 1440p, 1620p, 1800p for each of the three games | The collection starts in Uncharted 1, which sets PS4 Pro mode for Uncharted 2 and 3: an Uncharted 2 or 3 entry needs an Uncharted 1 entry on (the panel enables it). |
 
 Patch IDs, how the hook works and how to build from source: [docs/TECHNICAL.md](docs/TECHNICAL.md).
 

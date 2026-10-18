@@ -1,17 +1,17 @@
 # Changelog
 
-## 0.4.0
+## 0.3.3
 
-- On firmware 13.20, 8 GiB no longer needs the hypervisor exploit. NeoEnabler holds each PS4 game launch for a
-  moment in ShellCore, writes one byte to a kernel data value that extends the game's memory budget, and lets the
-  launch continue. The kernel code is not changed. The byte is restored when the game closes or the manager quits.
-  8 GiB now applies per launch, only to the games that need it (or to every Pro mode launch with **Keep 8 GiB on**).
-- On firmware 13.60, 8 GiB still uses the kernel code patch and needs the hypervisor exploit. NeoEnabler picks the
-  method by itself: the per-launch method when it is available for the firmware, the code patch otherwise.
-- Patches that need 8 GiB are still turned off while 8 GiB is not available, now checked for the method in use.
-- GPU clock control is no longer limited to firmware 13.20. It is offered on any firmware where the system's
-  power management driver answers the clock read with a valid value. **It is tested on 13.20 only.** If you have a
-  problem on another firmware, please open an issue with your firmware and the log from **Download Logs**.
+- Collections: the Games page allows one resolution entry for each game of a collection, told apart by the
+  executable it patches (AppElf). Before, ticking a resolution of one game turned off the resolution of the other
+  games of the same title ID. An entry without AppElf counts as `eboot.bin`.
+- A collection starts in `eboot.bin`, which sets PS4 Pro mode for the other games it starts, so a resolution of
+  another game crashed without a resolution of the `eboot.bin` game. Ticking one now also ticks the `eboot.bin`
+  resolution with the same resolution in its name ("Game - 1440p (PS4 Pro mode)" matches "1440p (PS4 Pro mode)"),
+  or the first one listed, when none is on. Unticking the last `eboot.bin` resolution also unticks the other games'
+  ones. The panel says what else changed, and those entries are tagged with the game they need.
+- The patch sync matches entries by Name, AppVer and AppElf, so two games of a collection with an entry of the
+  same name keep their own entry. Before, the entry of one game replaced the other's.
 
 ## 0.3.2
 

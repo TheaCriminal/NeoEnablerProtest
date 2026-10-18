@@ -58,12 +58,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }).then(function (response) {
             return response.text().then(function (text) {
                 if (!response.ok) throw new Error(text);
-                // One resolution entry per game: the manager turned the others off.
-                if (wanted && box.dataset.res) {
-                    document.querySelectorAll('input[data-res][data-tid="' + box.dataset.tid + '"]').forEach(function (other) {
-                        if (other !== box) other.checked = false;
-                    });
-                }
+                // The last line lists every entry of the game as hash=0/1 after the change: one resolution per
+                // executable, and in a collection the eboot.bin resolution that the other executables need.
+                var lines = text.split('\n'), state = lines.pop(), notice = false;
+                if (state.indexOf('state') !== 0) return;
+                state.split(' ').slice(1).forEach(function (pair) {
+                    var kv = pair.split('='), other = document.querySelector('input[data-tid="' + box.dataset.tid + '"][data-hash="' + kv[0] + '"]');
+                    if (!other || other.checked === (kv[1] === '1')) return;
+                    other.checked = kv[1] === '1';
+                    var sameGroup = other.dataset.res !== undefined && box.dataset.res !== undefined &&
+                        other.dataset.res.toLowerCase() === box.dataset.res.toLowerCase();
+                    if (other !== box && !(sameGroup && !other.checked)) notice = true;
+                });
+                if (notice) alert(lines.join('\n'));
             });
         }).catch(function (error) {
             box.checked = !wanted;

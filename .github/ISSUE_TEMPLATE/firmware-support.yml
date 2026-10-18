@@ -11,7 +11,7 @@ body:
     attributes:
       label: Setup
       description: PS5 firmware, console model, jailbreak and loader, hypervisor exploit (yes or no), NeoEnabler version.
-      placeholder: FW 13.60, Fat, Byepervisor + etaHEN, v0.3.2
+      placeholder: FW 13.60, Fat, Byepervisor + etaHEN, v0.3.3
     validations:
       required: true
   - type: textarea
