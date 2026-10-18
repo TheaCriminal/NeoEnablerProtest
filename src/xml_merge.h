@@ -1,5 +1,5 @@
 /* GPL-3.0-only. Merges NeoEnabler patch entries into a ps-patch-system XML without parsing the whole file:
-   each <Metadata ...>...</Metadata> block is one entry, keyed by its Name and AppVer attributes. */
+   each <Metadata ...>...</Metadata> block is one entry, keyed by its Name, AppVer and AppElf attributes (a collection has one executable per game). */
 #pragma once
 #include <stdlib.h>
 #include <string.h>
@@ -7,8 +7,8 @@
 
 typedef struct {
     size_t start, end;          /* byte range of the whole block, '<' to after "</Metadata>" */
-    const char *title, *name, *ver;
-    size_t title_len, name_len, ver_len;
+    const char *title, *name, *ver, *elf;
+    size_t title_len, name_len, ver_len, elf_len;
 } xm_block;
 
 static const char *xm_find(const char *s, size_t n, const char *pat) {
@@ -63,12 +63,28 @@ static int xm_next(const char *buf, size_t len, size_t pos, xm_block *b) {
         b->title = xm_attr(p, t, "Title", &b->title_len);
         b->name = xm_attr(p, t, "Name", &b->name_len);
         b->ver = xm_attr(p, t, "AppVer", &b->ver_len);
+        b->elf = xm_attr(p, t, "AppElf", &b->elf_len);
         return 1;
     }
     return 0;
 }
 
 static int xm_same(const char *a, size_t al, const char *b, size_t bl) { return al == bl && (!al || !memcmp(a, b, al)); }
+
+/* AppElf of an entry; a missing or empty one is the main executable, eboot.bin. */
+static const char *xm_elf(const xm_block *b, size_t *len) {
+    if (b->elf && b->elf_len) { *len = b->elf_len; return b->elf; }
+    *len = 9; return "eboot.bin";
+}
+
+/* Same AppVer (a missing attribute equals an empty one) and AppElf, compared ignoring case. */
+static int xm_same_target(const xm_block *a, const xm_block *b) {
+    size_t al, bl; const char *ae = xm_elf(a, &al), *be = xm_elf(b, &bl);
+    if (!xm_same(a->ver ? a->ver : "", a->ver_len, b->ver ? b->ver : "", b->ver_len) || al != bl) return 0;
+    for (size_t i = 0; i < al; i++)
+        if (tolower((unsigned char)ae[i]) != tolower((unsigned char)be[i])) return 0;
+    return 1;
+}
 
 /* Title of the first entry, compared case-insensitively and without surrounding spaces. */
 static int xm_title_is(const char *buf, size_t len, const char *title, size_t title_len) {
@@ -126,8 +142,8 @@ static size_t xm_tag_len(const char *b, size_t n) {
     return n;
 }
 
-/* Merges every entry of `ours` into a copy of `target`: an entry with the same Name and AppVer is replaced; an
-   entry with the same AppVer and patch lines but another Name (or Note) is replaced too, so the repository names
+/* Merges every entry of `ours` into a copy of `target`: an entry with the same Name, AppVer and AppElf is replaced;
+   an entry with the same AppVer, AppElf and patch lines but another Name (or Note) is replaced too, so the repository names
    and descriptions win and nothing is duplicated (on_rename reports it); any other entry is added before the
    last "</Patch>". Returns 0 and the new file in *out (malloc'd), -1 on a malformed file or allocation failure. */
 static int xm_merge_ex(const char *target, size_t target_len, const char *ours, size_t ours_len,
@@ -144,8 +160,7 @@ static int xm_merge_ex(const char *target, size_t target_len, const char *ours, 
         const char *text = ours + ob.start; size_t text_len = ob.end - ob.start;
         xm_block tb; int found = 0;
         for (size_t tp = 0; xm_next(buf, len, tp, &tb); tp = tb.end) {
-            if (!tb.name || !xm_same(tb.name, tb.name_len, ob.name, ob.name_len) ||
-                !xm_same(tb.ver ? tb.ver : "", tb.ver_len, ob.ver ? ob.ver : "", ob.ver_len)) continue;
+            if (!tb.name || !xm_same(tb.name, tb.name_len, ob.name, ob.name_len) || !xm_same_target(&tb, &ob)) continue;
             found = 1;
             if (!xm_same(buf + tb.start, tb.end - tb.start, text, text_len)) {
                 if (xm_splice(&buf, &len, tb.start, tb.end - tb.start, text, text_len)) { free(buf); return -1; }
@@ -155,7 +170,7 @@ static int xm_merge_ex(const char *target, size_t target_len, const char *ours, 
         }
         if (found) continue;
         for (size_t tp = 0; xm_next(buf, len, tp, &tb); tp = tb.end) {
-            if (!tb.name || !xm_same(tb.ver ? tb.ver : "", tb.ver_len, ob.ver ? ob.ver : "", ob.ver_len) ||
+            if (!tb.name || !xm_same_target(&tb, &ob) ||
                 !xm_same_lines(buf + tb.start, tb.end - tb.start, text, text_len)) continue;
             /* an entry that already carries another of our names keeps it */
             int ours_name = 0; xm_block x;

@@ -87,7 +87,8 @@ static void load_repo(void) {
     assert(repo_count > 0);
 }
 
-/* What the sync relies on in every downloaded file: a title ID in the name, one Title, unique Name + AppVer. */
+/* What the sync relies on in every downloaded file: a title ID in the name, one Title per AppElf (a collection has
+   one per game, and the first entry's Title names the file), unique Name + AppVer + AppElf. */
 static void check_repo(void) {
     for (int i = 0; i < repo_count; i++) {
         repo_file *f = &repo[i];
@@ -99,12 +100,14 @@ static void check_repo(void) {
         for (size_t p = 0; xm_next(f->xml, f->len, p, &a); p = a.end, entries++) {
             if (!a.title || !a.name || !a.ver) { fprintf(stderr, "%s: entry without Title, Name or AppVer\n", f->name); exit(1); }
             if (!entries) { memcpy(f->title, a.title, a.title_len); f->title[a.title_len] = 0; }
-            else if (!xm_title_is(f->xml, f->len, a.title, a.title_len)) { fprintf(stderr, "%s: mixed Titles\n", f->name); exit(1); }
-            for (size_t q = a.end; xm_next(f->xml, f->len, q, &b); q = b.end)
-                if (xm_same(a.name, a.name_len, b.name, b.name_len) && xm_same(a.ver, a.ver_len, b.ver, b.ver_len)) {
+            for (size_t q = a.end; xm_next(f->xml, f->len, q, &b); q = b.end) {
+                size_t ael, bel; const char *ae = xm_elf(&a, &ael), *be = xm_elf(&b, &bel);
+                if (xm_same(ae, ael, be, bel) && !xm_same(a.title, a.title_len, b.title, b.title_len)) { fprintf(stderr, "%s: mixed Titles\n", f->name); exit(1); }
+                if (xm_same(a.name, a.name_len, b.name, b.name_len) && xm_same_target(&a, &b)) {
                     fprintf(stderr, "%s: duplicate entry \"%.*s\" %.*s\n", f->name, (int)a.name_len, a.name, (int)a.ver_len, a.ver);
                     exit(1);
                 }
+            }
         }
         assert(entries > 0);
         /* Naming standard: "<resolution> (PS4 Pro mode[, ...][, requires 8 GiB enabled])", and NeoRequires agrees

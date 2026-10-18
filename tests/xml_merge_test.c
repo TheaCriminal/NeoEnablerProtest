@@ -49,6 +49,18 @@ int main(void) {
     assert(!xm_merge_ex(out, n, ours, sizeof ours - 1, &again, &m, &added, &replaced, &renamed, NULL, NULL));
     assert(!added && !replaced && !renamed && m == n);
     free(again); free(out);
-    puts("PASS XML merge: replace by Name and AppVer, rename same patch lines, add missing entries, keep others, idempotent");
+
+    /* A collection: the same Name and AppVer for two executables are two entries, each replaced by its own. */
+    static const char col[] =
+        "<Patch>\n  <Metadata Title=\"A\" Name=\"1440p (PS4 Pro mode)\" AppVer=\"01.02\" AppElf=\"eboot.bin\"><PatchList><Line Type=\"bytes\" Address=\"0x1\" Value=\"0x01\"/></PatchList></Metadata>\n"
+        "  <Metadata Title=\"B\" Name=\"1440p (PS4 Pro mode)\" AppVer=\"01.02\" AppElf=\"b.elf\"><PatchList><Line Type=\"bytes\" Address=\"0x2\" Value=\"0x02\"/></PatchList></Metadata>\n</Patch>\n";
+    static const char col_new[] =
+        "<Patch>\n  <Metadata Title=\"B\" Name=\"1440p (PS4 Pro mode)\" AppVer=\"01.02\" AppElf=\"b.elf\"><PatchList><Line Type=\"bytes\" Address=\"0x2\" Value=\"0x22\"/></PatchList></Metadata>\n"
+        "  <Metadata Title=\"B\" Name=\"1800p (PS4 Pro mode)\" AppVer=\"01.02\" AppElf=\"b.elf\"><PatchList><Line Type=\"bytes\" Address=\"0x1\" Value=\"0x01\"/></PatchList></Metadata>\n</Patch>\n";
+    assert(!xm_merge_ex(col, sizeof col - 1, col_new, sizeof col_new - 1, &out, &n, &added, &replaced, &renamed, NULL, NULL));
+    assert(replaced == 1 && added == 1 && renamed == 0);                 /* same lines as eboot.bin 1440p: not a rename */
+    assert(strstr(out, "Value=\"0x01\"/></PatchList></Metadata>\n  <Metadata Title=\"B\" Name=\"1440p") && strstr(out, "0x22") && !strstr(out, "0x02\""));
+    free(out);
+    puts("PASS XML merge: replace by Name, AppVer and AppElf, rename same patch lines, add missing entries, keep others, idempotent");
     return 0;
 }
