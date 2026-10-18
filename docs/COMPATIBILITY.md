@@ -28,7 +28,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | The Order: 1886 (01.02) | 4K, 4K up to 60 fps | Validated |
 | Dark Souls III: The Fire Fades Edition (01.03) | 1440p, 1620p, 1800p | Validated |
 | Batman: Arkham Knight (01.15) | 1620p, 1800p, Native 4K | Native 4K validated; 1620p and 1800p not tested yet |
-| Sleeping Dogs: Definitive Edition (01.01) | 1440p, 1620p, 1800p, 1800p up to 60 fps, Native 4K, Native 4K up to 60 fps | Native 4K, both 60 fps entries validated; 1440p, 1620p and 1800p not tested yet |
+| Sleeping Dogs: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K, each also up to 60 fps | Native 4K and the 60 fps entries validated; 1440p, 1620p and 1800p not tested yet |
 
 ## Other firmwares
 

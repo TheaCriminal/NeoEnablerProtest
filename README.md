@@ -124,7 +124,7 @@ game needs at launch. ps-patch-system ignores this attribute.
 | The Order: 1886 (01.02) | 4K, 4K up to 60 fps | Small sparkles may appear on edges while moving. Native 4K 60fps uses triple buffering: no tearing, slight stutter. |
 | Dark Souls III: The Fire Fades Edition (01.03) | 1440p, 1620p, 1800p | The game already runs in PS4 Pro mode. 4K does not fit in its memory. |
 | Batman: Arkham Knight (01.15) | 1620p, 1800p, native 4K | |
-| Sleeping Dogs: Definitive Edition (01.01) | 1440p, 1620p, 1800p, 1800p up to 60 fps, native 4K, native 4K up to 60 fps | The 60 fps entries use triple buffering: no tearing, slight stutter. 1800p up to 60 fps runs at 53-57 fps, native 4K up to 60 fps at 41-44 fps. |
+| Sleeping Dogs: Definitive Edition (01.01) | 1440p, 1620p, 1800p, native 4K, each also up to 60 fps | The 60 fps entries use triple buffering: no tearing, slight stutter. 1800p up to 60 fps runs at 53-57 fps, native 4K up to 60 fps at 41-44 fps. |
 | Driveclub (01.28) | 1440p, 4K (1620p render), 4K (1800p render), native 4K | 4K needs the 8 GiB memory budget. **Tested on firmware 13.20 only.** 4K with 1800p render runs close to 60 fps; native 4K is below 60 fps in races. 4K with 1620p or 1800p render may show blocky artifacts in the clouds and on other surfaces. Native 4K: snow can show inside the car. |
 
 Patch IDs, how the hook works and how to build from source: [docs/TECHNICAL.md](docs/TECHNICAL.md).
