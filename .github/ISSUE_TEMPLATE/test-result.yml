@@ -89,7 +89,7 @@ body:
     id: setup
     attributes:
       label: Console, jailbreak and NeoEnabler version
-      placeholder: Slim, y2jb + etaHEN, v0.3.2
+      placeholder: Slim, y2jb + etaHEN, v0.3.3
     validations:
       required: true
   - type: input

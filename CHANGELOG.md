@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3
+
+- Collections: the Games page allows one resolution entry for each game of a collection, told apart by the
+  executable it patches (AppElf). Before, ticking a resolution of one game turned off the resolution of the other
+  games of the same title ID. An entry without AppElf counts as `eboot.bin`.
+- The patch sync matches entries by Name, AppVer and AppElf, so two games of a collection with an entry of the
+  same name keep their own entry. Before, the entry of one game replaced the other's.
+
 ## 0.3.2
 
 - The patch sync now also uses the title IDs listed in each repository file (regions and special editions): the file

@@ -163,7 +163,8 @@ name, entry name, title, ELF and app version, so renaming an entry changes its h
 | Driveclub 01.28 | `Driveclub_CUSA00093.xml` | one resolution: `8cdf7724` 1440p, `d4ad7fde` 4K with 1620p render, `4903b2ea` 4K with 1800p render or `65ba17e0` native 4K | native 1440p, 4K output with 1620p or 1800p render, or native 4K (4K entries need the 8 GiB budget: +1 GiB render memory; with the stock budget the game crashes at launch). 1440p and 4K entries use an adaptive flip: vsync when the frame is on time, immediate flip when it is late (the game's own late-frame flip mode hangs the GPU in PS4 Pro mode) |
 | Sleeping Dogs: Definitive Edition 01.01 | `SleepingDogsDefinitiveEdition_CUSA01111.xml` | one resolution: `3e86be10` 1440p, `b5ab6c71` 1440p 60fps, `c0f65a30` 1620p, `9d79ba91` 1620p 60fps, `fdba4900` 1800p, `9cca9281` 1800p 60fps, `bdb7bc89` Native 4K or `099ca82e` Native 4K 60fps | 1440p to native 4K. The 60fps entries add triple buffering (a third swapchain target, back buffer index cycling 0-2, vsync on) and illusion's 60 FPS Unlock; video heap +512 MiB. Every entry also fixes a game race that crashed the load at random (a thread object on the stack, moved to static memory) |
 
-- Each resolution entry already includes the Pro mode fixes. Enable only one per game.
+- Each resolution entry already includes the Pro mode fixes. Enable only one per game (in a collection, one per
+  game executable, its AppElf).
 - Rivals: keep the community "Resolution Patch" disabled if it is in the patch file.
 - JC3: the Offline mode entry is required. Without it the game loops on the online login.
 - The XMLs only carry entries made in this project. The Bloodborne entries build on Kyo's resolution patch.

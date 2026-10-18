@@ -57,7 +57,7 @@ Open `http://<PS5 IP>:8765` in a browser on your network, or the **NeoEnabler** 
 - **Games**: every installed PS4 game that has a NeoEnabler patch for its installed version, with its icon, title
   ID, version and all of its patches. Tick a patch to enable it; the change goes straight to the ps-patch-system
   settings, there is nothing to save. Only one NeoEnabler resolution entry per game can be on: ticking one turns
-  the others off. Patches that need 8 GiB are marked and greyed out when 8 GiB is not available.
+  the others off. In a collection, each game in it can have one resolution on. Patches that need 8 GiB are marked and greyed out when 8 GiB is not available.
   Use the search bar to find a game by name or title ID.
 - **PS4 Pro mode and 8 GiB are automatic.** When a PS4 game starts, NeoEnabler checks its enabled patches: the
   game starts in PS4 Pro mode only when one of them needs it, and 8 GiB is switched on before the game starts
