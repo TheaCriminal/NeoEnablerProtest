@@ -48,8 +48,6 @@ supported **only** when both conditions are met:
 When either condition is missing, patches that need 8 GiB are greyed out and cannot be enabled. Everything else
 works without 8 GiB.
 
-**If you are on firmware 13.20 or 13.60, please test the 8 GiB budget and report your results.**
-
 NeoEnabler must keep running for the automatic Pro mode and 8 GiB: send it again after every reboot.
 
 ## Control panel
