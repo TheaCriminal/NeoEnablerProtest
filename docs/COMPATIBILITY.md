@@ -12,8 +12,8 @@ Status meanings:
 
 ## Firmware 13.20
 
-All entries below are validated by the maintainer on firmware 13.20. Notes and frame rates are in the
-[README](../README.md#game-patches).
+All entries below are validated by the maintainer on firmware 13.20. Notes and frame rates are in
+[GAMES.md](GAMES.md).
 
 | Game (version) | Resolution entries | Status |
 | --- | --- | --- |
