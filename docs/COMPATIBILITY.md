@@ -19,7 +19,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | --- | --- | --- |
 | Battlefield 4 (01.24) | 1440p, 1620p, 1800p, 4K | Validated |
 | Battlefield Hardline (01.09) | 1440p, 1620p, 1800p, 4K | Validated |
-| Bloodborne (01.09) | 1440p, 1620p, 1800p, Native 4K (8 GiB) | Validated |
+| Bloodborne (01.09) | 1440p, 1620p, Native 4K (8 GiB) | Validated |
 | Driveclub (01.28) | 1440p, 4K (1620p render), 4K (1800p render), Native 4K (8 GiB) | Validated |
 | Just Cause 3 (01.05) | 1440p, 4K | Validated |
 | Killzone Shadow Fall (01.81) | 1440p, 1620p, 1800p, 4K | Validated |

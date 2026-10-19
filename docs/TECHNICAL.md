@@ -154,7 +154,7 @@ name, entry name, title, ELF and app version, so renaming an entry changes its h
 | --- | --- | --- | --- |
 | Need for Speed Rivals 01.04 | `NeedForSpeedRivals_CUSA00168.xml` | one resolution: `7f4ee42f` 4K or `fc7fe6b6` 1440p | native 4K or 1440p |
 | Resident Evil 6 01.01 | `ResidentEvil6_CUSA03856.xml` | one resolution: `86499dd1` 1440p or `05789f48` 4K | 1440p or native 4K (small Capcom logo in 4K) |
-| Bloodborne 01.09 | `Bloodborne_CUSA00900.xml` | one resolution: `e7fcd40e` native 4K, `cda543da` 1800p, `f0e950ea` 1620p or `0e99b4ca` 1440p | up to 1800p, or native 4K with the 8 GiB budget (private heap +512 MiB, privateB +1 GiB) |
+| Bloodborne 01.09 | `Bloodborne_CUSA00900.xml` | one resolution: `e7fcd40e` native 4K, `f0e950ea` 1620p or `0e99b4ca` 1440p | up to 1620p, or native 4K with the 8 GiB budget (private heap +512 MiB, privateB +1 GiB) |
 | Just Cause 3 01.05 | `JustCause3_CUSA01493.xml` | one resolution: `1575f9b2` 1440p or `9644fb2b` 4K, + `fd9434a8` Offline mode | 1440p or native 4K |
 | Battlefield 4 01.24 | `Battlefield4_CUSA00049.xml` | one resolution: `f9ec0351` 1440p, `079ce771` 1620p, `3ad0f441` 1800p or `7add01c8` 4K | 1440p, 1620p, 1800p (stable 60 fps) or native 4K (~49 fps) |
 | Battlefield Hardline 01.09 | `BattlefieldHardline_CUSA00625.xml` | one resolution: `e7de2901` 1440p, `19aecd21` 1620p, `24e2de11` 1800p or `64ef2b98` Native 4K | 1440p, 1620p, 1800p or native 4K |
