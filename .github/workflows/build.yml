@@ -124,7 +124,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" neo-manager.elf neo-manager.elf.sha256 \
+          # A tag with a suffix (v0.3.4-experimental) is published as a pre-release, so it never becomes "Latest".
+          prerelease=()
+          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then prerelease=(--prerelease); fi
+          gh release create "${GITHUB_REF_NAME}" neo-manager.elf neo-manager.elf.sha256 "${prerelease[@]}" \
             --repo "${GITHUB_REPOSITORY}" \
             --title "NeoEnabler ${GITHUB_REF_NAME#v}" \
             --notes-file release-notes.md
