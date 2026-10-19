@@ -58,12 +58,15 @@ body:
         - Uncharted 1 - 1440p
         - Uncharted 1 - 1620p
         - Uncharted 1 - 1800p
+        - Uncharted 1 - Native 4K
         - Uncharted 2 - 1440p
         - Uncharted 2 - 1620p
         - Uncharted 2 - 1800p
+        - Uncharted 2 - Native 4K
         - Uncharted 3 - 1440p
         - Uncharted 3 - 1620p
         - Uncharted 3 - 1800p
+        - Uncharted 3 - Native 4K
     validations:
       required: true
   - type: dropdown
