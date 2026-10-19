@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.4-experimental
+
+- The launch hook now finds the `ATTRIBUTE` offset in the app info at each launch instead of trusting the
+  per-firmware table, which was never measured on 13.00. On 13.00 the hook read the wrong field, so every game
+  started in base mode and resolution patches crashed it (Bloodborne at the splash screen, The Order at boot). The
+  manager compares the app info with the game's `param.sfo` and tells the hook which offset to use. The table
+  offset is still the fallback.
+- The hook now asks the manager about every PS4 launch, not only when the table offset held the expected value.
+- The log shows the offset used for each launch (`launch: <title>: ATTRIBUTE ...`), and the app info around the known
+  offsets when it differs from the table. The status page shows the last offset found (`attr_detected`).
+
 ## 0.3.3
 
 - Collections: the Games page allows one resolution entry for each game of a collection, told apart by the

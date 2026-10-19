@@ -34,7 +34,7 @@ jobs:
           fi
           $CC $flags tests/budget_test.c -o /tmp/neo-budget-test
           /tmp/neo-budget-test
-      - name: Unit tests (XML merge, game patches and settings, patch sync against a fake GitHub serving xml/)
+      - name: Unit tests (XML merge, game patches and settings, patch sync against a fake GitHub serving xml/, ATTRIBUTE offset)
         env:
           CC: ${{ matrix.cc }}
         run: |
@@ -52,6 +52,8 @@ jobs:
           /tmp/neo-log-mirror-test
           $CC $flags tests/games_8gib_test.c -o /tmp/neo-games-8gib-test
           /tmp/neo-games-8gib-test xml
+          $CC $flags tests/attr_detect_test.c -o /tmp/neo-attr-detect-test
+          /tmp/neo-attr-detect-test
 
   patch-sync-github:
     name: Patch sync with the GitHub download
