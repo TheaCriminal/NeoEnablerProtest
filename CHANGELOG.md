@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.4-experimental
+## 0.3.4
 
 - The launch hook now finds the `ATTRIBUTE` offset in the app info at each launch instead of trusting the
   per-firmware table, which was never measured on 13.00. On 13.00 the hook read the wrong field, so every game
