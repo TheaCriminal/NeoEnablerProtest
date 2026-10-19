@@ -84,6 +84,8 @@ jobs:
           /tmp/neo-patch-sync-test xml
           cc -O2 -Wall -Wextra -Werror tests/games_8gib_test.c -o /tmp/neo-games-8gib-test
           /tmp/neo-games-8gib-test xml
+          cc -O2 -Wall -Wextra -Werror tests/attr_detect_test.c -o /tmp/neo-attr-detect-test
+          /tmp/neo-attr-detect-test
 
       - name: Build
         # Panel behavior tests use the Node runtime supplied on the hosted runner.
@@ -122,7 +124,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" neo-manager.elf neo-manager.elf.sha256 \
+          # A tag with a suffix (v0.3.4-experimental) is published as a pre-release, so it never becomes "Latest".
+          prerelease=()
+          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then prerelease=(--prerelease); fi
+          gh release create "${GITHUB_REF_NAME}" neo-manager.elf neo-manager.elf.sha256 "${prerelease[@]}" \
             --repo "${GITHUB_REPOSITORY}" \
             --title "NeoEnabler ${GITHUB_REF_NAME#v}" \
             --notes-file release-notes.md

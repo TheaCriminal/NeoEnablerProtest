@@ -127,11 +127,12 @@ static int write_call(pid_t pid, uintptr_t site, uintptr_t target) {
     return kernel_proc_copyin(pid, b, site, 5) || read_call(pid, site, &back) || back != target ? -1 : 0;
 }
 
-/* Code part of the shim in the cave matches this build (data fields excluded). */
+/* Code part of the shim in the cave matches this build (data fields from prev to magic and from req_info to the
+   end excluded). */
 static int cave_has_shim(pid_t pid, uintptr_t cave) {
     unsigned char a[sizeof(shim_code)];
     if (kernel_proc_copyout(pid, cave, a, sizeof(a))) return 0;
-    return !memcmp(a, shim_code, SHIM_PREV) && !memcmp(a + SHIM_MAGIC, shim_code + SHIM_MAGIC, sizeof(a) - SHIM_MAGIC);
+    return !memcmp(a, shim_code, SHIM_PREV) && !memcmp(a + SHIM_MAGIC, shim_code + SHIM_MAGIC, SHIM_REQ_INFO - SHIM_MAGIC);
 }
 
 /* Address of the ps-patch-system hook saved in an older shim (v2, or v3 of another build), 0 if none. */
@@ -190,7 +191,7 @@ static void bad_cave_text(const shell_t *s, char *out, size_t cap) {
     if (!rc) {
         for (size_t i = 0; i < 16 && i < n; i++) snprintf(head + 3 * i, 4, "%02x ", a[i]);
         for (size_t i = 0; i < sizeof(shim_code) && i < n; i++) {
-            if (i >= SHIM_PREV && i < SHIM_MAGIC) continue;
+            if ((i >= SHIM_PREV && i < SHIM_MAGIC) || i >= SHIM_REQ_INFO) continue;
             if (a[i] != shim_code[i]) { diff = (int)i; break; }
         }
         for (size_t i = 0; i + 8 <= n; i++) {
@@ -271,16 +272,19 @@ static int shim_configure(const shell_t *s, int force_all, uint64_t wait) {
     return shim_write(s, SHIM_FORCE_ALL, &all, 1) || shim_write(s, SHIM_WAIT_CYCLES, &wait, 8) ? -1 : 0;
 }
 
-/* Latest question: sequence number and title ID. */
-static int shim_question(const shell_t *s, uint32_t *seq, char title[10]) {
+/* Latest question: sequence number, title ID and the address of the app info in ShellCore. */
+static int shim_question(const shell_t *s, uint32_t *seq, char title[10], uint64_t *info) {
     unsigned char b[SHIM_ANSWER - SHIM_REQ_SEQ];
-    if (kernel_proc_copyout(s->pid, s->cave + SHIM_REQ_SEQ, b, sizeof(b))) return -1;
+    if (kernel_proc_copyout(s->pid, s->cave + SHIM_REQ_SEQ, b, sizeof(b)) ||
+        kernel_proc_copyout(s->pid, s->cave + SHIM_REQ_INFO, info, 8)) return -1;
     memcpy(seq, b, 4);
     memcpy(title, b + (SHIM_REQ_TITLE - SHIM_REQ_SEQ), 9); title[9] = 0;
     return 0;
 }
 
-/* Answer (bit 0: launch in Pro mode), then the acknowledgement the shim waits for. */
-static int shim_answer(const shell_t *s, uint32_t seq, unsigned char answer) {
-    return shim_write(s, SHIM_ANSWER, &answer, 1) || shim_write(s, SHIM_ACK_SEQ, &seq, 4) ? -1 : 0;
+/* Answer (bit 0: launch in Pro mode) and the ATTRIBUTE offset (0: the shim uses its table offset), then the
+   acknowledgement the shim waits for. */
+static int shim_answer(const shell_t *s, uint32_t seq, unsigned char answer, uint32_t attr_off) {
+    return shim_write(s, SHIM_ANSWER_OFF, &attr_off, 4) || shim_write(s, SHIM_ANSWER, &answer, 1) ||
+           shim_write(s, SHIM_ACK_SEQ, &seq, 4) ? -1 : 0;
 }

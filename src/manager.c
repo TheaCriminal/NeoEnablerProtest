@@ -23,6 +23,7 @@
 #include <ps5/kernel.h>
 #include <ps5/klog.h>
 #include "shellcore_hook.h"
+#include "attr_detect.h"
 #include "legacy_v4.h"
 #include "icon_data.h"
 #include "panel_data.h"
@@ -33,7 +34,7 @@
 #include "log_mirror.h"
 
 #define PORT 8765
-#define VERSION "NeoEnabler 0.3.3"
+#define VERSION "NeoEnabler 0.3.4"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -1021,7 +1022,8 @@ static shell_t live;
 static int live_ok;
 static uint32_t last_seq;
 static uint64_t tsc_hz = 1600000000ULL;
-static struct { int active, needs; uint32_t seq; char tid[10]; time_t since; } pending;
+static struct { int active, needs; uint32_t seq, attr_off; char tid[10]; time_t since; } pending;
+static struct { char tid[10]; uint32_t offset; } last_attr;   /* last detected ATTRIBUTE offset, for /status */
 static struct { int active, seen_game; char tid[10]; time_t since; } auto8;
 
 static uint64_t rdtsc(void) { uint32_t lo, hi; __asm__ volatile("rdtsc" : "=a"(lo), "=d"(hi)); return ((uint64_t)hi << 32) | lo; }
@@ -1064,20 +1066,76 @@ static void launch_attach(int ask) {
     live_ok = shim_live(&live);
     if (!live_ok) return;
     if (!was) {
-        char tid[10];
-        if (shim_question(&live, &last_seq, tid)) { live_ok = 0; return; }   /* earlier questions are not ours */
+        char tid[10]; uint64_t info;
+        if (shim_question(&live, &last_seq, tid, &info)) { live_ok = 0; return; }   /* earlier questions are not ours */
+        if (ask < 0) log_line("launch: questions enabled");   /* hook installed after the start */
     }
     if (!was || ask >= 0) shim_configure(&live, force_neo, ask == 0 ? 0 : tsc_hz * LAUNCH_WAIT_S);
+}
+
+/* ATTRIBUTE offset in the app info of this launch (0: the shim uses its table offset). Logs the choice, and the
+   app info around the known offsets when the table offset is not the one found, so a report shows the layout. */
+static uint32_t launch_attr_offset(const char *tid, uint64_t info) {
+    static unsigned char buf[AD_INFO_SIZE];
+    char path[64]; size_t n = 0;
+    uint32_t attr, attr2 = 0;
+    snprintf(path, sizeof path, APPMETA_DIR "/%.9s/param.sfo", tid);
+    char *sfo = ps_read(path, 64 << 10, &n);
+    int has_attr = sfo && !ad_sfo_int((unsigned char *)sfo, n, "ATTRIBUTE", &attr);
+    int has_attr2 = sfo && !ad_sfo_int((unsigned char *)sfo, n, "ATTRIBUTE2", &attr2);
+    free(sfo);
+    if (!has_attr) { log_line("launch: %s: ATTRIBUTE not found in %s, using the table offset 0x%x", tid, path, live.attr_off); return 0; }
+    if (!info || kernel_proc_copyout(live.pid, (uintptr_t)info, buf, sizeof buf)) {
+        log_line("launch: %s: app info at %llx unreadable, using the table offset 0x%x", tid, (unsigned long long)info, live.attr_off);
+        return 0;
+    }
+    ad_result r; ad_pick(buf, sizeof buf, attr, has_attr2, attr2, live.attr_off, &r);
+    char list[AD_MAX_CANDIDATES * 7 + 8] = ""; size_t used = 0;
+    for (int i = 0; i < r.count && i < AD_MAX_CANDIDATES; i++)
+        used += (size_t)snprintf(list + used, sizeof list - used, "%s0x%x", i ? " " : "", r.candidates[i]);
+    log_line("launch: %s: ATTRIBUTE 0x%x%s, matches at [%s]%s, %s: %s 0x%x (table 0x%x)", tid, attr,
+             has_attr2 ? "" : " (no ATTRIBUTE2)", list, r.count > AD_MAX_CANDIDATES ? " and more" : "", r.why,
+             r.offset ? "using" : "keeping", r.offset ? r.offset : live.attr_off, live.attr_off);
+    if (r.offset != live.attr_off) {
+        char dump[400];   /* log lines hold 512 characters */
+        for (size_t from = 0x1c0; from < 0x2a0; from += 0x70) {
+            ad_dump(buf, sizeof buf, from, from + 0x70, dump, sizeof dump);
+            log_line("launch: %s: app info %s", tid, dump);
+        }
+    }
+    snprintf(last_attr.tid, sizeof last_attr.tid, "%s", tid);
+    last_attr.offset = r.offset;
+    return r.offset;
+}
+
+/* The hook can only be installed after ps-patch-system has redirected the getAppInfo call. When NeoEnabler starts
+   first (payloads sent together or again), the install fails, so every 2 s, while the hook is not live, it is
+   installed as soon as the call points to the ps-patch-system hook (or to an older NeoEnabler shim). */
+static void hook_retry(void) {
+    static int last_rc = -1;
+    if (live_ok) return;
+    shell_t s; int st = hook_state(&s);
+    if (st != HOOK_OFF && st != HOOK_OLD) return;
+    int rc = hook_set(1);
+    if (rc) {
+        if (rc != last_rc) log_line("hook retry: failed to enable (rc=%d, state: %s)", rc, state_text(st));
+        last_rc = rc;
+        return;
+    }
+    last_rc = -1;
+    notify("NeoEnabler enabled: ps-patch-system finished loading after NeoEnabler started");
+    log_state();   /* questions start at the next check: right after the install ShellCore can still be resuming */
 }
 
 static void launch_poll(void) {
     if (!live_ok) return;
     if (!pending.active) {
-        uint32_t seq; char tid[10];
-        if (shim_question(&live, &seq, tid) || seq == last_seq) return;
+        uint32_t seq; char tid[10]; uint64_t info;
+        if (shim_question(&live, &seq, tid, &info) || seq == last_seq) return;
         last_seq = seq;
         pending.active = 1; pending.seq = seq; pending.since = time(NULL);
         snprintf(pending.tid, sizeof pending.tid, "%s", tid);
+        pending.attr_off = launch_attr_offset(tid, info);
         patches_drop_8gib(tid);
         pending.needs = game_needs(tid);
         if (force_neo) pending.needs |= NEEDS_PRO;
@@ -1102,7 +1160,7 @@ static void launch_poll(void) {
             snprintf(auto8.tid, sizeof auto8.tid, "%s", pending.tid);
         } else if (!want8) auto8.active = 0;
     }
-    shim_answer(&live, pending.seq, (unsigned char)pro);
+    shim_answer(&live, pending.seq, (unsigned char)pro, pending.attr_off);
     pending.active = 0;
     log_line("launch: %s starts in %s mode%s", pending.tid, pro ? "Pro" : "base",
              pro && mem_ok && ok ? (want8 ? " with 8 GiB" : " with the original memory") : "");
@@ -1189,6 +1247,7 @@ int main(void) {
           if (ms - last_mirror_ms >= 250 || ms < last_mirror_ms) { log_mirror_tick(); last_mirror_ms = ms; } }
         if(now<last_memory_poll||now-last_memory_poll>=2){
             launch_attach(-1);
+            hook_retry();
             launch_tick();
             gpu_tick();
             int memory_result=memory_poll();
@@ -1301,8 +1360,10 @@ int main(void) {
                      gpu_state_text(), gpu.enabled, gpu.target, gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
             used = strlen(body);
             snprintf(body + used, sizeof body - used,
-                     "force_neo: %d\nforce_8gib: %d\nlaunch_questions: %s\nlast_question: %u\n8gib_for_launch: %s\n",
-                     force_neo, force_8gib, live_ok ? "enabled" : "unavailable", last_seq, auto8.active ? auto8.tid : "none");
+                     "force_neo: %d\nforce_8gib: %d\nlaunch_questions: %s\nlast_question: %u\n8gib_for_launch: %s\n"
+                     "attr_detected: %s 0x%x\n",
+                     force_neo, force_8gib, live_ok ? "enabled" : "unavailable", last_seq, auto8.active ? auto8.tid : "none",
+                     last_attr.tid[0] ? last_attr.tid : "none", last_attr.offset);
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/panel.js")) {
             char script[sizeof panel_js + 1];

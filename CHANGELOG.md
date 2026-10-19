@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.4
+
+- The launch hook now finds the `ATTRIBUTE` offset in the app info at each launch instead of trusting the
+  per-firmware table, which was never measured on 13.00. On 13.00 the hook read the wrong field, so every game
+  started in base mode and resolution patches crashed it (Bloodborne at the splash screen, The Order at boot). The
+  manager compares the app info with the game's `param.sfo` and tells the hook which offset to use. The table
+  offset is still the fallback.
+- The hook now asks the manager about every PS4 launch, not only when the table offset held the expected value.
+- When NeoEnabler starts before ps-patch-system has set up its hook (both payloads sent together, or sent again),
+  it now installs its hook as soon as ps-patch-system is ready, checking every 2 seconds. Before, the hook stayed
+  off until NeoEnabler was sent again, so games started in base mode and Pro mode patches crashed them.
+- The log shows the offset used for each launch (`launch: <title>: ATTRIBUTE ...`), and the app info around the known
+  offsets when it differs from the table. The status page shows the last offset found (`attr_detected`).
+
 ## 0.3.3
 
 **Collection games, such as Uncharted: The Nathan Drake Collection, require this version or newer.**

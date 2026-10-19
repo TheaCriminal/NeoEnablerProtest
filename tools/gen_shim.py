@@ -12,11 +12,12 @@ for line in subprocess.check_output([sys.argv[1] if len(sys.argv) > 1 else 'nm',
     if m:
         syms[m.group(2)] = int(m.group(1), 16)
 fields = ('prev', 'printf_ptr', 'wait_cycles', 'attr_off', 'req_seq', 'ack_seq', 'req_title', 'answer', 'four_args',
-          'force_all', 'magic')
+          'force_all', 'magic', 'req_info', 'answer_off')
 assert syms.get('_start') == 0, syms
 assert all(f in syms for f in fields), syms
 assert code[syms['magic']:syms['magic'] + 8] == b'NEOENBL3'
 assert syms['prev'] % 8 == 0 and syms['req_seq'] % 4 == 0 and syms['ack_seq'] % 4 == 0
+assert syms['magic'] < syms['req_info'] < syms['answer_off'] and syms['answer_off'] + 4 == len(code), syms  # runtime data last
 out = ['static const unsigned char shim_code[%d] = {%s};' % (len(code), ','.join(hex(b) for b in code))]
 out += ['#define SHIM_%s %d' % (f.upper(), syms[f]) for f in fields]
 (build / 'shim_data.h').write_text('\n'.join(out) + '\n')

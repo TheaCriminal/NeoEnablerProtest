@@ -11,11 +11,19 @@ the `getAppInfo` call to its own hook. NEO Enabler chains onto that hook:
    (`patchGetAppInfoSfo`). The call must point inside `eh_frame` (the ps-patch-system hook), otherwise the panel shows
    "ps-patch-system not loaded".
 2. The shim (`src/shim.S`, position independent) is copied to the last 512 bytes of `eh_frame` and the call is
-   redirected to it. The shim calls the ps-patch-system hook first, then, for PS4 title IDs whose `ATTRIBUTE` is
-   exactly 2, sets bit `0x00800000` (`kPS4Pro`) and logs `[NEO <title>] old>new` to klog.
+   redirected to it. The shim calls the ps-patch-system hook first. For PS4 title IDs it then posts the title ID and
+   the app info address to the manager and waits up to 5 s for the answer: Pro mode or not, and the `ATTRIBUTE`
+   offset in the app info. When the answer is Pro mode and `ATTRIBUTE` is exactly 2, it sets bit `0x00800000`
+   (`kPS4Pro`) and logs `[NEO <title>] old>new` to klog.
 3. Per-firmware values are filled into the shim at install time: the previous call target, `printf`, the
    `ATTRIBUTE` offset in the app info (`0x26c` up to 10.60, `0x1f4` for 11.00 to 13.00, `0x214` from 13.20, as in
    ps-patch-system `get_ps5_attr`) and whether the app info is the third or fourth argument (fourth from 9.00).
+   The table offset was measured on 4.50, 8.00, 11.00 and 13.20 only. At each launch the manager reads the app info
+   and looks for the `ATTRIBUTE` and `ATTRIBUTE2` values of the game's `param.sfo` at consecutive offsets
+   (`src/attr_detect.h`). The table offset wins when it matches, then the offsets of the other firmwares, then a
+   single match. Without a choice, or without an answer, the shim uses the table offset. The log line
+   `launch: <title>: ATTRIBUTE ...` shows the matches and the offset used, followed by the app info bytes from
+   `0x1c0` to `0x2a0` when the offset differs from the table.
 4. Every write happens with `SceShellCore` stopped (SIGSTOP) and is read back. Disabling points the call back to
    the ps-patch-system hook.
 5. Disabling also removes the hook of NEO Enabler v4 when it is still in `SceShellCore` (fw 13.20). v4 overwrote
