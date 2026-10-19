@@ -1024,6 +1024,9 @@ static uint32_t last_seq;
 static uint64_t tsc_hz = 1600000000ULL;
 static struct { int active, needs; uint32_t seq, attr_off; char tid[10]; time_t since; } pending;
 static struct { char tid[10]; uint32_t offset; } last_attr;   /* last detected ATTRIBUTE offset, for /status */
+static uint32_t debug_attr_off;   /* test only (POST /debug/attr_off): table offset replaced until the manager restarts */
+
+static uint32_t table_attr_off(void) { return debug_attr_off ? debug_attr_off : live.attr_off; }
 static struct { int active, seen_game; char tid[10]; time_t since; } auto8;
 
 static uint64_t rdtsc(void) { uint32_t lo, hi; __asm__ volatile("rdtsc" : "=a"(lo), "=d"(hi)); return ((uint64_t)hi << 32) | lo; }
@@ -1083,19 +1086,19 @@ static uint32_t launch_attr_offset(const char *tid, uint64_t info) {
     int has_attr = sfo && !ad_sfo_int((unsigned char *)sfo, n, "ATTRIBUTE", &attr);
     int has_attr2 = sfo && !ad_sfo_int((unsigned char *)sfo, n, "ATTRIBUTE2", &attr2);
     free(sfo);
-    if (!has_attr) { log_line("launch: %s: ATTRIBUTE not found in %s, using the table offset 0x%x", tid, path, live.attr_off); return 0; }
+    if (!has_attr) { log_line("launch: %s: ATTRIBUTE not found in %s, using the table offset 0x%x", tid, path, table_attr_off()); return 0; }
     if (!info || kernel_proc_copyout(live.pid, (uintptr_t)info, buf, sizeof buf)) {
-        log_line("launch: %s: app info at %llx unreadable, using the table offset 0x%x", tid, (unsigned long long)info, live.attr_off);
+        log_line("launch: %s: app info at %llx unreadable, using the table offset 0x%x", tid, (unsigned long long)info, table_attr_off());
         return 0;
     }
-    ad_result r; ad_pick(buf, sizeof buf, attr, has_attr2, attr2, live.attr_off, &r);
+    ad_result r; ad_pick(buf, sizeof buf, attr, has_attr2, attr2, table_attr_off(), &r);
     char list[AD_MAX_CANDIDATES * 7 + 8] = ""; size_t used = 0;
     for (int i = 0; i < r.count && i < AD_MAX_CANDIDATES; i++)
         used += (size_t)snprintf(list + used, sizeof list - used, "%s0x%x", i ? " " : "", r.candidates[i]);
     log_line("launch: %s: ATTRIBUTE 0x%x%s, matches at [%s]%s, %s: %s 0x%x (table 0x%x)", tid, attr,
              has_attr2 ? "" : " (no ATTRIBUTE2)", list, r.count > AD_MAX_CANDIDATES ? " and more" : "", r.why,
-             r.offset ? "using" : "keeping", r.offset ? r.offset : live.attr_off, live.attr_off);
-    if (r.offset != live.attr_off) {
+             r.offset ? "using" : "keeping", r.offset ? r.offset : table_attr_off(), table_attr_off());
+    if (r.offset != table_attr_off()) {
         char dump[400];   /* log lines hold 512 characters */
         for (size_t from = 0x1c0; from < 0x2a0; from += 0x70) {
             ad_dump(buf, sizeof buf, from, from + 0x70, dump, sizeof dump);
@@ -1300,6 +1303,23 @@ int main(void) {
                 if (rc == -1 && enable) snprintf(gpu.message, sizeof gpu.message, "GPU clock request unavailable or failed; check firmware and SMU access");
                 log_line("panel: GPU enable=%d target=%u rc=%d", enable, target, rc);
                 notify(gpu.message); log_state(); serve_gpu_page(fd, gpu.message);
+            }
+        } else if (post && !strcmp(path, "/debug/attr_off")) {
+            /* Test only: simulates a firmware whose table offset is wrong. Writes value (0x100-0x3f8, multiple of 4)
+               as the shim's table offset; the detection then has to find the real one. Restart the manager to undo. */
+            char v[16]; char *end = NULL; unsigned long off = 0;
+            if (!form_value(form_body, "value", v, sizeof v)) off = strtoul(v, &end, 0);
+            if (!end || *end || off < AD_MIN_OFFSET || off + 8 > AD_INFO_SIZE || off % 4 || !live_ok) {
+                reply(fd, "400 Bad Request", "text/plain", "value must be 0x100-0x3f8, a multiple of 4, with the hook live\n");
+            } else {
+                uint32_t o = (uint32_t)off;
+                int rc = shim_write(&live, SHIM_ATTR_OFF, &o, 4);
+                if (!rc) debug_attr_off = o;
+                char m[160];
+                snprintf(m, sizeof m, "debug: shim table offset set to 0x%x (firmware table 0x%x): %s\n", o, live.attr_off,
+                         rc ? "write failed" : "ok, restart the manager to undo");
+                log_line("%s", m);
+                reply(fd, rc ? "500 Internal Server Error" : "200 OK", "text/plain", m);
             }
         } else if (post && !strcmp(path, "/patches/update")) {
             log_line("panel: game patches update requested");
