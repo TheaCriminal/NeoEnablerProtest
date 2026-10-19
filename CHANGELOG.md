@@ -2,6 +2,8 @@
 
 ## 0.3.3
 
+**Collection games, such as Uncharted: The Nathan Drake Collection, require this version or newer.**
+
 - Collections: the Games page allows one resolution entry for each game of a collection, told apart by the
   executable it patches (AppElf). Before, ticking a resolution of one game turned off the resolution of the other
   games of the same title ID. An entry without AppElf counts as `eboot.bin`.

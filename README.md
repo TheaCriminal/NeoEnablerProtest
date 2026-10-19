@@ -58,7 +58,9 @@ Open `http://<PS5 IP>:8765` in a browser on your network, or the **NeoEnabler** 
   ID, version and all of its patches. Tick a patch to enable it; the change goes straight to the ps-patch-system
   settings, there is nothing to save. Only one NeoEnabler resolution entry per game can be on: ticking one turns
   the others off. In a collection, each game in it can have one resolution on. The collection starts in its
-  first game, so the other games' resolutions need one of the first game: the panel ticks it for you. Patches
+  first game, so the other games' resolutions need one of the first game: the panel ticks it for you.
+  **Collections need NeoEnabler 0.3.3 or newer.** Older versions keep only one resolution per title ID, and their
+  patch sync replaces the entry of one game with another game's entry of the same name. Patches
   that need 8 GiB are marked and greyed out when 8 GiB is not available.
   Use the search bar to find a game by name or title ID.
 - **PS4 Pro mode and 8 GiB are automatic.** When a PS4 game starts, NeoEnabler checks its enabled patches: the
@@ -128,7 +130,7 @@ game needs at launch. ps-patch-system ignores this attribute.
 | Batman: Arkham Knight (01.15) | 1620p, 1800p, native 4K | |
 | Sleeping Dogs: Definitive Edition (01.01) | 1440p, 1620p, 1800p, native 4K, each also up to 60 fps | The 60 fps entries use triple buffering: no tearing, slight stutter. 1800p up to 60 fps runs at 53-57 fps, native 4K up to 60 fps at 41-44 fps. |
 | Driveclub (01.28) | 1440p, 4K (1620p render), 4K (1800p render), native 4K | 4K needs the 8 GiB memory budget. **Tested on firmware 13.20 only.** 4K with 1800p render runs close to 60 fps; native 4K is below 60 fps in races. 4K with 1620p or 1800p render may show blocky artifacts in the clouds and on other surfaces. Native 4K: snow can show inside the car. |
-| Uncharted: The Nathan Drake Collection (01.02) | 1440p, 1620p, 1800p, native 4K for each of the three games | The collection starts in Uncharted 1, which sets PS4 Pro mode for Uncharted 2 and 3: an Uncharted 2 or 3 entry needs an Uncharted 1 entry on (the panel enables it). Native 4K fits the stock memory with a smaller texture pool. |
+| Uncharted: The Nathan Drake Collection (01.02) | 1440p, 1620p, 1800p, native 4K for each of the three games | **Requires NeoEnabler 0.3.3 or newer.** The collection starts in Uncharted 1, which sets PS4 Pro mode for Uncharted 2 and 3: an Uncharted 2 or 3 entry needs an Uncharted 1 entry on (the panel enables it). Native 4K fits the stock memory with a smaller texture pool. |
 
 Patch IDs, how the hook works and how to build from source: [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
