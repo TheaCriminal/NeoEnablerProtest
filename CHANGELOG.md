@@ -8,6 +8,9 @@
   manager compares the app info with the game's `param.sfo` and tells the hook which offset to use. The table
   offset is still the fallback.
 - The hook now asks the manager about every PS4 launch, not only when the table offset held the expected value.
+- When NeoEnabler starts before ps-patch-system has set up its hook (both payloads sent together, or sent again),
+  it now installs its hook as soon as ps-patch-system is ready, checking every 2 seconds. Before, the hook stayed
+  off until NeoEnabler was sent again, so games started in base mode and Pro mode patches crashed them.
 - The log shows the offset used for each launch (`launch: <title>: ATTRIBUTE ...`), and the app info around the known
   offsets when it differs from the table. The status page shows the last offset found (`attr_detected`).
 

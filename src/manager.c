@@ -1068,6 +1068,7 @@ static void launch_attach(int ask) {
     if (!was) {
         char tid[10]; uint64_t info;
         if (shim_question(&live, &last_seq, tid, &info)) { live_ok = 0; return; }   /* earlier questions are not ours */
+        if (ask < 0) log_line("launch: questions enabled");   /* hook installed after the start */
     }
     if (!was || ask >= 0) shim_configure(&live, force_neo, ask == 0 ? 0 : tsc_hz * LAUNCH_WAIT_S);
 }
@@ -1105,6 +1106,25 @@ static uint32_t launch_attr_offset(const char *tid, uint64_t info) {
     snprintf(last_attr.tid, sizeof last_attr.tid, "%s", tid);
     last_attr.offset = r.offset;
     return r.offset;
+}
+
+/* The hook can only be installed after ps-patch-system has redirected the getAppInfo call. When NeoEnabler starts
+   first (payloads sent together or again), the install fails, so every 2 s, while the hook is not live, it is
+   installed as soon as the call points to the ps-patch-system hook (or to an older NeoEnabler shim). */
+static void hook_retry(void) {
+    static int last_rc = -1;
+    if (live_ok) return;
+    shell_t s; int st = hook_state(&s);
+    if (st != HOOK_OFF && st != HOOK_OLD) return;
+    int rc = hook_set(1);
+    if (rc) {
+        if (rc != last_rc) log_line("hook retry: failed to enable (rc=%d, state: %s)", rc, state_text(st));
+        last_rc = rc;
+        return;
+    }
+    last_rc = -1;
+    notify("NeoEnabler enabled: ps-patch-system finished loading after NeoEnabler started");
+    log_state();   /* questions start at the next check: right after the install ShellCore can still be resuming */
 }
 
 static void launch_poll(void) {
@@ -1227,6 +1247,7 @@ int main(void) {
           if (ms - last_mirror_ms >= 250 || ms < last_mirror_ms) { log_mirror_tick(); last_mirror_ms = ms; } }
         if(now<last_memory_poll||now-last_memory_poll>=2){
             launch_attach(-1);
+            hook_retry();
             launch_tick();
             gpu_tick();
             int memory_result=memory_poll();
