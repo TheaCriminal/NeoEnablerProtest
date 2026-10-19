@@ -33,6 +33,10 @@ when one of its enabled patches needs it; every other game starts as usual.
    repository and adds them to the ps-patch-system files (see [Game patches](#game-patches)).
 4. Open the panel and tick the patches you want for each game.
 
+> [!WARNING]
+> **8 GiB patches are on hold.** I am not working on new 8 GiB mode patches for now, because the current
+> hypervisor method on firmware 13.20 is unstable. The existing 8 GiB entries stay available.
+
 The **8 GiB PS4 Pro memory budget** is used only by patches that need it (marked "8 GiB" in the panel). It is
 supported **only** when both conditions are met:
 
