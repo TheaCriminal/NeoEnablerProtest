@@ -59,6 +59,8 @@ jobs:
 
       - name: Test memory guards and controls (host only)
         run: |
+          cc -O2 -Wall -Wextra -Werror tests/firmware_version_test.c -o /tmp/neo-firmware-version-test
+          /tmp/neo-firmware-version-test
           cc -O2 -Wall -Wextra -Werror tests/budget_test.c -o /tmp/neo-budget-test
           /tmp/neo-budget-test
           cc -O2 -Wall -Wextra -Werror tests/budget_data_test.c -o /tmp/neo-budget-data-test

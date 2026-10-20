@@ -3,7 +3,9 @@
 Branch: `release/v0.3.5-experimental`. The manager integrates the existing
 13.20 DATA transaction and a firmware-specific launch profile for 13.60.
 13.20 has a Bloodborne gameplay/constructor/restoration regression test;
-13.60 has offline validation only and needs console reports.
+13.60 has offline validation and one community report of Bloodborne 4K gameplay
+with the panel showing 8 GiB enabled. Raw console logs and teardown verification
+were not supplied for that report; other games still need reports.
 
 ## Transaction and synchronization
 
@@ -81,7 +83,8 @@ rollback, exact hook profiles, stop/write/readback failures, retained reservatio
 detach races and controller ownership/recovery. Native execution of the shim
 checks stack alignment, callee-saved registers, all three arguments, 64-bit return,
 POST expiration, CLAIM/HELD, stale commands/sequences and gate contention.
-These tests do not replace a 13.60 console test or full allocation/backing tests.
+The community gameplay report does not replace full allocation/backing tests or
+validate every game and launch on 13.60.
 
 See [VALIDATION-0.3.5-experimental.md](VALIDATION-0.3.5-experimental.md) for the
 13.20 session. Use a fresh boot and do not mix an older TEXT memory patch with

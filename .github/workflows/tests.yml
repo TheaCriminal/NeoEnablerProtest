@@ -32,6 +32,8 @@ jobs:
           if [ "${{ matrix.sanitize }}" = "1" ]; then
             flags="$flags -fsanitize=address,undefined -fno-sanitize-recover=all"
           fi
+          $CC $flags tests/firmware_version_test.c -o /tmp/neo-firmware-version-test
+          /tmp/neo-firmware-version-test
           $CC $flags tests/budget_test.c -o /tmp/neo-budget-test
           /tmp/neo-budget-test
           $CC $flags tests/budget_data_test.c -o /tmp/neo-budget-data-test

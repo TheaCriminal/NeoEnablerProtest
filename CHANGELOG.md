@@ -2,12 +2,23 @@
 
 ## 0.3.5-experimental
 
+Updated build: idle label and firmware query fix.
+
+- Cache the first successful actual firmware query for the manager lifetime; a failed or short sysctl response
+  cannot replace a recognized 13.60 with zero while idle. A query that has never succeeded is shown as
+  "firmware unavailable", rather than declaring the firmware unsupported.
+
+- Distinguish 8 GiB availability from activity: supported and available while idle is "ready", an unavailable
+  hook is "unavailable", and "not supported" is reserved for firmwares without a profile. Active 8 GiB remains
+  "enabled". The memory transaction and launch hook are unchanged.
+- Record the first 13.60 community report: Bloodborne reached Native 4K gameplay with 8 GiB enabled in the panel.
+
 - Integrates the existing 13.20 no-HV DATA transaction into the manager and ports the launch profile to 13.60.
   Kernel TEXT is not read or patched by this path. The controller confirms POST/CLAIM/HELD before applying the
   extension and retains launch serialization until the global is restored after game teardown.
 - Bloodborne on 13.20 reached gameplay with a reported 8192 MiB DMEM budget; the constructor value and automatic
-  restoration were verified; the maintainer also confirmed Bloodborne gameplay at native 4K. 13.60 is implemented and checked offline against its ShellCore/libkernel dumps,
-  but still needs hardware testing. These checks do not establish stability for every game or full backing coverage.
+  restoration were verified; the maintainer also confirmed Bloodborne gameplay at native 4K. 13.60 is checked against its ShellCore/libkernel dumps and now has one community report of Bloodborne
+  Native 4K gameplay with 8 GiB enabled in the panel. These checks do not establish stability for every game or full backing coverage.
 - Adds transaction, native shim, hook lifecycle and controller failure tests, and exposes DATA ownership,
   constructor and gate state in `/status`. Quit refuses while an owned DATA transaction is active.
 

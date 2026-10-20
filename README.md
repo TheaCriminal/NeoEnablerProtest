@@ -15,7 +15,7 @@ when one of its enabled patches needs it; every other game starts as usual.
 
 This experimental build uses the no-HV 8 GiB DATA path on firmware 13.20 and 13.60.
 See [validation and limitations](docs/8GB-NO-HV-1360.md): 13.20 has a Bloodborne gameplay and restoration test;
-13.60 has offline validation and still needs a console test.
+13.60 has one community report of Bloodborne 4K gameplay with 8 GiB enabled.
 
 ## What you need
 
@@ -40,8 +40,7 @@ See [validation and limitations](docs/8GB-NO-HV-1360.md): 13.20 has a Bloodborne
 The **8 GiB PS4 Pro memory budget** follows patches marked "8 GiB" in the panel.
 This experimental build requires:
 
-- **Firmware 13.20** (Bloodborne gameplay and automatic restoration checked) or **13.60** (ported and checked
-  against local dumps; **not tested on a 13.60 console**).
+- **Firmware 13.20** (Bloodborne gameplay and automatic restoration checked) or **13.60** (offline validated; **one community report** of Bloodborne 4K gameplay with 8 GiB enabled).
 - A running NeoEnabler manager and the validated ShellCore launch hook. The DATA path does **not** require an HV
   unlock and does not read or patch kernel TEXT.
 

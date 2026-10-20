@@ -191,15 +191,11 @@ static char patches_message[256] = "Not checked yet";
 
 #define SETTINGS_PATH "/data/neo-settings"
 
-/* 8 GiB is offered only on firmwares with a verified budget layout (mb_layouts): 13.20 tested, 13.60 pending testing. */
-static uint32_t fw_raw_version(void) {
-    uint32_t v = 0; size_t n = sizeof(v);
-    sysctlbyname("machdep.upd_version", &v, &n, NULL, 0);
-    return v;
-}
+/* Firmware support is independent of a running game or an active budget. */
+#include "firmware_version.h"
 static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != NULL; }
-static int memory_untested(void) { return fw_raw_version() == 0x13600000; }
-/* 8 GiB can be used: supported firmware and kernel code access confirmed (hypervisor exploit enabled). */
+static int memory_community_report(void) { return fw_raw_version() == 0x13600000; }
+/* Availability also requires a ready memory backend; an idle game is not required. */
 static int memory_available(void) { mb_snapshot m; return memory_supported() && !memory_check(&m); }
 /* GPU clock page and boost: the MP1 driver answering a clock read. */
 static int gpu_available(void) { unsigned mhz; return gpu_backend_supported() && !gpu_backend_read(&mhz); }
@@ -530,8 +526,8 @@ static void serve_page(int fd, const char *msg) {
               st == HOOK_ON && running_pro == 1 ? "on" : "off",
               st != HOOK_ON ? state_text(st) : running_pro == 1 ? "enabled" : running_pro == 0 ? "disabled" : "ready",
               memory.state == MB_8GIB ? "on" : "off",
-              memory.state == MB_8GIB ? "enabled" : memory.state == MB_UNKNOWN ? (mem_ok ? "unavailable" : "not supported") : "disabled",
-              memory_untested() ? "<br><small>Firmware 13.60: 8 GiB pending testing, please report results</small>" : "",
+              memory.state == MB_8GIB ? "enabled" : !fw_raw_version() ? "firmware unavailable" : !memory_supported() ? "not supported" : !mem_ok ? "unavailable" : "ready",
+              memory_community_report() ? "<br><small>Firmware 13.60: Bloodborne 4K with 8 GiB reported working; more test reports welcome</small>" : "",
               running, patches_esc,
               !force_neo, force_neo ? "on" : "off", force_neo ? "on" : "off", force_neo ? "Turn off" : "Turn on",
               !force_8gib, force_8gib && mem_ok ? "on" : "off",

@@ -38,7 +38,8 @@ Those raw files and Sony binaries are not release assets.
 ## Firmware 13.60
 
 Implemented and validated offline against the supplied ELF and kernel captures.
-No 13.60 console test has been performed. See [8GB-NO-HV-1360.md](8GB-NO-HV-1360.md)
+One community report now confirms Bloodborne Native 4K gameplay with 8 GiB enabled in the panel.
+Raw logs, a full backing test and post-close restoration verification were not supplied for that report. See [8GB-NO-HV-1360.md](8GB-NO-HV-1360.md)
 and [13.60-INPUT-VALIDATION.json](13.60-INPUT-VALIDATION.json).
 
 ## Local checks
@@ -49,3 +50,18 @@ and controller sequencing/recovery, including ASan/UBSan. Native shim ABI,
 barrier, expiration, stale commands and contention tests pass, including a build
 with ordinary host tools when the PS5 SDK is absent. Existing project tests are
 also run before publication.
+
+## Updated build: idle label and firmware identity
+
+Updated ELF SHA256: `b77bcd4a70bb0895906d781cefe42ec0c6426bc493fd54d4888c22fe2e1d0ccd`.
+The maintainer tested this exact binary on 13.20 and confirmed the panel showed
+`ready` without a running game. The hook installed with rc=0, gate/dirty/owned
+were zero, and recovery was not blocked. Evidence is retained locally under
+`build/label-fix/console-test/`.
+
+The actual firmware reader now caches only a complete successful sysctl result;
+a later failed read cannot replace a recognized version with zero. GCC and Clang
+ASan/UBSan regression tests cover initial failures, short responses, recovery
+and stable identity across idle/gameplay. The panel distinguishes `ready`,
+`enabled`, `unavailable`, `firmware unavailable` and `not supported`.
+The memory transaction, firmware-specific offsets and mount hook are unchanged.
