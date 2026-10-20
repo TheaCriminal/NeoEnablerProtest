@@ -135,6 +135,33 @@ int main(int argc, char **argv) {
     assert(gp_same_resolution("A - 1440p (PS4 Pro mode)", "1440p (PS4 Pro mode, x)") && !gp_same_resolution("A - 1440p (PS4 Pro mode)", "B - 1800p (PS4 Pro mode)"));
     s = settings_read(&sl); assert(gp_setting(s, sl, c[1].hash) == 1 && !gp_setting(s, sl, c[0].hash)); free(s);
     free(c);
+
+    /* 8 GiB in a collection: the budget is set when eboot.bin starts, so an 8 GiB entry of another executable brings
+       the 8 GiB eboot.bin entry, replacing one without 8 GiB; entries without 8 GiB keep picking one without it. */
+    const char *col8 = "<Patch>\n"
+        "<Metadata Title=\"C\" Name=\"4K (PS4 Pro mode)\" NeoRequires=\"pro\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C\" Name=\"4K (PS4 Pro mode, requires 8 GiB enabled)\" NeoRequires=\"pro,8gib\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C2\" Name=\"Game 2 - 4K (PS4 Pro mode)\" NeoRequires=\"pro\" AppVer=\"01.00\" AppElf=\"game2.elf\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C2\" Name=\"Game 2 - 4K (PS4 Pro mode, requires 8 GiB enabled)\" NeoRequires=\"pro,8gib\" AppVer=\"01.00\" AppElf=\"game2.elf\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C2\" Name=\"Game 2 - 1440p (PS4 Pro mode, requires 8 GiB enabled)\" NeoRequires=\"pro,8gib\" AppVer=\"01.00\" AppElf=\"game2.elf\"><PatchList/></Metadata>\n</Patch>\n";
+    put(PS_DIR "/col8.xml", col8, strlen(col8));
+    install_game("CUSA99997", "C", "01.00", PS_DIR, "col8.xml");
+    gp_patch *e = game_patches("CUSA99997", "01.00", &nc);
+    assert(nc == 5 && !e[0].needs_8gib && e[1].needs_8gib && e[3].needs_8gib);
+    assert(!game_set_patch("CUSA99997", e[2].hash, 1, 1, msg, sizeof msg));            /* no 8 GiB: eboot.bin without */
+    s = settings_read(&sl); assert(gp_setting(s, sl, e[0].hash) == 1 && !gp_setting(s, sl, e[1].hash)); free(s);
+    assert(!game_set_patch("CUSA99997", e[3].hash, 1, 1, msg, sizeof msg) && strstr(msg, "C2 needs 8 GiB from the start of the collection"));
+    s = settings_read(&sl);                                                            /* upgraded, Game 2 switched */
+    assert(!gp_setting(s, sl, e[0].hash) && gp_setting(s, sl, e[1].hash) == 1 && !gp_setting(s, sl, e[2].hash) && gp_setting(s, sl, e[3].hash) == 1); free(s);
+    assert(!game_set_patch("CUSA99997", e[4].hash, 1, 1, msg, sizeof msg) && !strstr(msg, "enabled instead"));   /* already 8 GiB */
+    assert(!game_set_patch("CUSA99997", e[2].hash, 1, 1, msg, sizeof msg));            /* back without 8 GiB: eboot.bin kept */
+    s = settings_read(&sl); assert(gp_setting(s, sl, e[1].hash) == 1 && gp_setting(s, sl, e[2].hash) == 1); free(s);
+    assert(!game_set_patch("CUSA99997", e[1].hash, 0, 1, msg, sizeof msg));            /* last eboot.bin off: all off */
+    assert(!game_set_patch("CUSA99997", e[4].hash, 1, 1, msg, sizeof msg));            /* 8 GiB first, other resolution */
+    s = settings_read(&sl); assert(!gp_setting(s, sl, e[0].hash) && gp_setting(s, sl, e[1].hash) == 1); free(s);
+    assert(!game_set_patch("CUSA99997", e[1].hash, 0, 1, msg, sizeof msg));
+    assert(game_set_patch("CUSA99997", e[3].hash, 1, 0, msg, sizeof msg) == -1);       /* refused without 8 GiB */
+    free(e);
     puts("PASS 8 GiB patches turned off while 8 GiB is unavailable, other patches kept, one resolution per executable");
     return 0;
 }

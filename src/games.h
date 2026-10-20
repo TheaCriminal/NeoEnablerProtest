@@ -131,8 +131,9 @@ static int game_flip(char **out, size_t *ol, const char *tid, const gp_patch *p,
 /* Enables or disables one patch of a game. Enabling a NeoEnabler resolution entry disables the other NeoEnabler
    resolution entries of that game for the same AppElf, so at most one is on per executable (a collection gets one per
    game it contains); other patches are not affected. In a collection the title ID starts in eboot.bin, which sets
-   PS4 Pro mode: enabling a resolution of another executable also enables the eboot.bin resolution of the same
-   resolution (gp_same_resolution; the first one listed when none matches) when no eboot.bin resolution is on, and disabling the last eboot.bin
+   PS4 Pro mode: enabling a resolution of another executable also enables the eboot.bin resolution with the same 8 GiB
+   need and resolution (gp_same_resolution; the first one listed when none matches) when no eboot.bin resolution is on,
+   or when the entry needs 8 GiB and the eboot.bin one does not (it is replaced), and disabling the last eboot.bin
    resolution also disables the resolutions of the other executables. Refuses hashes that are not an entry of the
    game's installed version, and 8 GiB patches when 8 GiB is unavailable (unsupported firmware or no hypervisor
    exploit). Returns 0, or -1 with a reason in msg. */
@@ -151,20 +152,33 @@ static int game_set_patch(const char *tid, const char *hash, int on, int memory_
         rc = game_flip(&out, &ol, tid, &p[i], 0, "one resolution per executable");
         others++;
     }
-    int main_on = 0;
-    for (int i = 0; i < n; i++) main_on |= p[i].resolution && gp_main_elf(&p[i]) && gp_setting(out, ol, p[i].hash) == 1;
-    if (!rc && on && main_i >= 0 && !main_on) {
-        /* the eboot.bin resolution of the same name, else the first one listed; never an 8 GiB one without 8 GiB */
-        int pick = -1;
+    int main_on = 0, main_8gib = 0;
+    for (int i = 0; i < n; i++)
+        if (p[i].resolution && gp_main_elf(&p[i]) && gp_setting(out, ol, p[i].hash) == 1) { main_on = 1; main_8gib |= p[i].needs_8gib; }
+    /* the other executables start through LoadExec with the budget of the eboot.bin launch: an 8 GiB entry of one of
+       them replaces an eboot.bin resolution that does not need 8 GiB by one that does */
+    int upgrade = on && main_i >= 0 && main_on && hit->needs_8gib && !main_8gib;
+    if (!rc && on && main_i >= 0 && (!main_on || upgrade)) {
+        /* the eboot.bin resolution with the same 8 GiB need, then the same name, else the first one listed; never an
+           8 GiB one without 8 GiB, and only an 8 GiB one for an upgrade */
+        int pick = -1, best = -1;
         for (int i = 0; i < n; i++) {
-            if (!p[i].resolution || !gp_main_elf(&p[i]) || (p[i].needs_8gib && !memory_ok)) continue;
-            if (gp_same_resolution(p[i].name, hit->name)) { pick = i; break; }
-            if (pick < 0) pick = i;
+            if (!p[i].resolution || !gp_main_elf(&p[i]) || (p[i].needs_8gib && !memory_ok) || (upgrade && !p[i].needs_8gib)) continue;
+            int score = 2 * (!p[i].needs_8gib == !hit->needs_8gib) + gp_same_resolution(p[i].name, hit->name);
+            if (score > best) { best = score; pick = i; }
         }
-        if (pick < 0) rc = -2;
-        else if (!(rc = game_flip(&out, &ol, tid, &p[pick], 1, "the collection starts in eboot.bin")))
-            snprintf(extra, sizeof extra, ". A PS4 Pro patch for %s is required for %s, so %s was enabled too",
-                     p[pick].title, hit->title, p[pick].name);
+        if (pick < 0) rc = upgrade ? 0 : -2;
+        else {
+            for (int i = 0; !rc && upgrade && i < n; i++)
+                if (i != pick && p[i].resolution && gp_main_elf(&p[i]) && gp_setting(out, ol, p[i].hash) == 1)
+                    rc = game_flip(&out, &ol, tid, &p[i], 0, "replaced by an 8 GiB eboot.bin resolution");
+            if (!rc && !(rc = game_flip(&out, &ol, tid, &p[pick], 1, upgrade ? "8 GiB is set when eboot.bin starts" : "the collection starts in eboot.bin"))) {
+                if (upgrade) snprintf(extra, sizeof extra, ". %s needs 8 GiB from the start of the collection, so %s was enabled instead",
+                                      hit->title, p[pick].name);
+                else snprintf(extra, sizeof extra, ". A PS4 Pro patch for %s is required for %s, so %s was enabled too",
+                              p[pick].title, hit->title, p[pick].name);
+            }
+        }
     }
     if (!rc && !on && hit->resolution && gp_main_elf(hit) && !main_on) {
         int dropped = 0;
