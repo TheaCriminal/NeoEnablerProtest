@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.5-experimental
+
+- GPU boost is no longer limited to firmware 13.20. It is offered on every firmware where the `/dev/mp1` driver
+  answers a clock read. Only 13.20 is tested: on other firmwares the clock request may fail or behave differently.
+
 ## 0.3.4
 
 - The launch hook now finds the `ATTRIBUTE` offset in the app info at each launch instead of trusting the

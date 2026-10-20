@@ -17,8 +17,7 @@ static int gpu_target_valid(unsigned mhz){return mhz>=GPU_MIN_MHZ&&mhz<=GPU_MAX_
 #include <sys/ioctl.h>
 #include <sys/sysctl.h>
 static int gpu_backend_supported(void){
- uint32_t fw=0;size_t n=4;
- return !sysctlbyname("machdep.upd_version",&fw,&n,NULL,0)&&n==4&&fw==0x13200000;
+ return 1;
 }
 static int gpu_backend_read(unsigned*out){
  if(!gpu_backend_supported())return -1;
@@ -70,7 +69,7 @@ static void gpu_owner_changed(int pid){
 }
 static int gpu_poll(int pid){
  if(!gpu_backend_supported()){
-  gpu.reading_valid=0;snprintf(gpu.message,sizeof gpu.message,"GPU clock control supports firmware 13.20 only");return -1;
+  gpu.reading_valid=0;snprintf(gpu.message,sizeof gpu.message,"GPU clock control unavailable");return -1;
  }
  gpu_owner_changed(pid);
  if(gpu.restore_pending)return -3;

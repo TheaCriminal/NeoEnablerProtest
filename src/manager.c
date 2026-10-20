@@ -34,7 +34,7 @@
 #include "log_mirror.h"
 
 #define PORT 8765
-#define VERSION "NeoEnabler 0.3.4"
+#define VERSION "NeoEnabler 0.3.5-experimental"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -200,7 +200,7 @@ static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != N
 static int memory_untested(void) { return fw_raw_version() == 0x13600000; }
 /* 8 GiB can be used: supported firmware and kernel code access confirmed (hypervisor exploit enabled). */
 static int memory_available(void) { mb_snapshot m; return memory_supported() && !mb_check(&m); }
-/* GPU clock page and boost: firmware with the MP1 backend (13.20) and the driver answering a clock read. */
+/* GPU clock page and boost: the MP1 driver answering a clock read. */
 static int gpu_available(void) { unsigned mhz; return gpu_backend_supported() && !gpu_backend_read(&mhz); }
 
 /* Advanced overrides: Pro mode for every PS4 game, and 8 GiB kept on. */
@@ -602,7 +602,7 @@ static void serve_gpu_page(int fd, const char *msg) {
         hb.p ? hb.p : "", msg ? "<p class=msg>" : "", msg ? msg : "", msg ? "</p>" : "", current,
         gpu.applied && !gpu.blocked ? "on" : gpu.enabled ? "unk" : "off", gpu_state_text(), gpu.message, previous,
         gpu.target, GPU_MIN_MHZ, GPU_MAX_MHZ, gpu.target, dis, dis, dis,
-        gpu_backend_supported() ? "" : "<p>GPU clock control is available on firmware 13.20 only.</p>");
+        gpu_backend_supported() ? "" : "<p>GPU clock control is unavailable.</p>");
     free(hb.p);
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
 }
