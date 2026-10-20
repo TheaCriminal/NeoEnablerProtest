@@ -103,53 +103,32 @@ checksum attached.
 - Log: every action and its result go to the kernel log with the prefix `[NeoEnabler]`, followed by a `state:` line
   (NEO hook, v4 hook, actual and requested 8 GiB state). Show Logs, Download Logs and Save Logs give a report, NeoEnabler's own log (`/data/neo-enabler/neo.log`) and the kernel log it keeps (`kernel.log`, polled four times a second); Save Logs writes it to `/data/neo-logs.txt`.
 
-## 8 GiB memory budget (0.2.0)
+## Experimental no-HV 8 GiB budget (0.3.5)
 
-`src/neo_budget.h` supports only the captured firmware13.20 budget constructor. Other supported NEO firmwares
-keep normal launch-hook functionality and report the memory adjustment unavailable. The actual firmware is
-read from `machdep.upd_version`, not the process SDK version.
+The manager selects the firmware-specific DATA backend for 13.20 and 13.60. It reads the actual firmware from
+`machdep.upd_version`, validates the ShellCore BeginAppMount2 function, exact call, import stub, GOT target and
+libkernel wrapper, and installs the retained shim in a fresh padding reservation. Userland pages must already
+be RWX. Installation and detach confirm ShellCore's stopped state using the bounded KERN_PROC_PROC enumeration;
+partial call writes are rolled back before resumption. Retained code is never reclaimed or reused.
 
-Detection is capability-based and does not read a Byepervisor cookie or try to execute a hypervisor exploit.
-Before reading kernel instructions, it reads ordinary DATA globals for the direct-map indices and kernel pmap,
-then walks the target page's guest page tables. All levels must be present, writable and free of XOTEXT. A
-missing/unreadable mapping blocks the code read. Page-table discovery uses the13.20 layout documented in
-the local Byepervisor-Reborn sources; the traversal does not change any PTE or disable protections.
+After a successful target mount the POST/CLAIM/HELD exchange establishes the pre-constructor barrier. The DATA
+transaction rechecks container identity and eligibility before changing extension byte+3 from zero to `0xc0`.
+This is a 3 GiB increment for the reference stock configuration, not an 8 GiB increment. The global stays owned
+for the game's lifetime, with the gate retained against another mount. The constructor must report
+`field38=0x24c000000`; the running game separately reports its budget via `kern.app.dmem_size_pid`.
 
-Guest permission bits alone **do not attest that nested-page protections or the entire hypervisor are disabled**.
-The subsequent bounded instruction reads and verified patch write establish the actual capability required here.
-Methods must expose the relevant kernel page for read/write through the SDK primitives; merely having arbitrary
-kernel DATA read/write is insufficient. Read/write failure leaves the feature unavailable or failed, rather than
-claiming that an exploit succeeded. The new detection path still requires live testing on a locked console and
-with other unlock methods; only local simulated protection/error cases have been tested for0.2.0.
+After confirmed teardown, no game process and no active shim callback, rollback restores the original global
+before clearing dirty and releasing the gate. A deadline or changed identity does not authorize an uncertain
+rollback: the controller retains ownership, blocks further mutation and reports that a reboot is required.
+Quiescent teardown can still recover the global. Quit refuses while the transaction is owned or recovery is blocked.
+All SDK reads/writes and mailbox polling run in the HTTP loop, without a concurrent kernel-pipe worker.
 
-The patch replaces12bytes at TEXT+0x9f9076 with `movabs r15,0x200000000; jmp short TEXT+0x9f90b8`.
-The existing relay jumps to the original continuation at+0x9f92b6. Guards verify the baseline at+0x9f9044,
-relay, continuation and exact original/known5.5GiB/8GiB selection. Application and restoration require no
-`eboot.bin` processes and empty application memory areas1..3. These checks are conservative snapshots, not a
-lock against an external launch racing the operation; close games and avoid launching during a change.
-Writes are read back; failures attempt rollback, and an unverified rollback blocks all further memory actions
-for that manager instance and instructs reboot. The manager never patches an unknown sequence or a live budget.
-Restoration selects the captured original5.25GiB NEO configuration.
+The older TEXT implementation and its tests remain as legacy code for the non-DATA selection. It is not
+probed as a fallback after a supported DATA hook fails. A reboot is required before switching from an old
+TEXT memory payload to this experiment, since DATA identity cannot attest to untouched protected code.
 
-`src/memory_control.h` defaults to automatic8GiB at manager startup. It rechecks prerequisites roughly every
-two seconds while the panel runs, in the same HTTP thread: the SDK's shared kernel pipe state must not be used
-concurrently by a new worker thread. No game is paused or remotely called. A requested change waits for games
-to close. Manual disable changes the target to the original budget and keeps it there; it does not touch the
-launch hook. Manual enable resumes automatic8GiB. NEO Enable/Disable do not touch the memory target or patch.
-These preferences last for the manager session; a new manager starts with the startup defaults. Quit stops
-polling without restoring either patch. Reboot removes both patches.
-
-The web status distinguishes `memory_8gib` (observed constructor selection) from `memory_auto` (requested
-policy). Running games show `kern.app.dmem_size_pid`;8192MiB is their reported launch budget, not memory use
-or an allocation/access test. The pre-release8GiB experiment was measured on Driveclub13.20; the user also
-reported successful gameplay with a patch that uses memory. This is distinct from a completed instrumented GPU
-probe: the separate native-allocation probes were refused by mmap in the game, including CPU-only mapping.
-
-Run host tests with `cc -O2 -Wall -Wextra -Werror tests/budget_test.c -o /tmp/neo-budget-test`, then execute
-`/tmp/neo-budget-test`. They use simulated kernel memory, never a console. Tests cover page access before code
-reads,1GiB/2MiB/4KiB mappings, unknown layouts, games/areas, readback errors, rollback, automatic/deferred/manual
-policy and permanent blocking after failed recovery. CI runs them before building. They do not validate a live
-hypervisor, the new detector on hardware, allocation capacity or GPU behavior.
+See [8GB-NO-HV-1360.md](8GB-NO-HV-1360.md) for offsets, input identities and limits and
+[VALIDATION-0.3.5-experimental.md](VALIDATION-0.3.5-experimental.md) for the console regression.
 
 ## Game patches
 

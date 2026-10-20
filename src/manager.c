@@ -27,6 +27,7 @@
 #include "legacy_v4.h"
 #include "icon_data.h"
 #include "panel_data.h"
+static void log_line(const char *fmt, ...);
 #include "memory_control.h"
 #include "gpu_control.h"
 #include "settings.h"
@@ -199,7 +200,7 @@ static uint32_t fw_raw_version(void) {
 static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != NULL; }
 static int memory_untested(void) { return fw_raw_version() == 0x13600000; }
 /* 8 GiB can be used: supported firmware and kernel code access confirmed (hypervisor exploit enabled). */
-static int memory_available(void) { mb_snapshot m; return memory_supported() && !mb_check(&m); }
+static int memory_available(void) { mb_snapshot m; return memory_supported() && !memory_check(&m); }
 /* GPU clock page and boost: the MP1 driver answering a clock read. */
 static int gpu_available(void) { unsigned mhz; return gpu_backend_supported() && !gpu_backend_read(&mhz); }
 
@@ -502,7 +503,7 @@ static void serve_page(int fd, const char *msg) {
 
     shell_t s; int st = hook_state(&s);
     if (st == HOOK_OFF && v4_active(&s)) st = HOOK_ON;
-    mb_snapshot memory; mb_check(&memory);
+    mb_snapshot memory; memory_check(&memory);
     char running[1024]; games_text(running, sizeof(running), 1);
     char patches_esc[768]; html_escape(patches_message, patches_esc, sizeof(patches_esc));
     sb_printf(&b, "</section><aside>"
@@ -726,7 +727,7 @@ static int do_set(int enable, char *msg, size_t cap, int show) {
 static void log_state(void) {
     shell_t s; int st = hook_state(&s);
     if (st == HOOK_BAD_CAVE) { char d[400]; bad_cave_text(&s, d, sizeof(d)); log_line("%s", d); }
-    mb_snapshot m; mb_check(&m);
+    mb_snapshot m; memory_check(&m);
     log_line("state: NEO hook %s, v4 hook %s, 8 GiB %s (requested %s): %s", state_text(st),
              v4_active(&s) ? "present" : "absent",
              m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
@@ -921,7 +922,7 @@ static void build_report(sbuf *b) {
     sb_printf(b, "==== Report ====\n%s\nfirmware %x.%02x\nconsole time %s (UTC, may be wrong; each log line also has +seconds since the manager started)\n"
               "manager running since %lds\nhook: %s\n", VERSION, fw >> 8, fw & 0xff, now, (long)(mono.tv_sec - manager_start.tv_sec), state_text(st));
     if (st == HOOK_BAD_CAVE) { char d[400]; bad_cave_text(&s, d, sizeof d); sb_printf(b, "%s\n", d); }
-    mb_snapshot m; mb_check(&m);
+    mb_snapshot m; memory_check(&m);
     sb_printf(b, "8 GiB: %s (requested %s): %s\n", m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
               memory_target ? "on" : "off", m.detail);
     sb_printf(b, "GPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", gpu_state_text(), gpu.target,
@@ -1056,7 +1057,7 @@ static void drop_8gib_request(void) {
     if (!force_8gib || memory_available()) return;
     force_8gib = 0;
     int saved = !settings_save();
-    log_line("Keep 8 GiB on: cleared, 8 GiB is not available (needs firmware 13.20 or 13.60 with the hypervisor exploit)%s",
+    log_line("Keep 8 GiB on: cleared, 8 GiB is not available (needs firmware 13.20 or 13.60 with a validated memory launch hook)%s",
              saved ? "" : " (settings not saved)");
 }
 
@@ -1152,7 +1153,7 @@ static void launch_poll(void) {
         if (!ok && time(NULL) - pending.since < LAUNCH_WAIT_S - 1) return;   /* e.g. the previous game still closing */
         if (!ok) {
             mb_snapshot m;   /* keep the budget as it is instead of switching it later, after this game */
-            if (!mb_check(&m)) memory_target = m.state == MB_8GIB;
+            if (!memory_check(&m)) memory_target = m.state == MB_8GIB;
             log_line("launch: %s: memory not switched (%s)", pending.tid, memory_message);
         }
         else if (want8 && !force_8gib) {
@@ -1175,6 +1176,12 @@ static void launch_tick(void) {
     auto8.active = 0;
     memory_request(0);
     log_line("8 GiB: %s closed: %s", auto8.tid, memory_message);
+}
+
+static int memory_launch_wants(const char *tid) {
+    if (!game_tid(tid)) return 0;
+    int needs = game_needs(tid);
+    return force_8gib || (needs & NEEDS_8GIB); /* actual Pro mode is checked in HELD */
 }
 
 /* Value of key in an x-www-form-urlencoded body, letters, digits and '.' only. */
@@ -1224,6 +1231,12 @@ int main(void) {
     launch_attach(1);
     log_line("launch: questions %s (TSC %llu Hz, wait %d s)", live_ok ? "enabled" : "unavailable, hook not installed",
              (unsigned long long)tsc_hz, LAUNCH_WAIT_S);
+    memory_init(fw_raw_version(), tsc_hz * 3);
+    memory_wants8 = memory_launch_wants;
+    if (bm.attached && !memory_data_blocked && bm_field(MS_ENABLED, 1)) {
+        memory_data_blocked = 1;
+        log_line("No-HV mount hook enable failed; reboot required");
+    }
     drop_8gib_request();
     if (force_8gib) memory_request(1);
     int memory_previous_result=memory_poll();
@@ -1239,6 +1252,7 @@ int main(void) {
     time_t last_memory_poll=time(NULL);
     long long last_mirror_ms=0;
     for (;;) {
+        memory_data_tick();
         launch_poll();
         binary_tick();
         time_t now=time(NULL);
@@ -1301,7 +1315,7 @@ int main(void) {
                 force_neo = value; launch_attach(1);
                 amsg = value ? "Pro mode for every PS4 game: on" : "Pro mode for every PS4 game: off (follows the game patches)";
             } else if (value && !memory_available()) {
-                amsg = "8 GiB needs firmware 13.20 or 13.60 with the hypervisor exploit enabled; nothing changed";
+                amsg = "8 GiB needs firmware 13.20 or 13.60 with a validated memory launch hook enabled; nothing changed";
             } else {
                 force_8gib = value;
                 if (value) memory_request(1); else if (!auto8.active) memory_request(0);
@@ -1334,6 +1348,7 @@ int main(void) {
             notify(smsg);
             if (!strcmp(form_body, "view=gpu") && gpu_available()) serve_gpu_page(fd, smsg); else serve_page(fd, smsg);
         } else if (post && !strcmp(path, "/quit")) {
+            if (memory_shutdown()) { reply(fd, "409 Conflict", "text/plain", "Close the game and wait for DATA restoration before quitting; check memory status\n"); close(fd); continue; }
             if (gpu_request(0, gpu.target, gpu_game_pid())) {
                 notify(gpu.message); serve_gpu_page(fd, "Clock restoration failed. Retry Disable before quitting."); close(fd); continue;
             }
@@ -1348,7 +1363,7 @@ int main(void) {
         } else if (!strcmp(path, "/status")) {
             shell_t s; int st = hook_state(&s);
             char games[1024]; games_text(games, sizeof(games), 0);
-            char body[3200];mb_snapshot memory;mb_check(&memory);gpu_refresh();
+            char body[3200];mb_snapshot memory;memory_check(&memory);gpu_refresh();
             snprintf(body, sizeof(body), "build: " VERSION "\nmemory_8gib: %s\nmemory_requested: %s\nmemory_detail: %s\nmemory_last_result: %s\nhook: %s\nv4 hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
                      memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled",
                      memory_target?"enabled":"disabled",memory.detail,memory_message,
@@ -1364,6 +1379,14 @@ int main(void) {
                      "attr_detected: %s 0x%x\n",
                      force_neo, force_8gib, live_ok ? "enabled" : "unavailable", last_seq, auto8.active ? auto8.tid : "none",
                      last_attr.tid[0] ? last_attr.tid : "none", last_attr.offset);
+            used = strlen(body);
+            bm_mailbox mail = {0}; int mail_ok = !bm_mail(&mail);
+            snprintf(body + used, sizeof body - used,
+                     "memory_backend: %s\nmount_hook: %s\nmount_seq: %u\nmount_phase: %u\nmount_gate: %u\nmount_dirty: %u\n"
+                     "data_owned: %d\ndata_restored: %d\ndata_constructor: %d\ndata_blocked: %d\n",
+                     memory_data_mode ? "DATA (no HV)" : "TEXT (HV required)", bm.attached ? "installed" : "absent",
+                     mail_ok ? mail.seq : 0, mail_ok ? mail.phase : 0, mail_ok ? mail.gate : 0, mail_ok ? mail.dirty : 0,
+                     memory_transaction.owned, memory_transaction.restored, memory_constructor, memory_data_blocked);
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/panel.js")) {
             char script[sizeof panel_js + 1];

@@ -2,6 +2,15 @@
 
 ## 0.3.5-experimental
 
+- Integrates the existing 13.20 no-HV DATA transaction into the manager and ports the launch profile to 13.60.
+  Kernel TEXT is not read or patched by this path. The controller confirms POST/CLAIM/HELD before applying the
+  extension and retains launch serialization until the global is restored after game teardown.
+- Bloodborne on 13.20 reached gameplay with a reported 8192 MiB DMEM budget; the constructor value and automatic
+  restoration were verified; the maintainer also confirmed Bloodborne gameplay at native 4K. 13.60 is implemented and checked offline against its ShellCore/libkernel dumps,
+  but still needs hardware testing. These checks do not establish stability for every game or full backing coverage.
+- Adds transaction, native shim, hook lifecycle and controller failure tests, and exposes DATA ownership,
+  constructor and gate state in `/status`. Quit refuses while an owned DATA transaction is active.
+
 - GPU boost is no longer limited to firmware 13.20. It is offered on every firmware where the `/dev/mp1` driver
   answers a clock read. Only 13.20 is tested: on other firmwares the clock request may fail or behave differently.
 

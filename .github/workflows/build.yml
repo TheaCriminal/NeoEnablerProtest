@@ -61,6 +61,13 @@ jobs:
         run: |
           cc -O2 -Wall -Wextra -Werror tests/budget_test.c -o /tmp/neo-budget-test
           /tmp/neo-budget-test
+          cc -O2 -Wall -Wextra -Werror tests/budget_data_test.c -o /tmp/neo-budget-data-test
+          /tmp/neo-budget-data-test
+          cc -O2 -Wall -Wextra -Werror -Wno-unused-function tests/budget_mount_control_test.c -o /tmp/neo-budget-control-test
+          /tmp/neo-budget-control-test
+          bash tools/test_budget_shim.sh
+          cc -O2 -Wall -Wextra -Werror -Ibuild/budget-shim-tests tests/budget_mount_hook_test.c -o /tmp/neo-budget-hook-test
+          /tmp/neo-budget-hook-test
 
       - name: Test firmware diagnostic toolkit
         run: python3 -m unittest discover -s tests -p 'test_firmware_report.py' -v

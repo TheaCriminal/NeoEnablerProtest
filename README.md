@@ -13,6 +13,10 @@ so NeoEnabler is only useful for the games listed below.
 You pick the patches in the NeoEnabler panel. A game starts in Pro mode, and gets the 8 GiB memory budget, only
 when one of its enabled patches needs it; every other game starts as usual.
 
+This experimental build uses the no-HV 8 GiB DATA path on firmware 13.20 and 13.60.
+See [validation and limitations](docs/8GB-NO-HV-1360.md): 13.20 has a Bloodborne gameplay and restoration test;
+13.60 has offline validation and still needs a console test.
+
 ## What you need
 
 - A jailbroken PS5 on firmware 4.00 to 13.60 (tested on 13.20) with an ELF loader, such as etaHEN or elfldr.
@@ -33,17 +37,17 @@ when one of its enabled patches needs it; every other game starts as usual.
    repository and adds them to the ps-patch-system files (see [Game patches](#game-patches)).
 4. Open the panel and tick the patches you want for each game.
 
-> [!WARNING]
-> **8 GiB patches are on hold.** I am not working on new 8 GiB mode patches for now, because the current
-> hypervisor method on firmware 13.20 is unstable. The existing 8 GiB entries stay available.
+The **8 GiB PS4 Pro memory budget** follows patches marked "8 GiB" in the panel.
+This experimental build requires:
 
-The **8 GiB PS4 Pro memory budget** is used only by patches that need it (marked "8 GiB" in the panel). It is
-supported **only** when both conditions are met:
+- **Firmware 13.20** (Bloodborne gameplay and automatic restoration checked) or **13.60** (ported and checked
+  against local dumps; **not tested on a 13.60 console**).
+- A running NeoEnabler manager and the validated ShellCore launch hook. The DATA path does **not** require an HV
+  unlock and does not read or patch kernel TEXT.
 
-- **Firmware 13.20** (tested) or **13.60** (offsets found, **needs testing**).
-- **Hypervisor exploit enabled** (Byepervisor or another method that allows reading and writing the kernel code
-  page). NeoEnabler checks that access without relying on exploit-specific markers and does not unlock the
-  hypervisor itself.
+Start from a reboot and load the jailbreak and ps-patch-system before this build. Do not mix it with an older
+8 GiB memory payload or an existing kernel TEXT memory patch in the same boot. Close the game before quitting
+the manager. If a guard refuses a launch or reports a recovery failure, read the memory status before retrying.
 
 When either condition is missing, patches that need 8 GiB are greyed out and cannot be enabled. Everything else
 works without 8 GiB.
