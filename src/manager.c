@@ -1052,6 +1052,28 @@ static int patches_drop_8gib(const char *only_tid) {
     return dropped;
 }
 
+/* A launch that wanted 8 GiB was released without it: its 8 GiB patches are turned off before ps-patch-system reads
+   the settings for that game (it does when the game process starts, after the mount). */
+static void memory_launch_refused(const char *tid) {
+    if (!game_tid(tid)) return;
+    int dropped = games_drop_8gib(tid, "8 GiB was not applied to this launch");
+    if (dropped) {
+        char note[200];
+        snprintf(note, sizeof note, "8 GiB could not be applied to %s: %d patch%s that need it turned off", tid, dropped, dropped == 1 ? "" : "es");
+        notify(note);
+    }
+}
+
+/* Patches can also be turned on in the ps-patch-system Patch Manager: when its settings file changes, 8 GiB patches
+   are turned off again while 8 GiB is not available. */
+static void settings_watch(void) {
+    static time_t mtime; static off_t size = -1;
+    struct stat st;
+    if (stat(SETTINGS_XML, &st) || (st.st_mtime == mtime && st.st_size == size)) return;
+    mtime = st.st_mtime; size = st.st_size;
+    patches_drop_8gib(NULL);
+}
+
 /* "Keep 8 GiB on" is a request for the budget. Without 8 GiB (no hypervisor exploit, or an unsupported firmware) there
    is nothing to request: it is cleared and saved, so it does not stay on and come back at the next unlock. */
 static void drop_8gib_request(void) {
@@ -1234,6 +1256,7 @@ int main(void) {
              (unsigned long long)tsc_hz, LAUNCH_WAIT_S);
     memory_init(fw_raw_version(), tsc_hz * 3);
     memory_wants8 = memory_launch_wants;
+    memory_refused8 = memory_launch_refused;
     if (bm.attached && !memory_data_blocked && bm_field(MS_ENABLED, 1)) {
         memory_data_blocked = 1;
         log_line("No-HV mount hook enable failed; reboot required");
@@ -1264,6 +1287,7 @@ int main(void) {
             launch_attach(-1);
             hook_retry();
             launch_tick();
+            settings_watch();
             gpu_tick();
             int memory_result=memory_poll();
             if(memory_result!=memory_previous_result){

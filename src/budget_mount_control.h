@@ -14,6 +14,9 @@ static int memory_data_mode,memory_constructor,memory_data_blocked;
 static uint32_t memory_seq;
 static time_t memory_applied;
 static int (*memory_wants8)(const char*);
+/* A launch that wants 8 GiB is released without it: its 8 GiB patches must be off before ps-patch-system reads them. */
+static void (*memory_refused8)(const char*);
+static void memory_refuse(const char *title){if(memory_refused8)memory_refused8(title);}
 
 static int memory_check(mb_snapshot *s){
  if(!memory_data_mode)return mb_check(s);
@@ -124,7 +127,7 @@ static void memory_data_tick(void){
  int target=m.result>=0&&m.category==0xf000&&m.phase==1&&memory_wants8&&memory_wants8(title);
  if(!target){bm_command(2,m.seq);return;}
  /* Mark dirty BEFORE touching DATA; it also prevents accidental detach. */
- if(bm_command(1,m.seq)){memory_data_blocked=1;return;}
+ if(bm_command(1,m.seq)){memory_data_blocked=1;memory_refuse(title);return;}
  uint32_t seq=m.seq;int held=0;
  for(int i=0;i<10000;i++){
   if(bm_mail(&m))break;
@@ -133,15 +136,16 @@ static void memory_data_tick(void){
   if(m.phase>=4)break;
   usleep(500);
  }
- if(!held){bm_command(2,seq);log_line("8 GiB DATA: HELD not confirmed for %s; no write",title);return;}
+ if(!held){bm_command(2,seq);log_line("8 GiB DATA: HELD not confirmed for %s; no write",title);memory_refuse(title);return;}
  mbd_snapshot s;int rc=mbd_read_snapshot(memory_data,&s);
  if(rc||!mbd_eligible(&s)||s.category!=m.category){
-  bm_command(2,seq);log_line("8 GiB DATA: launch %s refused by snapshot guards (read=%d)",title,rc);return;
+  bm_command(2,seq);log_line("8 GiB DATA: launch %s refused by snapshot guards (read=%d)",title,rc);memory_refuse(title);return;
  }
- if(bm_field(MS_DIRTY,1)){bm_command(2,seq);memory_data_blocked=1;return;}
+ if(bm_field(MS_DIRTY,1)){bm_command(2,seq);memory_data_blocked=1;memory_refuse(title);return;}
  rc=mbd_apply(memory_data,&memory_transaction,&s);
  log_line("8 GiB DATA: launch=%s seq=%u HELD apply=%d owned=%d app=%u",title,seq,rc,memory_transaction.owned,s.app_id);
  if(rc){
+  memory_refuse(title);
   if(rc==MBD_TX_RECOVERY){memory_data_blocked=1;return;}
   bm_field(MS_DIRTY,0);bm_command(2,seq);return;
  }

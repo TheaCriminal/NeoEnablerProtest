@@ -44,11 +44,13 @@ static int mbd_apply(const mbd_layout*l,mbd_transaction*t,const mbd_snapshot*s){
 static int mbd_restore(const mbd_layout*l,mbd_transaction*t){(void)l;event('R');restore_calls++;if(!restore_rc){t->owned=0;t->restored=1;}return restore_rc;}
 #include "../src/budget_mount_control.h"
 static int wants(const char*t){assert(!strcmp(t,"CUSA01111"));return memory_target;}
+static int refused;
+static void refuse(const char*t){assert(!strcmp(t,"CUSA01111"));refused++;}
 static void reset(void){
  memset(&bm,0,sizeof bm);bm.attached=1;memset(&mail,0,sizeof mail);mail.seq=1;mail.phase=1;mail.category=0xf000;memcpy(mail.title,"CUSA01111",10);
  memset(&snap,0,sizeof snap);snap.container=0xffff800000001000ULL;snap.app_id=42;snap.category=0xf000;snap.references=1;snap.profile=1;snap.mode=2;
  memset(&memory_transaction,0,sizeof memory_transaction);memset(&memory_owner,0,sizeof memory_owner);
- memory_data=&layout;memory_data_mode=1;memory_constructor=memory_data_blocked=0;memory_seq=0;memory_target=1;memory_wants8=wants;
+ memory_data=&layout;memory_data_mode=1;memory_constructor=memory_data_blocked=0;memory_seq=0;memory_target=1;memory_wants8=wants;memory_refused8=refuse;refused=0;
  eligible=held=1;apply_rc=restore_rc=apply_calls=restore_calls=mutations=remove_calls=command_fail=0;event_count=0;events[0]=0;
 }
 int main(void){
@@ -56,11 +58,14 @@ int main(void){
  memory_data_tick();assert(apply_calls==1); /* outstanding transaction blocks a second launch */
  snap.flags=0x40;snap.field38=MBD_EXPECTED_STOCK+MBD_DELTA;memory_data_tick();assert(memory_constructor&&!restore_calls);
  snap.references=0;snap.container=0;mail.active=0;memory_data_tick();assert(!strcmp(events,"1DA3Rdg"));assert(!memory_transaction.owned);
- reset();held=0;memory_data_tick();assert(!mutations&&!strcmp(events,"12"));
- reset();eligible=0;memory_data_tick();assert(!mutations&&!strcmp(events,"12"));
- reset();mail.result=-1;memory_data_tick();assert(!mutations&&!strcmp(events,"2"));
- reset();mail.phase=4;memory_data_tick();assert(!mutations&&!strcmp(events,"2"));
- reset();memory_target=0;memory_data_tick();memory_data_tick();assert(!mutations&&!strcmp(events,"2")); /* duplicate sequence */
+ assert(!refused);   /* applied: its 8 GiB patches stay on */
+ /* A launch that wants 8 GiB and is released without it reports the title, so its 8 GiB patches are turned off. */
+ reset();held=0;memory_data_tick();assert(!mutations&&!strcmp(events,"12")&&refused==1);
+ reset();eligible=0;memory_data_tick();assert(!mutations&&!strcmp(events,"12")&&refused==1);
+ reset();apply_rc=2;memory_data_tick();assert(!mutations&&refused==1);
+ reset();mail.result=-1;memory_data_tick();assert(!mutations&&!strcmp(events,"2")&&!refused);
+ reset();mail.phase=4;memory_data_tick();assert(!mutations&&!strcmp(events,"2")&&!refused);
+ reset();memory_target=0;memory_data_tick();memory_data_tick();assert(!mutations&&!strcmp(events,"2")&&!refused); /* duplicate sequence */
  reset();memory_data_tick();snap.app_id++;memory_data_tick();assert(!restore_calls&&memory_data_blocked&&memory_transaction.owned&&mail.gate);
  reset();memory_data_tick();snap.flags=0x40;snap.field38=1;memory_data_tick();assert(!restore_calls&&memory_data_blocked&&memory_transaction.owned&&mail.gate);
  reset();assert(memory_shutdown()==0&&remove_calls==1);
@@ -68,7 +73,7 @@ int main(void){
  reset();mail.gate=1;assert(memory_shutdown()==-1&&!remove_calls);
  reset();memory_data_tick();assert(memory_shutdown()==-1&&!remove_calls);
  reset();memory_data_tick();restore_rc=1;snap.container=0;snap.references=0;mail.active=0;memory_data_tick();assert(memory_data_blocked&&strchr(events,'g')==NULL);
- reset();command_fail=1;memory_data_tick();assert(memory_data_blocked&&!mutations);
+ reset();command_fail=1;memory_data_tick();assert(memory_data_blocked&&!mutations&&refused==1);
  /* A deadline cannot authorize rollback inside the mount callback. */
  reset();memory_data_tick();memory_applied=time(NULL)-31;memory_data_tick();
  assert(memory_data_blocked&&!restore_calls&&memory_transaction.owned&&mail.gate);
