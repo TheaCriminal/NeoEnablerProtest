@@ -17,5 +17,5 @@ python3 tools/gen_shim.py "$B/llvm-nm" "$NEO_BUILD_DIR"
 python3 tools/gen_step_shim.py "$B/llvm-nm" "$NEO_BUILD_DIR"
 (cd assets && xxd -i -n icon0_png icon0.png) > "$NEO_BUILD_DIR/icon_data.h"
 (cd assets && xxd -i -n panel_js panel.js) > "$NEO_BUILD_DIR/panel_data.h"
-"$B/prospero-clang" -O2 -Wall -Wextra -Werror -I"$NEO_BUILD_DIR" -o "$NEO_OUTPUT" src/manager.c -lkernel_sys -lSceNet -lSceSsl -lSceHttp
+"$B/prospero-clang" -O2 -Wall -Wextra -Werror -I"$NEO_BUILD_DIR" -o "$NEO_OUTPUT" src/manager.c -lkernel_sys -lSceNet -lSceSsl -lSceHttp -lSceUserService -lSceSystemService
 sha256sum "$NEO_OUTPUT"

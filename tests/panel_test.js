@@ -39,7 +39,7 @@ vm.runInNewContext(fs.readFileSync('assets/panel.js', 'utf8'), {
         ['/gpu/enable', 'POST', 'mhz=2150'], ['/gpu/enable', 'POST', 'mhz=2200']
     ]);
     assert.equal(calls.filter(x => x === 'open').length, 2);
-    listeners.click({target: {closest: () => ({href: '/gpu'})}, preventDefault() {}});
+    listeners.click({target: {closest: s => s === 'nav a' ? {href: '/gpu'} : null}, preventDefault() {}});
     assert(calls.includes('/gpu'));
     listeners.keydown({keyCode: 27});
     listeners.keydown({key: 'BrowserBack'});
