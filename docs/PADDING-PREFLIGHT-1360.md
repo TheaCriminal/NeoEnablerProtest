@@ -38,4 +38,6 @@ through installation and removal.
 
 Candidate name: `NeoEnabler 0.3.5-experimental-hook-padding-test`.
 ELF SHA256: `719b15e08fd7b5fad3e9cface1611b3b2d3835733646276f968a9acf661bf655`.
-This candidate has not yet been verified on the affected 13.60 console.
+The affected 13.60 user subsequently reported that this candidate worked and
+the game opened successfully. No post-close restoration status was supplied.
+The final 0.3.5 build uses this implementation with the release version label.

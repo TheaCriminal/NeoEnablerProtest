@@ -103,7 +103,7 @@ checksum attached.
 - Log: every action and its result go to the kernel log with the prefix `[NeoEnabler]`, followed by a `state:` line
   (NEO hook, v4 hook, actual and requested 8 GiB state). Show Logs, Download Logs and Save Logs give a report, NeoEnabler's own log (`/data/neo-enabler/neo.log`) and the kernel log it keeps (`kernel.log`, polled four times a second); Save Logs writes it to `/data/neo-logs.txt`.
 
-## Experimental no-HV 8 GiB budget (0.3.5)
+## No-HV 8 GiB budget (0.3.5)
 
 The manager selects the firmware-specific DATA backend for 13.20 and 13.60. It reads the actual firmware from
 `machdep.upd_version`, validates the ShellCore BeginAppMount2 function, exact call, import stub, GOT target and
@@ -125,7 +125,7 @@ All SDK reads/writes and mailbox polling run in the HTTP loop, without a concurr
 
 The older TEXT implementation and its tests remain as legacy code for the non-DATA selection. It is not
 probed as a fallback after a supported DATA hook fails. A reboot is required before switching from an old
-TEXT memory payload to this experiment, since DATA identity cannot attest to untouched protected code.
+TEXT memory payload to this implementation, since DATA identity cannot attest to untouched protected code.
 
 See [8GB-NO-HV-1360.md](8GB-NO-HV-1360.md) for offsets, input identities and limits and
 [VALIDATION-0.3.5-experimental.md](VALIDATION-0.3.5-experimental.md) for the console regression.

@@ -33,7 +33,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 
 ## Other firmwares
 
-Pro mode is supported from 4.00 to 13.60, and the experimental no-HV 8 GiB budget has profiles for 13.20 and 13.60. Community reports are listed below; one successful report does not validate every game or launch.
+Pro mode is supported from 4.00 to 13.60, and the no-HV 8 GiB budget has profiles for 13.20 and 13.60. Community reports are listed below; one successful report does not validate every game or launch.
 
 | Firmware | Pro mode patches | 8 GiB entries (Bloodborne Native 4K, Driveclub Native 4K) |
 | --- | --- | --- |

@@ -1,6 +1,6 @@
-# Experimental no-HV 8 GiB on 13.20 and 13.60
+# No-HV 8 GiB on 13.20 and 13.60
 
-Branch: `release/v0.3.5-experimental`. The manager integrates the existing
+Release: `v0.3.5`. The manager integrates the existing
 13.20 DATA transaction and a firmware-specific launch profile for 13.60.
 13.20 has a Bloodborne gameplay/constructor/restoration regression test;
 13.60 has offline validation and one community report of Bloodborne 4K gameplay
@@ -66,8 +66,10 @@ or backing validation on 13.60 hardware.
 The 13.60 GOT has the unique JUMP_SLOT relocation for NID `HRDq-RDIGmI`;
 libkernel exports the corresponding wrapper at `0x42850`. The wrapper's first
 48 bytes match 13.20, while six relative operand bytes differ in the captured
-body. Padding is in the executable mapping's page-rounded tail and is checked
-for zero bytes and RWX at runtime.
+body. Reservations are in the executable mapping's page-rounded tail. The actual
+slots are checked for zero bytes or recognized disarmed retained shims and RWX at
+runtime. The prefix before the reservation pool is preserved and is not required
+to be empty; see [the 13.60 investigation](PADDING-PREFLIGHT-1360.md).
 
 [13.60-INPUT-VALIDATION.json](13.60-INPUT-VALIDATION.json) records current ELF
 hashes and earlier SELF metadata. Both ELFs have their file-backed segments
@@ -88,5 +90,9 @@ validate every game and launch on 13.60.
 
 See [VALIDATION-0.3.5-experimental.md](VALIDATION-0.3.5-experimental.md) for the
 13.20 session. Use a fresh boot and do not mix an older TEXT memory patch with
-this DATA experiment. Keep the manager running until the game closes and its
+this DATA implementation. Keep the manager running until the game closes and its
 owned extension is restored. Quit refuses an active or unresolved transaction.
+
+The affected 13.60 user reported that the padding-test candidate worked and the
+game opened successfully. Post-close restoration status for that console has
+not been supplied. See [0.3.5 validation](VALIDATION-0.3.5.md).

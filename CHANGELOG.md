@@ -1,8 +1,18 @@
 # Changelog
 
+## 0.3.5
+
+- The 8 GiB memory mode now works without an HV unlock on firmware 13.20 and 13.60. It turns on automatically
+  for enabled patches that need it. Bloodborne has reached Native 4K gameplay on both firmwares.
+- Fixes an issue that could prevent 8 GiB from becoming available on 13.60.
+- The memory status now shows "ready" when 8 GiB is available with no game running, "enabled" while active,
+  and "unavailable" when it cannot be activated.
+- GPU boost is now available on other firmwares when the console supports clock control. It remains tested
+  on 13.20 only and is off by default.
+
 ## 0.3.5-experimental
 
-Updated build: idle label and firmware query fix.
+Historical experimental builds; the firmware query cache below was withdrawn before the final release.
 
 - Cache the first successful actual firmware query for the manager lifetime; a failed or short sysctl response
   cannot replace a recognized 13.60 with zero while idle. A query that has never succeeded is shown as

@@ -13,9 +13,9 @@ so NeoEnabler is only useful for the games listed below.
 You pick the patches in the NeoEnabler panel. A game starts in Pro mode, and gets the 8 GiB memory budget, only
 when one of its enabled patches needs it; every other game starts as usual.
 
-This experimental build uses the no-HV 8 GiB DATA path on firmware 13.20 and 13.60.
+Version 0.3.5 supports the 8 GiB memory budget without an HV unlock on firmware 13.20 and 13.60.
 See [validation and limitations](docs/8GB-NO-HV-1360.md): 13.20 has a Bloodborne gameplay and restoration test;
-13.60 has one community report of Bloodborne 4K gameplay with 8 GiB enabled.
+13.60 has community reports of Bloodborne 4K gameplay with 8 GiB enabled and a successful launch after the availability fix.
 
 ## What you need
 
@@ -38,9 +38,9 @@ See [validation and limitations](docs/8GB-NO-HV-1360.md): 13.20 has a Bloodborne
 4. Open the panel and tick the patches you want for each game.
 
 The **8 GiB PS4 Pro memory budget** follows patches marked "8 GiB" in the panel.
-This experimental build requires:
+This mode requires:
 
-- **Firmware 13.20** (Bloodborne gameplay and automatic restoration checked) or **13.60** (offline validated; **one community report** of Bloodborne 4K gameplay with 8 GiB enabled).
+- **Firmware 13.20** (Bloodborne gameplay and automatic restoration checked) or **13.60** (community-reported Bloodborne 4K gameplay with 8 GiB enabled).
 - A running NeoEnabler manager and the validated ShellCore launch hook. The DATA path does **not** require an HV
   unlock and does not read or patch kernel TEXT.
 
@@ -92,7 +92,7 @@ Open **GPU clock** in the panel, select a target from **1800 to 2200 MHz** in 50
 are saved with **Save Settings** and requested again when a PS4 game starts. This works independently of NEO and
 8 GiB, including PS4 base mode.
 
-GPU boost is **off by default**, with 2200 MHz selected. It is tested on **firmware 13.20** only (other firmwares are enabled in 0.3.5-experimental) and uses the stock
+GPU boost is **off by default**, with 2200 MHz selected. It is tested on **firmware 13.20** only (other firmwares are enabled in 0.3.5) and uses the stock
 `/dev/mp1` driver, without patching the kernel or needing a hypervisor exploit. The sustained frequency may be
 lower than the target. A short gameplay test at 2200 MHz read around 2155-2200 MHz. FPS gains and long-term
 stability have not been established.
