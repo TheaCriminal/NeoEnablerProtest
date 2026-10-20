@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.3.5
+
+- The 8 GiB memory mode now works without an HV unlock on firmware 13.20 and 13.60. It turns on automatically
+  for enabled patches that need it. Bloodborne has reached Native 4K gameplay on both firmwares.
+- Fixes an issue that could prevent 8 GiB from becoming available on 13.60.
+- The memory status now shows "ready" when 8 GiB is available with no game running, "enabled" while active,
+  and "unavailable" when it cannot be activated.
+- GPU boost is now available on other firmwares when the console supports clock control. It is confirmed
+  working on 13.20 and 13.60 and is off by default.
+
+## 0.3.5-experimental
+
+Historical experimental builds; the firmware query cache below was withdrawn before the final release.
+
+- Cache the first successful actual firmware query for the manager lifetime; a failed or short sysctl response
+  cannot replace a recognized 13.60 with zero while idle. A query that has never succeeded is shown as
+  "firmware unavailable", rather than declaring the firmware unsupported.
+
+- Distinguish 8 GiB availability from activity: supported and available while idle is "ready", an unavailable
+  hook is "unavailable", and "not supported" is reserved for firmwares without a profile. Active 8 GiB remains
+  "enabled". The memory transaction and launch hook are unchanged.
+- Record the first 13.60 community report: Bloodborne reached Native 4K gameplay with 8 GiB enabled in the panel.
+
+- Integrates the existing 13.20 no-HV DATA transaction into the manager and ports the launch profile to 13.60.
+  Kernel TEXT is not read or patched by this path. The controller confirms POST/CLAIM/HELD before applying the
+  extension and retains launch serialization until the global is restored after game teardown.
+- Bloodborne on 13.20 reached gameplay with a reported 8192 MiB DMEM budget; the constructor value and automatic
+  restoration were verified; the maintainer also confirmed Bloodborne gameplay at native 4K. 13.60 is checked against its ShellCore/libkernel dumps and now has one community report of Bloodborne
+  Native 4K gameplay with 8 GiB enabled in the panel. These checks do not establish stability for every game or full backing coverage.
+- Adds transaction, native shim, hook lifecycle and controller failure tests, and exposes DATA ownership,
+  constructor and gate state in `/status`. Quit refuses while an owned DATA transaction is active.
+
+- GPU boost is no longer limited to firmware 13.20. It is offered on every firmware where the `/dev/mp1` driver
+  answers a clock read. Only 13.20 is tested: on other firmwares the clock request may fail or behave differently.
+
 ## 0.3.4
 
 - The launch hook now finds the `ATTRIBUTE` offset in the app info at each launch instead of trusting the

@@ -85,6 +85,12 @@ static void load_repo(void) {
     }
     closedir(d);
     assert(repo_count > 0);
+    /* Exercise the largest XML regardless of filesystem enumeration order. */
+    for (int i = 1; i < repo_count; i++) {
+        if (repo[i].len > repo[0].len) {
+            repo_file largest = repo[i]; repo[i] = repo[0]; repo[0] = largest;
+        }
+    }
 }
 
 /* What the sync relies on in every downloaded file: a title ID in the name, one Title per AppElf (a collection has
@@ -274,14 +280,14 @@ int main(int argc, char **argv) {
     assert(!get(r.backup_dir, "CUSA90003.xml", &n) && !get(test_dir, "CUSA90001.xml.neo-tmp", &n));
 
     /* Second run: nothing to change, no new backup. */
-    char before[2][1 << 16]; size_t before_len[2];
-    for (int i = 0; i < 2; i++) { s = get(test_dir, names[i], &before_len[i]); assert(before_len[i] < sizeof(before[i])); memcpy(before[i], s, before_len[i]); free(s); }
+    char *before[2]; size_t before_len[2];
+    for (int i = 0; i < 2; i++) { before[i] = get(test_dir, names[i], &before_len[i]); assert(before[i]); }
     patch_sync(&r);
     puts(r.message);
     assert(r.files_updated == 0 && r.files_created == 0 && r.files_unchanged == 2 + total_ids && r.errors == 0);
     assert(!r.backup_dir[0] && !strstr(r.message, "Backup"));
     assert(backups() == PS_MAX_BACKUPS);
-    for (int i = 0; i < 2; i++) { s = get(test_dir, names[i], &n); assert(n == before_len[i] && !memcmp(s, before[i], n)); free(s); }
+    for (int i = 0; i < 2; i++) { s = get(test_dir, names[i], &n); assert(n == before_len[i] && !memcmp(s, before[i], n)); free(s); free(before[i]); }
 
     /* Listing download fails: nothing touched. */
     put(names[0], orig[0]);

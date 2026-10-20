@@ -31,19 +31,29 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Sleeping Dogs: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K, each also up to 60 fps | Native 4K and the 60 fps entries validated; 1440p, 1620p and 1800p not tested yet |
 | Uncharted: The Nathan Drake Collection (01.02) | Uncharted 1, 2 and 3: 1440p, 1620p, 1800p, Native 4K | Uncharted 1 and 3 validated; Uncharted 2 runs in Native 4K, its 1440p, 1620p and 1800p not tested yet |
 
+## GPU boost
+
+GPU boost is validated by the maintainer on 13.20 and confirmed working on 13.60
+through a community result relayed by the maintainer on 2026-10-20. The 13.60
+report did not specify target or measured clocks. Other firmwares remain untested.
+
 ## Other firmwares
 
-Pro mode is supported from 4.00 to 13.60, and the 8 GiB budget only on 13.20. Every entry below is **Untested**
-until a report arrives.
+Pro mode is supported from 4.00 to 13.60, and the no-HV 8 GiB budget has profiles for 13.20 and 13.60. Community reports are listed below; one successful report does not validate every game or launch.
 
 | Firmware | Pro mode patches | 8 GiB entries (Bloodborne Native 4K, Driveclub Native 4K) |
 | --- | --- | --- |
 | 4.00 - 13.00 | Untested | Not supported |
-| 13.60 | Untested | Untested (offsets found, needs hardware test) |
+| 13.60 | Reported: Bloodborne Native 4K | Reported: Bloodborne reached gameplay; panel showed 8 GiB enabled. Other games untested |
 
 ## Community reports
 
-None yet. Add rows here when a report is accepted: game, entry, firmware, result, number of reports.
+| Firmware | Game | Entry | Result | Reports |
+| --- | --- | --- | --- | --- |
+| 13.60 | Bloodborne (version not supplied) | Native 4K, 8 GiB | Reported: gameplay reached, 8 GiB enabled in panel | 1 |
+
+Reported through the maintainer on 2026-10-20. Raw status/logs, a full backing test and restoration after closing
+were not supplied for this community test. The earlier idle "not supported" label did not prevent the successful launch.
 
 | Game and entry | Firmware | Result | Reports | Status |
 | --- | --- | --- | --- | --- |

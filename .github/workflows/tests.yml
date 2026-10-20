@@ -32,8 +32,17 @@ jobs:
           if [ "${{ matrix.sanitize }}" = "1" ]; then
             flags="$flags -fsanitize=address,undefined -fno-sanitize-recover=all"
           fi
+          $CC $flags tests/firmware_version_test.c -o /tmp/neo-firmware-version-test
+          /tmp/neo-firmware-version-test
           $CC $flags tests/budget_test.c -o /tmp/neo-budget-test
           /tmp/neo-budget-test
+          $CC $flags tests/budget_data_test.c -o /tmp/neo-budget-data-test
+          /tmp/neo-budget-data-test
+          $CC $flags -Wno-unused-function tests/budget_mount_control_test.c -o /tmp/neo-budget-control-test
+          /tmp/neo-budget-control-test
+          bash tools/test_budget_shim.sh
+          $CC $flags -Ibuild/budget-shim-tests tests/budget_mount_hook_test.c -o /tmp/neo-budget-hook-test
+          /tmp/neo-budget-hook-test
       - name: Unit tests (XML merge, game patches and settings, patch sync against a fake GitHub serving xml/, ATTRIBUTE offset)
         env:
           CC: ${{ matrix.cc }}

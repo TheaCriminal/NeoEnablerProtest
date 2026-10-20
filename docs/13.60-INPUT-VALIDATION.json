@@ -1,0 +1,60 @@
+{
+  "scope": "Offline ELF structure, instruction and import/export validation; no 13.60 console test",
+  "inputs": [
+    {
+      "sha256": "15606a2cb87b73b091ed2121b37424ea8826d301ba6d07ce0a508da4979ea090",
+      "size": 35337588,
+      "segments_in_bounds": true,
+      "file": "SceShellCore.elf"
+    },
+    {
+      "sha256": "60921322b155ba649cfa29ea5e6d358ca0229424b4f73fd5c30ae7f7ce7c304c",
+      "size": 592492,
+      "segments_in_bounds": true,
+      "file": "libkernel_sys.sprx"
+    }
+  ],
+  "prior_self_metadata": [
+    {
+      "file": "libkernel_sys.sprx",
+      "sha256": "9c760cc3d4889a1920ff63e123c50420bab41f415d9f1c9de94502db01d696fd",
+      "format": "PS5 SELF",
+      "metadata_fw": "0x1360000000000000",
+      "embedded_elf_offset": "0x1a0",
+      "expected_elf_sha256": "2c969ed8b35ce3a40b037260236394ae8b7e8c55b36e13f8cf845877babbf1a2",
+      "matches_1320_elf_hash": false,
+      "encrypted_block_segments": 6,
+      "block_segments": 6
+    },
+    {
+      "file": "SceShellCore.elf",
+      "sha256": "0e365cf5850f156cc099777faf12aa12ba4fb2e71d7d49d82f2aaf5b7708beab",
+      "format": "PS5 SELF",
+      "metadata_fw": "0x1360000000000000",
+      "embedded_elf_offset": "0x1a0",
+      "expected_elf_sha256": "9c6e6970c515784f2777e029b0c359fd9b2306536f05f72dd87bf63e51f691c4",
+      "matches_1320_elf_hash": false,
+      "encrypted_block_segments": 6,
+      "block_segments": 6
+    }
+  ],
+  "profile": {
+    "function": "0x6d7af0",
+    "call": "0x6d8941",
+    "call_bytes": "e86a3a2801",
+    "import": "0x195c3b0",
+    "stub": "ff25aab07000",
+    "got": "0x2067460",
+    "wrapper": "0x42850",
+    "nid": "HRDq-RDIGmI",
+    "padding_start": "0x19626fc",
+    "cave_start": "0x1963000",
+    "padding_end": "0x1964000"
+  },
+  "limitations": [
+    "Firmware provenance supplied by user; exact firmware also required at runtime.",
+    "Current decrypted ELF hashes differ from prior SELF expected ELF digests; cause not established.",
+    "Padding is the executable mapping page tail, checked for zero bytes and RWX in runtime.",
+    "Static validation does not establish hardware compatibility or allocation/backing coverage."
+  ]
+}
