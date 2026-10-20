@@ -2,9 +2,12 @@
 
 ## 0.4.0
 
-- In a collection, enabling a patch that needs 8 GiB for a game started from the collection menu now also
-  switches the menu game to its 8 GiB patch, since the memory is set when the collection starts. Patches without
-  8 GiB keep selecting the menu game patch without 8 GiB.
+- The 8 GiB memory feature is now called 8GB Mode in the panel and notifications.
+- In a collection, enabling a patch that needs 8GB Mode for a game started from the collection menu now also
+  switches the menu game to its 8GB Mode patch, since the memory is set when the collection starts. Patches without
+  8GB Mode keep selecting the menu game patch without it.
+- Patches that need 8GB Mode and were enabled in the ps-patch-system Patch Manager are now turned off when 8GB Mode
+  is not available, and also when a game launch could not get 8GB Mode, before the game reads its patches.
 
 ## 0.3.5
 
