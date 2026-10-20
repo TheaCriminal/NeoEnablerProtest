@@ -76,17 +76,22 @@ static int game_pkg_version(const char *path, char *ver, size_t cap) {
 }
 
 /* Game and update versions. With an update, the appmeta param.sfo is the update's, so the game version comes from
-   the game package; without one it is the appmeta APP_VER. */
+   the game package; when it cannot be read (a game mounted from another drive leaves /user/app empty), from the
+   master VERSION of that param.sfo. Without an update it is the appmeta APP_VER. */
 static void game_versions(game_t *g) {
     char path[96]; size_t n;
     g->game_ver[0] = g->update_ver[0] = 0;
     snprintf(path, sizeof path, APPMETA_DIR "/%.9s/param.sfo", g->tid);
-    char app[16] = "", *sfo = ps_read(path, 64 << 10, &n);
-    if (sfo) { gp_sfo((unsigned char *)sfo, n, "APP_VER", app, sizeof app); free(sfo); }
+    char app[16] = "", master[16] = "", *sfo = ps_read(path, 64 << 10, &n);
+    if (sfo) {
+        gp_sfo((unsigned char *)sfo, n, "APP_VER", app, sizeof app);
+        gp_sfo((unsigned char *)sfo, n, "VERSION", master, sizeof master);
+        free(sfo);
+    }
     if (!g->update) { snprintf(g->game_ver, sizeof g->game_ver, "%s", app); return; }
     snprintf(g->update_ver, sizeof g->update_ver, "%s", app);
     snprintf(path, sizeof path, APP_DIR "/%.9s/app.pkg", g->tid);
-    if (game_pkg_version(path, g->game_ver, sizeof g->game_ver)) g->game_ver[0] = 0;
+    if (game_pkg_version(path, g->game_ver, sizeof g->game_ver)) snprintf(g->game_ver, sizeof g->game_ver, "%s", master);
 }
 
 /* Entries of the game's patch file that apply to its installed version; malloc'd, count in *n. */

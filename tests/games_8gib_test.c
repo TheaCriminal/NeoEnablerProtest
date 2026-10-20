@@ -186,10 +186,10 @@ int main(int argc, char **argv) {
     for (int i = 0; i < ng; i++) if (!strcmp(gs[i].tid, "CUSA99996")) v = &gs[i];
     assert(v && v->update && !strcmp(v->game_ver, "01.00") && !strcmp(v->update_ver, "01.05"));
     games_free(gs, ng);
-    assert(!system("rm " APP_DIR "/CUSA99996/app.pkg"));                    /* unreadable package: game version unknown */
+    assert(!system("rm " APP_DIR "/CUSA99996/app.pkg"));                    /* no package: the master VERSION */
     gs = games_scan(&ng); v = NULL;
     for (int i = 0; i < ng; i++) if (!strcmp(gs[i].tid, "CUSA99996")) v = &gs[i];
-    assert(v && !v->game_ver[0] && !strcmp(v->update_ver, "01.05"));
+    assert(v && !strcmp(v->game_ver, "01.00") && !strcmp(v->update_ver, "01.05"));
     games_free(gs, ng);
     puts("PASS 8 GiB patches turned off while 8 GiB is unavailable, other patches kept, one resolution per executable");
     return 0;
