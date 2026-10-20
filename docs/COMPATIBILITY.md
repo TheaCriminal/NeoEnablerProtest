@@ -31,6 +31,12 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Sleeping Dogs: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K, each also up to 60 fps | Native 4K and the 60 fps entries validated; 1440p, 1620p and 1800p not tested yet |
 | Uncharted: The Nathan Drake Collection (01.02) | Uncharted 1, 2 and 3: 1440p, 1620p, 1800p, Native 4K | Uncharted 1 and 3 validated; Uncharted 2 runs in Native 4K, its 1440p, 1620p and 1800p not tested yet |
 
+## GPU boost
+
+GPU boost is validated by the maintainer on 13.20 and confirmed working on 13.60
+through a community result relayed by the maintainer on 2026-10-20. The 13.60
+report did not specify target or measured clocks. Other firmwares remain untested.
+
 ## Other firmwares
 
 Pro mode is supported from 4.00 to 13.60, and the no-HV 8 GiB budget has profiles for 13.20 and 13.60. Community reports are listed below; one successful report does not validate every game or launch.

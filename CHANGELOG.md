@@ -7,8 +7,8 @@
 - Fixes an issue that could prevent 8 GiB from becoming available on 13.60.
 - The memory status now shows "ready" when 8 GiB is available with no game running, "enabled" while active,
   and "unavailable" when it cannot be activated.
-- GPU boost is now available on other firmwares when the console supports clock control. It remains tested
-  on 13.20 only and is off by default.
+- GPU boost is now available on other firmwares when the console supports clock control. It is confirmed
+  working on 13.20 and 13.60 and is off by default.
 
 ## 0.3.5-experimental
 

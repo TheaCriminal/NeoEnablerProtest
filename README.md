@@ -92,7 +92,7 @@ Open **GPU clock** in the panel, select a target from **1800 to 2200 MHz** in 50
 are saved with **Save Settings** and requested again when a PS4 game starts. This works independently of NEO and
 8 GiB, including PS4 base mode.
 
-GPU boost is **off by default**, with 2200 MHz selected. It is tested on **firmware 13.20** only (other firmwares are enabled in 0.3.5) and uses the stock
+GPU boost is **off by default**, with 2200 MHz selected. It is confirmed working on **firmware 13.20 and 13.60** and uses the stock
 `/dev/mp1` driver, without patching the kernel or needing a hypervisor exploit. The sustained frequency may be
 lower than the target. A short gameplay test at 2200 MHz read around 2155-2200 MHz. FPS gains and long-term
 stability have not been established.
