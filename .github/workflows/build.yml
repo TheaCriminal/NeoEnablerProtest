@@ -13,6 +13,8 @@ permissions:
 env:
   # PS5 Payload SDK release used for the build (https://github.com/ps5-payload-dev/sdk/releases)
   SDK_VERSION: v0.44
+  # Pin the SDK wrappers as well as the installed compiler and linker.
+  LLVM_CONFIG: /usr/bin/llvm-config-19
 
 jobs:
   build:
@@ -23,7 +25,7 @@ jobs:
       - name: Install host tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-18 lld-18 xxd unzip python3
+          sudo apt-get install -y clang-19 lld-19 llvm-19-dev xxd unzip python3
 
       - name: Cache PS5 Payload SDK
         id: sdk-cache
@@ -37,6 +39,14 @@ jobs:
         run: |
           curl -fsSL -o sdk.zip "https://github.com/ps5-payload-dev/sdk/releases/download/${SDK_VERSION}/ps5-payload-sdk.zip"
           unzip -q sdk.zip -d "$HOME"
+
+      - name: Verify the SDK uses LLVM 19
+        run: |
+          sdk_bin="$HOME/ps5-payload-sdk/bin"
+          llvm_version=$("$sdk_bin/prospero-llvm-config" --version)
+          [[ "$llvm_version" == 19.* ]]
+          "$sdk_bin/prospero-clang" --version
+          "$sdk_bin/ld.lld" --version
 
       - name: Check that the tag matches the version
         if: startsWith(github.ref, 'refs/tags/v')
