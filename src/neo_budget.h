@@ -88,10 +88,10 @@ static int mb_page_access(uint64_t text,const mb_layout*L){
 static int mb_check(mb_snapshot*s){
  memset(s,0,sizeof(*s));s->state=MB_UNKNOWN;uint32_t fw=0;uint64_t data=MB_DATA();
  if(mb_firmware(&fw)||data<0xffffffff00000000ULL||(data&0xfff)){
-  snprintf(s->detail,sizeof s->detail,"8 GiB adjustment unavailable (firmware query failed)");return -1;
+  snprintf(s->detail,sizeof s->detail,"8GB Mode adjustment unavailable (firmware query failed)");return -1;
  }
  const mb_layout*L=mb_find_layout(fw);
- if(!L){snprintf(s->detail,sizeof s->detail,"8 GiB adjustment unavailable on this firmware");return -1;}
+ if(!L){snprintf(s->detail,sizeof s->detail,"8GB Mode adjustment unavailable on this firmware");return -1;}
  s->layout=L;
  s->text=data-L->data_delta;
  if(!mb_page_access(s->text,L)){snprintf(s->detail,sizeof s->detail,"Kernel code access unavailable; waiting for hypervisor unlock");return -1;}
@@ -110,7 +110,7 @@ static int mb_check(mb_snapshot*s){
  else if(!memcmp(s->code,step,12))s->state=MB_STEP;
  else{snprintf(s->detail,sizeof s->detail,"Unknown memory patch; nothing written");return -1;}
  s->access_ready=1;
- snprintf(s->detail,sizeof s->detail,"%s",s->state==MB_8GIB?"8 GiB enabled for PS4 games":s->state==MB_STEP?"8 GiB disabled; previous 5.5 GiB experiment active":"8 GiB disabled; original 5.25 GiB memory restored");return 0;
+ snprintf(s->detail,sizeof s->detail,"%s",s->state==MB_8GIB?"8GB Mode enabled for PS4 games":s->state==MB_STEP?"8GB Mode disabled; previous 5.5 GiB experiment active":"8GB Mode disabled; original 5.25 GiB memory restored");return 0;
 }
 /* Readback/rollback are bounded to this known 12-byte NEO branch. */
 static int mb_set(int enable,char*msg,size_t cap){
@@ -119,7 +119,7 @@ static int mb_set(int enable,char*msg,size_t cap){
  const mb_layout*L=s.layout;
  const unsigned char*desired=enable?mb_eight:mb_original;
  if(!memcmp(s.code,desired,12)){snprintf(msg,cap,"%s",s.detail);return 0;}
- if(mb_games()!=0){snprintf(msg,cap,"Close every game before changing the 8 GiB memory");return 2;}
+ if(mb_games()!=0){snprintf(msg,cap,"Close every game before changing 8GB Mode");return 2;}
  for(unsigned i=1;i<=3;i++){
   signed char count=-1;
   if(MB_READ(s.text+L->areas_off+i*0x138+0x8e,&count,1)||count!=0){snprintf(msg,cap,"Application memory area %u is active or unreadable; nothing written",i);return 3;}
@@ -133,5 +133,5 @@ static int mb_set(int enable,char*msg,size_t cap){
   int restored=!undo&&!check&&!memcmp(readback,s.code,12);
   snprintf(msg,cap,"Memory write failed; rollback %s%s",restored?"verified":"FAILED",restored?"":"; do not launch games; reboot console");return restored?5:6;
  }
- snprintf(msg,cap,"%s",enable?"8 GiB enabled for PS4 games":"8 GiB disabled; original 5.25 GiB memory restored");return 0;
+ snprintf(msg,cap,"%s",enable?"8GB Mode enabled for PS4 games":"8GB Mode disabled; original 5.25 GiB memory restored");return 0;
 }

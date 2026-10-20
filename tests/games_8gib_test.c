@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
     assert(nc == 5 && !e[0].needs_8gib && e[1].needs_8gib && e[3].needs_8gib);
     assert(!game_set_patch("CUSA99997", e[2].hash, 1, 1, msg, sizeof msg));            /* no 8 GiB: eboot.bin without */
     s = settings_read(&sl); assert(gp_setting(s, sl, e[0].hash) == 1 && !gp_setting(s, sl, e[1].hash)); free(s);
-    assert(!game_set_patch("CUSA99997", e[3].hash, 1, 1, msg, sizeof msg) && strstr(msg, "C2 needs 8 GiB from the start of the collection"));
+    assert(!game_set_patch("CUSA99997", e[3].hash, 1, 1, msg, sizeof msg) && strstr(msg, "C2 needs 8GB Mode from the start of the collection"));
     s = settings_read(&sl);                                                            /* upgraded, Game 2 switched */
     assert(!gp_setting(s, sl, e[0].hash) && gp_setting(s, sl, e[1].hash) == 1 && !gp_setting(s, sl, e[2].hash) && gp_setting(s, sl, e[3].hash) == 1); free(s);
     assert(!game_set_patch("CUSA99997", e[4].hash, 1, 1, msg, sizeof msg) && !strstr(msg, "enabled instead"));   /* already 8 GiB */

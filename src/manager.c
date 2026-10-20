@@ -222,9 +222,9 @@ static void settings_load(void) {
         gpu_configure(cfg.gpu_enabled, cfg.gpu_mhz);
         if (cfg.gpu_enabled && !gpu_backend_supported()) log_line("settings: saved GPU boost ignored on unsupported firmware");
         if (cfg.force_8gib && !memory_supported())
-            log_line("settings: force_8gib=1 ignored, 8 GiB is not supported on firmware %x.%02x",
+            log_line("settings: force_8gib=1 ignored, 8GB Mode is not supported on firmware %x.%02x",
                      (fw_raw_version() >> 24) & 0xff, (fw_raw_version() >> 16) & 0xff);
-        if (cfg.memory && !cfg.force_8gib) log_line("settings: memory_8gib=1 of an older version ignored; 8 GiB now follows the game patches");
+        if (cfg.memory && !cfg.force_8gib) log_line("settings: memory_8gib=1 of an older version ignored; 8GB Mode now follows the game patches");
     }
     fclose(f);
 }
@@ -492,7 +492,7 @@ static void serve_page(int fd, const char *msg) {
             if (p->resolution) { sb_printf(&b, " data-res='"); sb_esc(&b, p->elf); sb_printf(&b, "'"); }
             sb_printf(&b, "%s%s><span><b>", on ? " checked" : "", blocked ? " disabled" : "");
             sb_esc(&b, p->name);
-            sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8 GiB</span>" : "");
+            sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
             int main_i = gp_main_entry(g[i].patches, g[i].count, k);
             if (main_i >= 0) { sb_printf(&b, "<span class=tag>Needs a "); sb_esc(&b, g[i].patches[main_i].title); sb_printf(&b, " resolution</span>"); }
             if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }
@@ -510,8 +510,8 @@ static void serve_page(int fd, const char *msg) {
     sb_printf(&b, "</section><aside>"
               "<div class=card><h2>Status</h2>"
               "<div>PS4 Pro mode <span class='state %s'>%s</span></div>"
-              "<div style='margin-top:6px'>8 GiB memory <span class='state %s'>%s</span>%s</div>"
-              "<p><small>Pro mode and 8 GiB follow the enabled patches of each game. 8 GiB returns to the original "
+              "<div style='margin-top:6px'>8GB Mode <span class='state %s'>%s</span>%s</div>"
+              "<p><small>Pro mode and 8GB Mode follow the enabled patches of each game. 8GB Mode returns to the original "
               "memory when the game closes.</small></p><b>Game running</b><ul>%s</ul></div>"
               "<div class=card><h2>Game patches</h2><p>%s</p><small>Downloads the patches from the NeoEnabler repository "
               "into " PS_DIR ". Changed files are backed up to " PS_BACKUP_ROOT " first.</small>"
@@ -524,7 +524,7 @@ static void serve_page(int fd, const char *msg) {
               "<form method=post><input type=hidden name=on value=%d><b>Pro mode for every PS4 game</b> "
               "<span class='state %s'>%s</span><br><small>Ignores the patch selection.</small><br>"
               "<button formaction=/advanced/neo>%s</button></form>"
-              "<form method=post style='margin-top:12px'><input type=hidden name=on value=%d><b>Keep 8 GiB on</b> "
+              "<form method=post style='margin-top:12px'><input type=hidden name=on value=%d><b>Keep 8GB Mode on</b> "
               "<span class='state %s'>%s</span><br><small>For every Pro mode launch, until turned off.</small><br>"
               "<button formaction=/advanced/memory%s>%s</button></form></details>"
               "<small style='text-align:center'>" VERSION "</small></aside></div></main></body></html>",
@@ -532,7 +532,7 @@ static void serve_page(int fd, const char *msg) {
               st != HOOK_ON ? state_text(st) : running_pro == 1 ? "enabled" : running_pro == 0 ? "disabled" : "ready",
               memory.state == MB_8GIB ? "on" : "off",
               memory.state == MB_8GIB ? "enabled" : !fw_raw_version() ? "firmware unavailable" : !memory_supported() ? "not supported" : !mem_ok ? "unavailable" : "ready",
-              memory_community_report() ? "<br><small>Firmware 13.60: Bloodborne 4K with 8 GiB reported working; more test reports welcome</small>" : "",
+              memory_community_report() ? "<br><small>Firmware 13.60: Bloodborne 4K with 8GB Mode reported working; more test reports welcome</small>" : "",
               running, patches_esc,
               !force_neo, force_neo ? "on" : "off", force_neo ? "on" : "off", force_neo ? "Turn off" : "Turn on",
               !force_8gib, force_8gib && mem_ok ? "on" : "off",
@@ -589,7 +589,7 @@ static void serve_gpu_page(int fd, const char *msg) {
         "<small>Applies to PS4 games in base or NEO mode. A saved target is requested on the next PS4 launch. "
         "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
         "<form method=post><input type=hidden name=view value=gpu><button formaction=/settings/save>Save Settings</button></form>"
-        "%s</div></div><p><small>GPU boost is independent of NEO and 8 GiB. Quitting restores the captured GPU clock.<br>"
+        "%s</div></div><p><small>GPU boost is independent of NEO and 8GB Mode. Quitting restores the captured GPU clock.<br>"
         VERSION "</small></p></main>"
         "<script>(function(){const r=document.getElementById('gpu-target'),o=document.getElementById('gpu-value');"
         "r.addEventListener('input',()=>o.textContent=r.value);"
@@ -729,7 +729,7 @@ static void log_state(void) {
     shell_t s; int st = hook_state(&s);
     if (st == HOOK_BAD_CAVE) { char d[400]; bad_cave_text(&s, d, sizeof(d)); log_line("%s", d); }
     mb_snapshot m; memory_check(&m);
-    log_line("state: NEO hook %s, v4 hook %s, 8 GiB %s (requested %s): %s", state_text(st),
+    log_line("state: NEO hook %s, v4 hook %s, 8GB Mode %s (requested %s): %s", state_text(st),
              v4_active(&s) ? "present" : "absent",
              m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
              memory_target ? "on" : "off", m.detail);
@@ -924,7 +924,7 @@ static void build_report(sbuf *b) {
               "manager running since %lds\nhook: %s\n", VERSION, fw >> 8, fw & 0xff, now, (long)(mono.tv_sec - manager_start.tv_sec), state_text(st));
     if (st == HOOK_BAD_CAVE) { char d[400]; bad_cave_text(&s, d, sizeof d); sb_printf(b, "%s\n", d); }
     mb_snapshot m; memory_check(&m);
-    sb_printf(b, "8 GiB: %s (requested %s): %s\n", m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
+    sb_printf(b, "8GB Mode: %s (requested %s): %s\n", m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
               memory_target ? "on" : "off", m.detail);
     sb_printf(b, "GPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", gpu_state_text(), gpu.target,
               gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
@@ -1046,7 +1046,7 @@ static int patches_drop_8gib(const char *only_tid) {
     int dropped = games_drop_8gib(only_tid, memory_message);
     if (dropped) {
         char note[200];
-        snprintf(note, sizeof note, "%d patch%s that need 8 GiB turned off: 8 GiB is not available", dropped, dropped == 1 ? "" : "es");
+        snprintf(note, sizeof note, "%d patch%s that need 8GB Mode turned off: 8GB Mode is not available", dropped, dropped == 1 ? "" : "es");
         notify(note);
     }
     return dropped;
@@ -1056,10 +1056,10 @@ static int patches_drop_8gib(const char *only_tid) {
    the settings for that game (it does when the game process starts, after the mount). */
 static void memory_launch_refused(const char *tid) {
     if (!game_tid(tid)) return;
-    int dropped = games_drop_8gib(tid, "8 GiB was not applied to this launch");
+    int dropped = games_drop_8gib(tid, "8GB Mode was not applied to this launch");
     if (dropped) {
         char note[200];
-        snprintf(note, sizeof note, "8 GiB could not be applied to %s: %d patch%s that need it turned off", tid, dropped, dropped == 1 ? "" : "es");
+        snprintf(note, sizeof note, "8GB Mode could not be applied to %s: %d patch%s that need it turned off", tid, dropped, dropped == 1 ? "" : "es");
         notify(note);
     }
 }
@@ -1074,13 +1074,13 @@ static void settings_watch(void) {
     patches_drop_8gib(NULL);
 }
 
-/* "Keep 8 GiB on" is a request for the budget. Without 8 GiB (no hypervisor exploit, or an unsupported firmware) there
+/* "Keep 8GB Mode on" is a request for the budget. Without 8 GiB (no hypervisor exploit, or an unsupported firmware) there
    is nothing to request: it is cleared and saved, so it does not stay on and come back at the next unlock. */
 static void drop_8gib_request(void) {
     if (!force_8gib || memory_available()) return;
     force_8gib = 0;
     int saved = !settings_save();
-    log_line("Keep 8 GiB on: cleared, 8 GiB is not available (needs firmware 13.20 or 13.60 with a validated memory launch hook)%s",
+    log_line("Keep 8GB Mode on: cleared, 8GB Mode is not available (needs firmware 13.20 or 13.60 with a validated memory launch hook)%s",
              saved ? "" : " (settings not saved)");
 }
 
@@ -1164,7 +1164,7 @@ static void launch_poll(void) {
         pending.needs = game_needs(tid);
         if (force_neo) pending.needs |= NEEDS_PRO;
         log_line("launch: %s needs %s%s", tid, pending.needs & NEEDS_PRO ? "Pro mode" : "base mode",
-                 pending.needs & NEEDS_8GIB ? " and 8 GiB" : "");
+                 pending.needs & NEEDS_8GIB ? " and 8GB Mode" : "");
     }
     int pro = (pending.needs & NEEDS_PRO) != 0, ok = 1;
     int mem_ok = memory_available();
@@ -1187,7 +1187,7 @@ static void launch_poll(void) {
     shim_answer(&live, pending.seq, (unsigned char)pro, pending.attr_off);
     pending.active = 0;
     log_line("launch: %s starts in %s mode%s", pending.tid, pro ? "Pro" : "base",
-             pro && mem_ok && ok ? (want8 ? " with 8 GiB" : " with the original memory") : "");
+             pro && mem_ok && ok ? (want8 ? " with 8GB Mode" : " with the original memory") : "");
 }
 
 /* 8 GiB switched on for a launch goes back to the original budget when no game runs any more. */
@@ -1198,7 +1198,7 @@ static void launch_tick(void) {
     if (games < 0 || (!auto8.seen_game && time(NULL) - auto8.since < 60)) return;
     auto8.active = 0;
     memory_request(0);
-    log_line("8 GiB: %s closed: %s", auto8.tid, memory_message);
+    log_line("8GB Mode: %s closed: %s", auto8.tid, memory_message);
 }
 
 static int memory_launch_wants(const char *tid) {
@@ -1264,7 +1264,7 @@ int main(void) {
     drop_8gib_request();
     if (force_8gib) memory_request(1);
     int memory_previous_result=memory_poll();
-    log_line("8 GiB: %s", memory_message);
+    log_line("8GB Mode: %s", memory_message);
     gpu_tick();
     int li = install_launcher();
     snprintf(msg + strlen(msg), sizeof(msg) - strlen(msg), "\nWeb panel: port %d%s", PORT,
@@ -1292,7 +1292,7 @@ int main(void) {
             int memory_result=memory_poll();
             if(memory_result!=memory_previous_result){
                 if(memory_result==0||memory_result==5||memory_result==6)notify(memory_message);
-                else log_line("8 GiB: %s (result %d)",memory_message,memory_result);
+                else log_line("8GB Mode: %s (result %d)",memory_message,memory_result);
                 drop_8gib_request();
                 log_state();
                 patches_drop_8gib(NULL);
@@ -1340,11 +1340,11 @@ int main(void) {
                 force_neo = value; launch_attach(1);
                 amsg = value ? "Pro mode for every PS4 game: on" : "Pro mode for every PS4 game: off (follows the game patches)";
             } else if (value && !memory_available()) {
-                amsg = "8 GiB needs firmware 13.20 or 13.60 with a validated memory launch hook enabled; nothing changed";
+                amsg = "8GB Mode needs firmware 13.20 or 13.60 with a validated memory launch hook enabled; nothing changed";
             } else {
                 force_8gib = value;
                 if (value) memory_request(1); else if (!auto8.active) memory_request(0);
-                amsg = value ? "Keep 8 GiB on: on" : "Keep 8 GiB on: off (8 GiB follows the game patches)";
+                amsg = value ? "Keep 8GB Mode on: on" : "Keep 8GB Mode on: off (8GB Mode follows the game patches)";
             }
             int saved = !settings_save();
             log_line("panel: %s%s", amsg, saved ? "" : " (settings not saved)");
@@ -1379,10 +1379,10 @@ int main(void) {
             }
             reply(fd, "200 OK", "text/html; charset=utf-8", "<!doctype html><meta charset=utf-8><title>NeoEnabler</title>"
                   "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. Games no longer ask for Pro mode "
-                  "or 8 GiB until the manager runs again. GPU clock restore requested.</body>");
+                  "or 8GB Mode until the manager runs again. GPU clock restore requested.</body>");
             close(fd);
             launch_attach(0);
-            notify("NeoEnabler: panel stopped (per-game Pro mode and 8 GiB stopped, GPU boost stopped)");
+            notify("NeoEnabler: panel stopped (per-game Pro mode and 8GB Mode stopped, GPU boost stopped)");
             log_state();
             break;
         } else if (!strcmp(path, "/status")) {

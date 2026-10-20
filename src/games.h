@@ -143,7 +143,7 @@ static int game_set_patch(const char *tid, const char *hash, int on, int memory_
     int n; gp_patch *p = game_patches(tid, ver, &n), *hit = NULL;
     for (int i = 0; i < n; i++) if (!strcmp(p[i].hash, hash)) hit = &p[i];
     if (!hit) { free(p); snprintf(msg, cap, "This patch is not available for %s %s", tid, ver); return -1; }
-    if (on && hit->needs_8gib && !memory_ok) { free(p); snprintf(msg, cap, "This patch needs 8 GiB: firmware 13.20 or 13.60 with the validated no-HV launch hook installed"); return -1; }
+    if (on && hit->needs_8gib && !memory_ok) { free(p); snprintf(msg, cap, "This patch needs 8GB Mode: firmware 13.20 or 13.60 with the validated no-HV launch hook installed"); return -1; }
     size_t sl, ol; char *s = settings_read(&sl), *out = NULL;
     int rc = gp_setting_set(s, sl, hash, on, &out, &ol), others = 0, k = (int)(hit - p), main_i = gp_main_entry(p, n, k);
     char extra[640] = "";
@@ -171,9 +171,9 @@ static int game_set_patch(const char *tid, const char *hash, int on, int memory_
         else {
             for (int i = 0; !rc && upgrade && i < n; i++)
                 if (i != pick && p[i].resolution && gp_main_elf(&p[i]) && gp_setting(out, ol, p[i].hash) == 1)
-                    rc = game_flip(&out, &ol, tid, &p[i], 0, "replaced by an 8 GiB eboot.bin resolution");
-            if (!rc && !(rc = game_flip(&out, &ol, tid, &p[pick], 1, upgrade ? "8 GiB is set when eboot.bin starts" : "the collection starts in eboot.bin"))) {
-                if (upgrade) snprintf(extra, sizeof extra, ". %s needs 8 GiB from the start of the collection, so %s was enabled instead",
+                    rc = game_flip(&out, &ol, tid, &p[i], 0, "replaced by an 8GB Mode eboot.bin resolution");
+            if (!rc && !(rc = game_flip(&out, &ol, tid, &p[pick], 1, upgrade ? "8GB Mode is set when eboot.bin starts" : "the collection starts in eboot.bin"))) {
+                if (upgrade) snprintf(extra, sizeof extra, ". %s needs 8GB Mode from the start of the collection, so %s was enabled instead",
                                       hit->title, p[pick].name);
                 else snprintf(extra, sizeof extra, ". A PS4 Pro patch for %s is required for %s, so %s was enabled too",
                               p[pick].title, hit->title, p[pick].name);
@@ -220,7 +220,7 @@ static int games_drop_8gib(const char *only_tid, const char *why) {
             if (!p->needs_8gib || !settings || gp_setting(settings, sl, p->hash) != 1) continue;
             if (!game_set_patch(g[i].tid, p->hash, 0, 0, msg, sizeof msg)) {
                 dropped++;
-                log_line("patches: %s: \"%s\" turned off, it needs 8 GiB (%s)", g[i].tid, p->name, why);
+                log_line("patches: %s: \"%s\" turned off, it needs 8GB Mode (%s)", g[i].tid, p->name, why);
             }
         }
     }

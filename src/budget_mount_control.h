@@ -30,7 +30,7 @@ static int memory_check(mb_snapshot *s){
  }
  s->state=memory_transaction.owned&&!memory_transaction.restored?MB_8GIB:MB_STOCK;
  s->access_ready=1;
- snprintf(s->detail,sizeof s->detail,"%s",s->state==MB_8GIB?"8 GiB DATA transaction active (no HV)":"No-HV 8 GiB ready for the next eligible Pro launch");
+ snprintf(s->detail,sizeof s->detail,"%s",s->state==MB_8GIB?"8GB Mode DATA transaction active (no HV)":"No-HV 8GB Mode ready for the next eligible Pro launch");
  return 0;
 }
 static int memory_init(uint32_t fw,uint64_t cycles){
@@ -50,8 +50,8 @@ static int memory_data_restore(void){
   memory_data_blocked=1;snprintf(memory_message,sizeof memory_message,"DATA restored but launch gate cleanup failed; reboot required");return 6;
  }
  memory_constructor=0;memset(&memory_owner,0,sizeof memory_owner);
- snprintf(memory_message,sizeof memory_message,"Original DATA extension restored; no-HV 8 GiB ready");
- log_line("8 GiB DATA: rollback verified; launch gate released");return 0;
+ snprintf(memory_message,sizeof memory_message,"Original DATA extension restored; no-HV 8GB Mode ready");
+ log_line("8GB Mode DATA: rollback verified; launch gate released");return 0;
 }
 static int memory_poll(void){
  if(!memory_data_mode)return memory_text_poll();
@@ -61,8 +61,8 @@ static int memory_request(int enable){
  if(!memory_data_mode)return memory_text_request(enable);
  if(memory_data_blocked)return 6;
  memory_target=!!enable;
- snprintf(memory_message,sizeof memory_message,"%s",enable?"No-HV 8 GiB requested for eligible Pro launches":
-          memory_transaction.owned?"8 GiB stays active until the game closes; restoration pending":"No-HV 8 GiB disabled for future launches");
+ snprintf(memory_message,sizeof memory_message,"%s",enable?"No-HV 8GB Mode requested for eligible Pro launches":
+          memory_transaction.owned?"8GB Mode stays active until the game closes; restoration pending":"No-HV 8GB Mode disabled for future launches");
  return bm.attached?0:1;
 }
 static void memory_data_tick(void){
@@ -97,7 +97,7 @@ static void memory_data_tick(void){
   if(s.container!=memory_owner.container||s.app_id!=memory_owner.app_id){
    memory_data_blocked=1;
    snprintf(memory_message,sizeof memory_message,"DATA container identity changed; gate retained; reboot required");
-   log_line("8 GiB DATA: container identity changed; rollback awaits quiescent teardown");return;
+   log_line("8GB Mode DATA: container identity changed; rollback awaits quiescent teardown");return;
   }
   if(s.references!=1||s.profile!=memory_owner.profile||s.mode!=memory_owner.mode||
      s.category!=memory_owner.category||s.maximum||s.extension!=MBD_DELTA){
@@ -106,16 +106,16 @@ static void memory_data_tick(void){
   }
   if(!memory_constructor&&(s.flags&0x40)){
    memory_constructor=1;
-   log_line("8 GiB DATA: constructor app=%u field38=0x%lx expected=0x%lx match=%d",
+   log_line("8GB Mode DATA: constructor app=%u field38=0x%lx expected=0x%lx match=%d",
      s.app_id,(unsigned long)s.field38,(unsigned long)(MBD_EXPECTED_STOCK+MBD_DELTA),s.field38==MBD_EXPECTED_STOCK+MBD_DELTA);
    if(s.field38!=MBD_EXPECTED_STOCK+MBD_DELTA){
     memory_data_blocked=1;
     snprintf(memory_message,sizeof memory_message,"Unexpected constructor budget; gate retained; reboot required");return;
    }
-   snprintf(memory_message,sizeof memory_message,"8 GiB constructor verified (no HV); extension held until game closes");
+   snprintf(memory_message,sizeof memory_message,"8GB Mode constructor verified (no HV); extension held until game closes");
   }
   if(!memory_constructor&&time(NULL)-memory_applied>30){
-   log_line("8 GiB DATA: constructor deadline; gate and transaction retained until quiescent teardown");
+   log_line("8GB Mode DATA: constructor deadline; gate and transaction retained until quiescent teardown");
    memory_data_blocked=1;
    snprintf(memory_message,sizeof memory_message,"Constructor deadline; DATA ownership retained; reboot required");
   }
@@ -136,14 +136,14 @@ static void memory_data_tick(void){
   if(m.phase>=4)break;
   usleep(500);
  }
- if(!held){bm_command(2,seq);log_line("8 GiB DATA: HELD not confirmed for %s; no write",title);memory_refuse(title);return;}
+ if(!held){bm_command(2,seq);log_line("8GB Mode DATA: HELD not confirmed for %s; no write",title);memory_refuse(title);return;}
  mbd_snapshot s;int rc=mbd_read_snapshot(memory_data,&s);
  if(rc||!mbd_eligible(&s)||s.category!=m.category){
-  bm_command(2,seq);log_line("8 GiB DATA: launch %s refused by snapshot guards (read=%d)",title,rc);memory_refuse(title);return;
+  bm_command(2,seq);log_line("8GB Mode DATA: launch %s refused by snapshot guards (read=%d)",title,rc);memory_refuse(title);return;
  }
  if(bm_field(MS_DIRTY,1)){bm_command(2,seq);memory_data_blocked=1;memory_refuse(title);return;}
  rc=mbd_apply(memory_data,&memory_transaction,&s);
- log_line("8 GiB DATA: launch=%s seq=%u HELD apply=%d owned=%d app=%u",title,seq,rc,memory_transaction.owned,s.app_id);
+ log_line("8GB Mode DATA: launch=%s seq=%u HELD apply=%d owned=%d app=%u",title,seq,rc,memory_transaction.owned,s.app_id);
  if(rc){
   memory_refuse(title);
   if(rc==MBD_TX_RECOVERY){memory_data_blocked=1;return;}
@@ -157,7 +157,7 @@ static void memory_data_tick(void){
   snprintf(memory_message,sizeof memory_message,"Launch acknowledgment failed; DATA transaction retained; reboot required");
   return;
  }
- snprintf(memory_message,sizeof memory_message,"8 GiB DATA applied to %s (no HV); waiting for constructor",title);
+ snprintf(memory_message,sizeof memory_message,"8GB Mode DATA applied to %s (no HV); waiting for constructor",title);
 }
 static int memory_shutdown(void){
  if(!memory_data_mode)return 0;

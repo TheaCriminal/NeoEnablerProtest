@@ -5,7 +5,7 @@
 #include "neo_budget.h"
 static int memory_target=0;
 static int memory_retry_blocked;
-static char memory_message[256]="8 GiB disabled (default)";
+static char memory_message[256]="8GB Mode disabled (default)";
 static int memory_text_poll(void){
  if(memory_retry_blocked)return memory_retry_blocked==2?6:5;
  int rc=mb_set(memory_target,memory_message,sizeof memory_message);
