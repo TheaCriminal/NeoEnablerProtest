@@ -20,6 +20,7 @@
 #include <sys/sysctl.h>
 #include <sys/user.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <ps5/kernel.h>
 #include <ps5/klog.h>
 #include "shellcore_hook.h"
@@ -35,7 +36,7 @@ static void log_line(const char *fmt, ...);
 #include "log_mirror.h"
 
 #define PORT 8765
-#define VERSION "NeoEnabler 0.3.5"
+#define VERSION "NeoEnabler 0.4.0"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -45,6 +46,9 @@ typedef struct {
 typedef struct { char useless[45]; char message[3075]; } notify_request_t;
 int sceKernelGetAppInfo(pid_t pid, app_info_t *info);
 int sceKernelSendNotificationRequest(int, notify_request_t *, size_t, int);
+int sceUserServiceInitialize(void *);
+int sceUserServiceGetForegroundUser(int *user);
+int sceSystemServiceLaunchApp(const char *title_id, const char **argv, void *param);
 
 /* NeoEnabler's own log. The kernel log keeps only the last 128 KiB, which the system overwrites within seconds, so
    every line also goes here, with the console time to the millisecond and the seconds since start. At 256 KiB the file becomes neo.log.old and a new one starts. */
@@ -222,9 +226,9 @@ static void settings_load(void) {
         gpu_configure(cfg.gpu_enabled, cfg.gpu_mhz);
         if (cfg.gpu_enabled && !gpu_backend_supported()) log_line("settings: saved GPU boost ignored on unsupported firmware");
         if (cfg.force_8gib && !memory_supported())
-            log_line("settings: force_8gib=1 ignored, 8 GiB is not supported on firmware %x.%02x",
+            log_line("settings: force_8gib=1 ignored, 8GB Mode is not supported on firmware %x.%02x",
                      (fw_raw_version() >> 24) & 0xff, (fw_raw_version() >> 16) & 0xff);
-        if (cfg.memory && !cfg.force_8gib) log_line("settings: memory_8gib=1 of an older version ignored; 8 GiB now follows the game patches");
+        if (cfg.memory && !cfg.force_8gib) log_line("settings: memory_8gib=1 of an older version ignored; 8GB Mode now follows the game patches");
     }
     fclose(f);
 }
@@ -336,6 +340,82 @@ static int games_text(char *out, size_t cap, int html) {
     return games;
 }
 
+/* Title ID of the open PS4 game (an eboot.bin process with one); 1 when there is one. */
+static int open_game(char tid[10]) {
+    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC, 0}; size_t n = 0; int found = 0;
+    tid[0] = 0;
+    if (sysctl(mib, 4, NULL, &n, NULL, 0) || !n || n > 32 * 1024 * 1024) return 0;
+    unsigned char *buf = malloc(n);
+    if (!buf || sysctl(mib, 4, buf, &n, NULL, 0)) { free(buf); return 0; }
+    for (size_t off = 0; !found && off + sizeof(struct kinfo_proc) <= n;) {
+        struct kinfo_proc *ki = (void *)(buf + off);
+        if (ki->ki_structsize < (int)sizeof(*ki) || (size_t)ki->ki_structsize > n - off) break;
+        app_info_t info = {0};
+        if (!strcmp(ki->ki_comm, "eboot.bin") && !sceKernelGetAppInfo(ki->ki_pid, &info) && info.title_id[0]) {
+            snprintf(tid, 10, "%.9s", info.title_id);
+            found = 1;
+        }
+        off += (size_t)ki->ki_structsize;
+    }
+    free(buf);
+    return found;
+}
+
+/* Play: the launch runs in its own thread, because ShellCore asks this manager about the launch (Pro mode, 8GB
+   Mode) while it is starting the game, and the questions are answered by the main loop. The thread only calls the
+   system service; the main loop logs and notifies the result (play_tick). */
+static struct { volatile int busy, done; int rc; char tid[10]; } play;
+
+static void *play_thread(void *arg) {
+    (void)arg;
+    struct { uint32_t size, user, opt; uint64_t report; uint32_t flag; } param = {0};
+    int user = -1, rc = sceUserServiceGetForegroundUser(&user);
+    if (!rc && user > 0) {
+        param.size = sizeof param; param.user = (uint32_t)user;
+        const char *argv[] = {NULL};
+        rc = sceSystemServiceLaunchApp(play.tid, argv, &param);
+    } else if (!rc) rc = -1;
+    play.rc = rc;
+    play.done = 1;
+    return NULL;
+}
+
+/* Starts an installed game for the signed-in user. Refused while a game is open or another start is running. */
+static int play_start(const char *tid, char *msg, size_t cap) {
+    char open[10], name[128];
+    if (!game_tid(tid)) { snprintf(msg, cap, "Unknown game"); return -1; }
+    game_name(tid, name, sizeof name);
+    if (!name[0]) snprintf(name, sizeof name, "%s", tid);
+    if (play.busy) { snprintf(msg, cap, "%s is already starting", play.tid); return -1; }
+    if (open_game(open)) {
+        char other[128];
+        game_name(open, other, sizeof other);
+        if (!strcmp(open, tid)) snprintf(msg, cap, "%s is already open", name);
+        else snprintf(msg, cap, "Close %s before starting %s", other[0] ? other : open, name);
+        return -1;
+    }
+    snprintf(play.tid, sizeof play.tid, "%s", tid);
+    play.busy = 1; play.done = 0;
+    pthread_t th;
+    if (pthread_create(&th, NULL, play_thread, NULL)) { play.busy = 0; snprintf(msg, cap, "%s could not be started", name); return -1; }
+    pthread_detach(th);
+    log_line("play: starting %s (%s)", tid, name);
+    snprintf(msg, cap, "Starting %s", name);
+    return 0;
+}
+
+static void play_tick(void) {
+    if (!play.busy || !play.done) return;
+    play.busy = 0;
+    log_line("play: %s: launch 0x%08x", play.tid, (unsigned)play.rc);
+    if (play.rc < 0) {
+        char note[200];
+        snprintf(note, sizeof note, play.rc == -1 ? "%s could not be started: no user is signed in"
+                                                  : "%s could not be started (0x%08x)", play.tid, (unsigned)play.rc);
+        notify(note);
+    }
+}
+
 /* A unique PS4 eboot is the only automatic clock target. Native games, mixed
  * game processes, failed scans and launcher processes never trigger boost. */
 static int gpu_game_pid(void) {
@@ -420,10 +500,22 @@ static const char page_head[] =
     "@media(max-width:900px){.layout{grid-template-columns:1fr}}"
     ".card,.game{background:rgba(17,23,34,.96);border:1px solid var(--line);border-radius:var(--radius);padding:16px}"
     "aside{display:grid;gap:14px}aside h2{font-size:15px;margin:0 0 8px}"
-    ".game{display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;margin-bottom:14px}"
-    ".game img{width:96px;height:96px;border-radius:12px;object-fit:cover;background:var(--surface-2)}"
-    ".game h2{font-size:18px;margin:0}.game h2 span{color:var(--muted);font-weight:400;font-size:14px}"
-    ".ver{color:var(--muted);font-size:13px;margin:2px 0 10px}"
+    ".games{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}"
+    ".game{display:flex;flex-direction:column;padding:0;overflow:hidden}"
+    ".game .art{width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--surface-2);display:block}"
+    ".info{display:flex;flex-direction:column;gap:2px;padding:10px 12px 0;flex:1}.name{font-size:15px}"
+    ".meta{color:var(--muted);font-size:13px}.actions{display:flex;gap:8px;padding:0 12px 12px}.actions button{flex:1;margin:10px 0 0}"
+    "button.primary{background:var(--blue-strong);border-color:var(--blue-strong)}"
+    ".window{position:fixed;inset:0;z-index:5;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.66)}"
+    ".window[hidden]{display:none}"
+    ".sheet{width:min(860px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border:1px solid var(--line);"
+    "border-radius:var(--radius);padding:16px}"
+    ".whead{display:flex;align-items:center;gap:12px}.whead img{width:56px;height:56px;border-radius:10px;object-fit:cover;"
+    "background:var(--surface-2)}.whead h2{flex:1;font-size:18px;margin:0}.whead h2 span{color:var(--muted);font-weight:400;font-size:14px}"
+    ".whead .close{margin:0}"
+    ".facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0;padding:10px 12px;border:1px solid var(--line);"
+    "border-radius:10px;background:var(--surface-2)}.facts dt{color:var(--muted);font-size:12px}.facts dd{margin:0;font-weight:600}"
+    ".patches li[hidden]{display:none}"
     ".patches{list-style:none;margin:0;padding:0;display:grid;gap:8px}"
     ".patch{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;padding:10px 12px;border:1px solid var(--line);"
     "border-radius:10px;background:var(--surface-2);cursor:pointer}"
@@ -446,7 +538,9 @@ static const char page_head[] =
     "background:#0c111a;color:var(--text);font:inherit}.search:focus{outline:2px solid var(--blue);outline-offset:1px}"
     ".game[hidden]{display:none}"
     "ul{margin:6px 0 0;padding-left:18px}small{color:var(--muted)}"
-    "</style><script src=/panel.js></script></head><body>";
+    "</style><script>/* the browser of older firmwares has no <dialog>: it gets the legacy panel */"
+    "if(typeof document.createElement('dialog').showModal!=='function')location.replace('/legacy');</script>"
+    "<script src=/panel.js></script></head><body>";
 
 /* v4 hook still in ShellCore (forces NEO regardless of this manager's hook). */
 static int v4_active(const shell_t *s) { return s->pid > 0 && s->frame && v4_state(s->pid, s->frame) == V4_PRESENT; }
@@ -462,9 +556,211 @@ static void page_header(sbuf *b, const char *active) {
               gpu_available() ? ">GPU clock</a>" : "");
 }
 
+/* Status, game patches update, logs and the advanced overrides. In the legacy panel the forms carry legacy=1, so the
+   answer is the legacy page again. */
+static void page_status(sbuf *b, int legacy) {
+    int mem_ok = memory_available();
+    const char *hid = legacy ? "<input type=hidden name=legacy value=1>" : "";
+    shell_t s; int st = hook_state(&s);
+    if (st == HOOK_OFF && v4_active(&s)) st = HOOK_ON;
+    mb_snapshot memory; memory_check(&memory);
+    char running[1024]; games_text(running, sizeof(running), 1);
+    char patches_esc[768]; html_escape(patches_message, patches_esc, sizeof(patches_esc));
+    sb_printf(b, "<aside>"
+              "<div class=card><h2>Status</h2>"
+              "<div>PS4 Pro mode <span class='state %s'>%s</span></div>"
+              "<div style='margin-top:6px'>8GB Mode <span class='state %s'>%s</span>%s</div>"
+              "<p><small>Pro mode and 8GB Mode follow the enabled patches of each game. 8GB Mode returns to the original "
+              "memory when the game closes.</small></p><b>Game running</b><ul>%s</ul></div>"
+              "<div class=card><h2>Game patches</h2><p>%s</p><small>Downloads the patches from the NeoEnabler repository "
+              "into " PS_DIR ". Changed files are backed up to " PS_BACKUP_ROOT " first.</small>"
+              "<form method=post>%s<button formaction=/patches/update>Update Patches</button></form></div>"
+              "<div class=card><h2>Logs</h2><small>Kernel logs, including every NeoEnabler step.</small>"
+              "<form method=post>%s<a href=/logs target=_blank><button type=button>Show Logs</button></a>"
+              "<a href=/logs/download><button type=button>Download Logs</button></a>"
+              "<button formaction=/logs/save>Save Logs</button><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
+              "<details class=card><summary>Advanced</summary>"
+              "<form method=post>%s<input type=hidden name=on value=%d><b>Pro mode for every PS4 game</b> "
+              "<span class='state %s'>%s</span><br><small>Ignores the patch selection.</small><br>"
+              "<button formaction=/advanced/neo>%s</button></form>"
+              "<form method=post style='margin-top:12px'>%s<input type=hidden name=on value=%d><b>Keep 8GB Mode on</b> "
+              "<span class='state %s'>%s</span><br><small>For every Pro mode launch, until turned off.</small><br>"
+              "<button formaction=/advanced/memory%s>%s</button></form></details>"
+              "<small style='text-align:center'>" VERSION "</small></aside>",
+              st == HOOK_ON && running_pro == 1 ? "on" : "off",
+              st != HOOK_ON ? state_text(st) : running_pro == 1 ? "enabled" : running_pro == 0 ? "disabled" : "ready",
+              memory.state == MB_8GIB ? "on" : "off",
+              memory.state == MB_8GIB ? "enabled" : !fw_raw_version() ? "firmware unavailable" : !memory_supported() ? "not supported" : !mem_ok ? "unavailable" : "ready",
+              memory_community_report() ? "<br><small>Firmware 13.60: Bloodborne 4K with 8GB Mode reported working; more test reports welcome</small>" : "",
+              running, patches_esc, hid, hid,
+              hid, !force_neo, force_neo ? "on" : "off", force_neo ? "on" : "off", force_neo ? "Turn off" : "Turn on",
+              hid, !force_8gib, force_8gib && mem_ok ? "on" : "off",
+              !force_8gib ? "off" : mem_ok ? "on" : "requested, not available", !force_8gib && !mem_ok ? " disabled" : "",
+              force_8gib ? "Turn off" : "Turn on");
+}
+
+/* Set for a request of the legacy panel (its paths, or legacy=1 in the form): pages answer with the legacy panel. */
+static int legacy_request;
+static void serve_legacy(int fd, const char *msg, const char *q);
+
+/* URL-decoded value of key in an x-www-form-urlencoded body; "" when missing. */
+static void form_text(const char *body, const char *key, char *out, size_t cap) {
+    size_t kl = strlen(key), o = 0;
+    out[0] = 0;
+    for (const char *p = body; p && *p; p = strchr(p, '&') ? strchr(p, '&') + 1 : NULL) {
+        if (strncmp(p, key, kl) || p[kl] != '=') continue;
+        for (const char *v = p + kl + 1; *v && *v != '&' && o + 1 < cap; v++) {
+            unsigned x;
+            if (*v == '+') out[o++] = ' ';
+            else if (*v == '%' && v[1] && v[2] && sscanf(v + 1, "%2x", &x) == 1) { out[o++] = (char)x; v += 2; }
+            else out[o++] = *v;
+        }
+        out[o] = 0;
+        return;
+    }
+}
+
+/* Every word of q is in text, ignoring ASCII case. */
+static int words_match(const char *text, const char *q) {
+    char word[64];
+    for (const char *p = q; *p;) {
+        while (*p == ' ') p++;
+        size_t n = strcspn(p, " ");
+        if (!n) break;
+        snprintf(word, sizeof word, "%.*s", (int)(n < sizeof word ? n : sizeof word - 1), p);
+        size_t wl = strlen(word), tl = strlen(text); int found = 0;
+        for (size_t i = 0; !found && i + wl <= tl; i++) found = !strncasecmp(text + i, word, wl);
+        if (!found) return 0;
+        p += n;
+    }
+    return 1;
+}
+
+/* Panel for the browser of older firmwares: plain pages and forms, no script needed (a patch checkbox submits its
+   form), no CSS variables, grid or overlays. */
+static const char legacy_head[] =
+    "<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
+    "<title>NeoEnabler</title><style>"
+    "*{box-sizing:border-box}body{margin:0;background:#080b12;color:#f4f7fb;font:15px/1.45 sans-serif}"
+    "header{padding:12px 16px;background:#111722;border-bottom:1px solid #263145}h1{font-size:19px;margin:0 0 8px}"
+    "h1 small{color:#95a2b8;font-weight:normal;font-size:13px;margin-left:8px}a{color:#55a7ff}"
+    "main{padding:16px}h2{font-size:18px;margin:0}h2 span{color:#95a2b8;font-weight:normal;font-size:14px}"
+    "button{font:inherit;color:#f4f7fb;background:#171f2d;border:1px solid #263145;border-radius:10px;padding:7px 13px;"
+    "margin:8px 8px 0 0;cursor:pointer}button.primary{background:#147ee8;border-color:#147ee8}button.danger{background:#3a1f1d;border-color:#5c2c28}"
+    "input[type=text]{font:inherit;background:#0c111a;color:#f4f7fb;border:1px solid #263145;border-radius:10px;padding:8px 12px;width:60%}"
+    ".msg{margin:0 0 14px;padding:10px 14px;border:1px solid #263145;border-radius:10px;background:#111722}"
+    ".game{display:inline-block;vertical-align:top;width:190px;margin:0 12px 12px 0;background:#111722;border:1px solid #263145;"
+    "border-radius:14px;overflow:hidden}.game img{display:block;width:190px;height:190px;background:#171f2d}"
+    ".info{padding:10px 12px 0}.name{display:block;font-weight:bold}.meta{color:#95a2b8;font-size:13px}"
+    ".actions{padding:0 12px 12px}.actions form,.actions a{display:inline}"
+    ".card{background:#111722;border:1px solid #263145;border-radius:14px;padding:16px;margin:0 0 14px}"
+    "aside{display:block;max-width:640px;margin-top:10px}aside h2{font-size:15px;margin:0 0 8px}"
+    ".whead img{width:56px;height:56px;border-radius:10px;vertical-align:middle;margin-right:12px;background:#171f2d}"
+    ".whead h2{display:inline;vertical-align:middle}"
+    ".facts{margin:14px 0;padding:10px 12px;border:1px solid #263145;border-radius:10px;background:#171f2d}"
+    ".facts div{display:inline-block;margin-right:28px}.facts span{display:block;color:#95a2b8;font-size:12px}"
+    ".patch{margin:0 0 8px;padding:10px 12px;border:1px solid #263145;border-radius:10px;background:#171f2d}"
+    ".patch.on{border-color:#55a7ff}.patch label{display:block;cursor:pointer}.patch input{margin:0 10px 0 0}"
+    ".patch i{display:block;color:#95a2b8;font-size:13px;margin:2px 0 0 28px}"
+    ".tag{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:bold;"
+    "color:#f2bd5d;border:1px solid #6b5a33}"
+    ".state{display:inline-block;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:bold;background:#171f2d}"
+    ".state.on{background:#173a2d;color:#52d39a}.state.off{color:#95a2b8}"
+    "details summary{cursor:pointer;color:#95a2b8;font-size:13px}ul{margin:6px 0 0;padding-left:18px}small{color:#95a2b8}"
+    "</style></head><body>";
+
+static void legacy_header(sbuf *b, const char *msg) {
+    uint32_t fw_raw = fw_raw_version();
+    sb_printf(b, "%s<header><h1>NeoEnabler <small>FW %x.%02x</small></h1><a href=/legacy><button type=button>Games</button></a>"
+              "<form method=post action=/quit style='display:inline'><button class=danger>Quit</button></form></header><main>",
+              legacy_head, (fw_raw >> 24) & 0xff, (fw_raw >> 16) & 0xff);
+    if (msg && msg[0]) { sb_printf(b, "<p class=msg>"); sb_esc(b, msg); sb_printf(b, "</p>"); }
+}
+
+/* Legacy games page: search, one card per game (icon, name, title ID, Play, Patches), then the status. */
+static void serve_legacy(int fd, const char *msg, const char *q) {
+    sbuf b = {0};
+    legacy_header(&b, msg);
+    int n, shown = 0; game_t *g = games_scan(&n);
+    if (n) {
+        sb_printf(&b, "<form method=post action=/legacy><input type=text name=q value='");
+        sb_esc(&b, q);
+        sb_printf(&b, "' placeholder='Search by name or title ID'> <button>Search</button></form><div style='margin-top:14px'>");
+    } else sb_printf(&b, "<div class=card><b>No installed game with NeoEnabler patches</b><p><small>Games appear here when "
+                         PS_DIR " has a patch for their installed version that needs PS4 Pro mode. Use Update Patches "
+                         "to download the patches.</small></p></div><div>");
+    for (int i = 0; i < n; i++) {
+        char text[160];
+        snprintf(text, sizeof text, "%s %s", g[i].name, g[i].tid);
+        if (!words_match(text, q)) continue;
+        shown++;
+        sb_printf(&b, "<div class=game><img src='/icon/%s' alt=''><div class=info><span class=name>", g[i].tid);
+        sb_esc(&b, g[i].name[0] ? g[i].name : g[i].tid);
+        sb_printf(&b, "</span><span class=meta>%s</span></div><div class=actions><form method=post action=/legacy/play>"
+                      "<input type=hidden name=tid value=%s><button class=primary>Play</button></form>"
+                      "<a href='/legacy/patches?tid=%s'><button type=button>Patches</button></a></div></div>", g[i].tid, g[i].tid, g[i].tid);
+    }
+    if (n && !shown) sb_printf(&b, "<p class=card>No game matches the search.</p>");
+    sb_printf(&b, "</div>");
+    games_free(g, n);
+    page_status(&b, 1);
+    sb_printf(&b, "</main></body></html>");
+    if (b.p) reply_bytes(fd, "200 OK", "text/html; charset=utf-8", "no-store", b.p, b.n);
+    else reply(fd, "500 Internal Server Error", "text/plain", "out of memory\n");
+    free(b.p);
+}
+
+/* Legacy patches page of one game: icon, name and title ID, versions and patch count, search, and the patches. Each
+   patch is a form; its checkbox submits it and the answer is this page with the result of game_set_patch. */
+static void serve_legacy_patches(int fd, const char *tid, const char *q, const char *msg) {
+    int n; game_t *g = games_scan(&n), *x = NULL;
+    for (int i = 0; i < n; i++) if (!strcmp(g[i].tid, tid)) x = &g[i];
+    if (!x) { games_free(g, n); serve_legacy(fd, "This game has no NeoEnabler patches", ""); return; }
+    sbuf b = {0};
+    legacy_header(&b, msg);
+    size_t sl; char *settings = settings_read(&sl);
+    int mem_ok = memory_available(), shown = 0;
+    const char *title = x->name[0] ? x->name : x->tid;
+    sb_printf(&b, "<div class=whead><img src='/icon/%s' alt=''><h2>", x->tid);
+    sb_esc(&b, title);
+    sb_printf(&b, " <span>(%s)</span></h2></div><div class=facts><div><span>Game version</span><b>%s</b></div>"
+                  "<div><span>Update version</span><b>%s</b></div><div><span>Patches</span><b>%d</b></div></div>"
+                  "<form method=post action=/legacy/patches><input type=hidden name=tid value=%s><input type=text name=q value='",
+              x->tid, x->game_ver[0] ? x->game_ver : "Unknown", x->update ? (x->update_ver[0] ? x->update_ver : "Unknown") : "None",
+              x->count, x->tid);
+    sb_esc(&b, q);
+    sb_printf(&b, "' placeholder='Search patches'> <button>Search</button></form><div style='margin-top:14px'>");
+    for (int k = 0; k < x->count; k++) {
+        const gp_patch *p = &x->patches[k];
+        char text[2048];
+        snprintf(text, sizeof text, "%s %s", p->name, p->note);
+        if (!words_match(text, q)) continue;
+        shown++;
+        int on = gp_setting(settings, sl, p->hash) == 1, blocked = p->needs_8gib && !mem_ok && !on;
+        sb_printf(&b, "<form method=post action=/legacy/patches/set class='patch%s'><input type=hidden name=tid value=%s>"
+                      "<input type=hidden name=hash value=%s><input type=hidden name=on value=%d><input type=hidden name=q value='",
+                  on ? " on" : "", x->tid, p->hash, !on);
+        sb_esc(&b, q);
+        sb_printf(&b, "'><label><input type=checkbox onclick='this.form.submit()'%s%s><b>", on ? " checked" : "", blocked ? " disabled" : "");
+        sb_esc(&b, p->name);
+        sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
+        int main_i = gp_main_entry(x->patches, x->count, k);
+        if (main_i >= 0) { sb_printf(&b, "<span class=tag>Needs a "); sb_esc(&b, x->patches[main_i].title); sb_printf(&b, " resolution</span>"); }
+        if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }
+        sb_printf(&b, "</label></form>");
+    }
+    if (!shown) sb_printf(&b, "<p class=card>No patch matches the search.</p>");
+    sb_printf(&b, "</div></main></body></html>");
+    free(settings); games_free(g, n);
+    if (b.p) reply_bytes(fd, "200 OK", "text/html; charset=utf-8", "no-store", b.p, b.n);
+    else reply(fd, "500 Internal Server Error", "text/plain", "out of memory\n");
+    free(b.p);
+}
+
 /* Games with NeoEnabler patches on the left (icon, name, title ID, version, every patch of that version with a
    checkbox); status, patch update, logs and the advanced overrides on the right. */
 static void serve_page(int fd, const char *msg) {
+    if (legacy_request) { serve_legacy(fd, msg, ""); return; }
     sbuf b = {0};
     page_header(&b, "games");
     sb_printf(&b, "<main>");
@@ -478,66 +774,55 @@ static void serve_page(int fd, const char *msg) {
     if (!n) sb_printf(&b, "<div class=card><b>No installed game with NeoEnabler patches</b><p><small>Games appear here when "
                           PS_DIR " has a patch for their installed version that needs PS4 Pro mode. Use Update Patches "
                           "to download the patches.</small></p></div>");
+    /* cards (icon, name, title ID, Play and Patches), then one patch window per game, shown by Patches */
+    if (n) sb_printf(&b, "<div class=games>");
     for (int i = 0; i < n; i++) {
+        const char *title = g[i].name[0] ? g[i].name : g[i].tid;
         sb_printf(&b, "<article class=game data-search='");
         sb_esc(&b, g[i].name);
-        sb_printf(&b, " %s'><img src='/icon/%s' alt='' loading=lazy><div><h2>", g[i].tid, g[i].tid);
-        sb_esc(&b, g[i].name[0] ? g[i].name : g[i].tid);
-        sb_printf(&b, " <span>(%s)</span></h2><p class=ver>Version %s%s</p><ul class=patches>", g[i].tid, g[i].version,
-                  g[i].update ? " (update installed)" : "");
+        sb_printf(&b, " %s'><img class=art src='/icon/%s' alt='' loading=lazy><div class=info><b class=name>", g[i].tid, g[i].tid);
+        sb_esc(&b, title);
+        sb_printf(&b, "</b><span class=meta>%s</span></div><div class=actions><button type=button class=primary data-play=%s>Play</button>"
+                      "<button type=button data-open=w-%s>Patches</button></div></article>", g[i].tid, g[i].tid, g[i].tid);
+    }
+    if (n) sb_printf(&b, "</div>");
+    for (int i = 0; i < n; i++) {
+        const char *title = g[i].name[0] ? g[i].name : g[i].tid;
+        sb_printf(&b, "<div class=window id=w-%s hidden><div class=sheet role=dialog aria-modal=true aria-label='Patches of ", g[i].tid);
+        sb_esc(&b, title);
+        sb_printf(&b, "'><div class=whead><img src='/icon/%s' alt='' loading=lazy><h2>", g[i].tid);
+        sb_esc(&b, title);
+        sb_printf(&b, " <span>(%s)</span></h2><button type=button class=close data-close aria-label=Close>Close</button></div>"
+                      "<dl class=facts><div><dt>Game version</dt><dd>%s</dd></div><div><dt>Update version</dt><dd>%s</dd></div>"
+                      "<div><dt>Patches</dt><dd>%d</dd></div></dl>"
+                      "<input type=search class='search patch-search' placeholder='Search patches' autocomplete=off aria-label='Search patches'>"
+                      "<p class='card none' hidden>No patch matches the search.</p><ul class=patches>", g[i].tid,
+                  g[i].game_ver[0] ? g[i].game_ver : "Unknown", g[i].update ? (g[i].update_ver[0] ? g[i].update_ver : "Unknown") : "None",
+                  g[i].count);
         for (int k = 0; k < g[i].count; k++) {
             const gp_patch *p = &g[i].patches[k];
             int on = gp_setting(settings, sl, p->hash) == 1, blocked = p->needs_8gib && !mem_ok && !on;
-            sb_printf(&b, "<li><label class=patch><input type=checkbox data-tid=%s data-hash=%s", g[i].tid, p->hash);
+            sb_printf(&b, "<li data-search='");
+            sb_esc(&b, p->name);
+            sb_printf(&b, " ");
+            sb_esc(&b, p->note);
+            sb_printf(&b, "'><label class=patch><input type=checkbox data-tid=%s data-hash=%s", g[i].tid, p->hash);
             if (p->resolution) { sb_printf(&b, " data-res='"); sb_esc(&b, p->elf); sb_printf(&b, "'"); }
             sb_printf(&b, "%s%s><span><b>", on ? " checked" : "", blocked ? " disabled" : "");
             sb_esc(&b, p->name);
-            sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8 GiB</span>" : "");
+            sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
             int main_i = gp_main_entry(g[i].patches, g[i].count, k);
             if (main_i >= 0) { sb_printf(&b, "<span class=tag>Needs a "); sb_esc(&b, g[i].patches[main_i].title); sb_printf(&b, " resolution</span>"); }
             if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }
             sb_printf(&b, "</span></label></li>");
         }
-        sb_printf(&b, "</ul></div></article>");
+        sb_printf(&b, "</ul></div></div>");
     }
     free(settings); games_free(g, n);
 
-    shell_t s; int st = hook_state(&s);
-    if (st == HOOK_OFF && v4_active(&s)) st = HOOK_ON;
-    mb_snapshot memory; memory_check(&memory);
-    char running[1024]; games_text(running, sizeof(running), 1);
-    char patches_esc[768]; html_escape(patches_message, patches_esc, sizeof(patches_esc));
-    sb_printf(&b, "</section><aside>"
-              "<div class=card><h2>Status</h2>"
-              "<div>PS4 Pro mode <span class='state %s'>%s</span></div>"
-              "<div style='margin-top:6px'>8 GiB memory <span class='state %s'>%s</span>%s</div>"
-              "<p><small>Pro mode and 8 GiB follow the enabled patches of each game. 8 GiB returns to the original "
-              "memory when the game closes.</small></p><b>Game running</b><ul>%s</ul></div>"
-              "<div class=card><h2>Game patches</h2><p>%s</p><small>Downloads the patches from the NeoEnabler repository "
-              "into " PS_DIR ". Changed files are backed up to " PS_BACKUP_ROOT " first.</small>"
-              "<form method=post><button formaction=/patches/update>Update Patches</button></form></div>"
-              "<div class=card><h2>Logs</h2><small>Kernel logs, including every NeoEnabler step.</small>"
-              "<form method=post><a href=/logs target=_blank><button type=button>Show Logs</button></a>"
-              "<a href=/logs/download><button type=button>Download Logs</button></a>"
-              "<button formaction=/logs/save>Save Logs</button><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
-              "<details class=card><summary>Advanced</summary>"
-              "<form method=post><input type=hidden name=on value=%d><b>Pro mode for every PS4 game</b> "
-              "<span class='state %s'>%s</span><br><small>Ignores the patch selection.</small><br>"
-              "<button formaction=/advanced/neo>%s</button></form>"
-              "<form method=post style='margin-top:12px'><input type=hidden name=on value=%d><b>Keep 8 GiB on</b> "
-              "<span class='state %s'>%s</span><br><small>For every Pro mode launch, until turned off.</small><br>"
-              "<button formaction=/advanced/memory%s>%s</button></form></details>"
-              "<small style='text-align:center'>" VERSION "</small></aside></div></main></body></html>",
-              st == HOOK_ON && running_pro == 1 ? "on" : "off",
-              st != HOOK_ON ? state_text(st) : running_pro == 1 ? "enabled" : running_pro == 0 ? "disabled" : "ready",
-              memory.state == MB_8GIB ? "on" : "off",
-              memory.state == MB_8GIB ? "enabled" : !fw_raw_version() ? "firmware unavailable" : !memory_supported() ? "not supported" : !mem_ok ? "unavailable" : "ready",
-              memory_community_report() ? "<br><small>Firmware 13.60: Bloodborne 4K with 8 GiB reported working; more test reports welcome</small>" : "",
-              running, patches_esc,
-              !force_neo, force_neo ? "on" : "off", force_neo ? "on" : "off", force_neo ? "Turn off" : "Turn on",
-              !force_8gib, force_8gib && mem_ok ? "on" : "off",
-              !force_8gib ? "off" : mem_ok ? "on" : "requested, not available", !force_8gib && !mem_ok ? " disabled" : "",
-              force_8gib ? "Turn off" : "Turn on");
+    sb_printf(&b, "</section>");
+    page_status(&b, 0);
+    sb_printf(&b, "</div></main></body></html>");
     if (b.p) reply_bytes(fd, "200 OK", "text/html; charset=utf-8", "no-store", b.p, b.n);
     else reply(fd, "500 Internal Server Error", "text/plain", "out of memory\n");
     free(b.p);
@@ -589,7 +874,7 @@ static void serve_gpu_page(int fd, const char *msg) {
         "<small>Applies to PS4 games in base or NEO mode. A saved target is requested on the next PS4 launch. "
         "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
         "<form method=post><input type=hidden name=view value=gpu><button formaction=/settings/save>Save Settings</button></form>"
-        "%s</div></div><p><small>GPU boost is independent of NEO and 8 GiB. Quitting restores the captured GPU clock.<br>"
+        "%s</div></div><p><small>GPU boost is independent of NEO and 8GB Mode. Quitting restores the captured GPU clock.<br>"
         VERSION "</small></p></main>"
         "<script>(function(){const r=document.getElementById('gpu-target'),o=document.getElementById('gpu-value');"
         "r.addEventListener('input',()=>o.textContent=r.value);"
@@ -729,7 +1014,7 @@ static void log_state(void) {
     shell_t s; int st = hook_state(&s);
     if (st == HOOK_BAD_CAVE) { char d[400]; bad_cave_text(&s, d, sizeof(d)); log_line("%s", d); }
     mb_snapshot m; memory_check(&m);
-    log_line("state: NEO hook %s, v4 hook %s, 8 GiB %s (requested %s): %s", state_text(st),
+    log_line("state: NEO hook %s, v4 hook %s, 8GB Mode %s (requested %s): %s", state_text(st),
              v4_active(&s) ? "present" : "absent",
              m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
              memory_target ? "on" : "off", m.detail);
@@ -924,7 +1209,7 @@ static void build_report(sbuf *b) {
               "manager running since %lds\nhook: %s\n", VERSION, fw >> 8, fw & 0xff, now, (long)(mono.tv_sec - manager_start.tv_sec), state_text(st));
     if (st == HOOK_BAD_CAVE) { char d[400]; bad_cave_text(&s, d, sizeof d); sb_printf(b, "%s\n", d); }
     mb_snapshot m; memory_check(&m);
-    sb_printf(b, "8 GiB: %s (requested %s): %s\n", m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
+    sb_printf(b, "8GB Mode: %s (requested %s): %s\n", m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
               memory_target ? "on" : "off", m.detail);
     sb_printf(b, "GPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", gpu_state_text(), gpu.target,
               gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
@@ -1046,19 +1331,41 @@ static int patches_drop_8gib(const char *only_tid) {
     int dropped = games_drop_8gib(only_tid, memory_message);
     if (dropped) {
         char note[200];
-        snprintf(note, sizeof note, "%d patch%s that need 8 GiB turned off: 8 GiB is not available", dropped, dropped == 1 ? "" : "es");
+        snprintf(note, sizeof note, "%d patch%s that need 8GB Mode turned off: 8GB Mode is not available", dropped, dropped == 1 ? "" : "es");
         notify(note);
     }
     return dropped;
 }
 
-/* "Keep 8 GiB on" is a request for the budget. Without 8 GiB (no hypervisor exploit, or an unsupported firmware) there
+/* A launch that wanted 8 GiB was released without it: its 8 GiB patches are turned off before ps-patch-system reads
+   the settings for that game (it does when the game process starts, after the mount). */
+static void memory_launch_refused(const char *tid) {
+    if (!game_tid(tid)) return;
+    int dropped = games_drop_8gib(tid, "8GB Mode was not applied to this launch");
+    if (dropped) {
+        char note[200];
+        snprintf(note, sizeof note, "8GB Mode could not be applied to %s: %d patch%s that need it turned off", tid, dropped, dropped == 1 ? "" : "es");
+        notify(note);
+    }
+}
+
+/* Patches can also be turned on in the ps-patch-system Patch Manager: when its settings file changes, 8 GiB patches
+   are turned off again while 8 GiB is not available. */
+static void settings_watch(void) {
+    static time_t mtime; static off_t size = -1;
+    struct stat st;
+    if (stat(SETTINGS_XML, &st) || (st.st_mtime == mtime && st.st_size == size)) return;
+    mtime = st.st_mtime; size = st.st_size;
+    patches_drop_8gib(NULL);
+}
+
+/* "Keep 8GB Mode on" is a request for the budget. Without 8 GiB (no hypervisor exploit, or an unsupported firmware) there
    is nothing to request: it is cleared and saved, so it does not stay on and come back at the next unlock. */
 static void drop_8gib_request(void) {
     if (!force_8gib || memory_available()) return;
     force_8gib = 0;
     int saved = !settings_save();
-    log_line("Keep 8 GiB on: cleared, 8 GiB is not available (needs firmware 13.20 or 13.60 with a validated memory launch hook)%s",
+    log_line("Keep 8GB Mode on: cleared, 8GB Mode is not available (needs firmware 13.20 or 13.60 with a validated memory launch hook)%s",
              saved ? "" : " (settings not saved)");
 }
 
@@ -1142,7 +1449,7 @@ static void launch_poll(void) {
         pending.needs = game_needs(tid);
         if (force_neo) pending.needs |= NEEDS_PRO;
         log_line("launch: %s needs %s%s", tid, pending.needs & NEEDS_PRO ? "Pro mode" : "base mode",
-                 pending.needs & NEEDS_8GIB ? " and 8 GiB" : "");
+                 pending.needs & NEEDS_8GIB ? " and 8GB Mode" : "");
     }
     int pro = (pending.needs & NEEDS_PRO) != 0, ok = 1;
     int mem_ok = memory_available();
@@ -1165,7 +1472,7 @@ static void launch_poll(void) {
     shim_answer(&live, pending.seq, (unsigned char)pro, pending.attr_off);
     pending.active = 0;
     log_line("launch: %s starts in %s mode%s", pending.tid, pro ? "Pro" : "base",
-             pro && mem_ok && ok ? (want8 ? " with 8 GiB" : " with the original memory") : "");
+             pro && mem_ok && ok ? (want8 ? " with 8GB Mode" : " with the original memory") : "");
 }
 
 /* 8 GiB switched on for a launch goes back to the original budget when no game runs any more. */
@@ -1176,7 +1483,7 @@ static void launch_tick(void) {
     if (games < 0 || (!auto8.seen_game && time(NULL) - auto8.since < 60)) return;
     auto8.active = 0;
     memory_request(0);
-    log_line("8 GiB: %s closed: %s", auto8.tid, memory_message);
+    log_line("8GB Mode: %s closed: %s", auto8.tid, memory_message);
 }
 
 static int memory_launch_wants(const char *tid) {
@@ -1224,6 +1531,7 @@ int main(void) {
         return 1;
     }
     log_line("%s started", VERSION);
+    sceUserServiceInitialize(0);
     settings_load();
     log_line("settings: force_neo=%d force_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u",
              force_neo, force_8gib, gpu.enabled, gpu.target);
@@ -1234,6 +1542,7 @@ int main(void) {
              (unsigned long long)tsc_hz, LAUNCH_WAIT_S);
     memory_init(fw_raw_version(), tsc_hz * 3);
     memory_wants8 = memory_launch_wants;
+    memory_refused8 = memory_launch_refused;
     if (bm.attached && !memory_data_blocked && bm_field(MS_ENABLED, 1)) {
         memory_data_blocked = 1;
         log_line("No-HV mount hook enable failed; reboot required");
@@ -1241,7 +1550,7 @@ int main(void) {
     drop_8gib_request();
     if (force_8gib) memory_request(1);
     int memory_previous_result=memory_poll();
-    log_line("8 GiB: %s", memory_message);
+    log_line("8GB Mode: %s", memory_message);
     gpu_tick();
     int li = install_launcher();
     snprintf(msg + strlen(msg), sizeof(msg) - strlen(msg), "\nWeb panel: port %d%s", PORT,
@@ -1255,6 +1564,7 @@ int main(void) {
     for (;;) {
         memory_data_tick();
         launch_poll();
+        play_tick();
         binary_tick();
         time_t now=time(NULL);
         { struct timespec mt; clock_gettime(CLOCK_MONOTONIC, &mt);
@@ -1264,11 +1574,12 @@ int main(void) {
             launch_attach(-1);
             hook_retry();
             launch_tick();
+            settings_watch();
             gpu_tick();
             int memory_result=memory_poll();
             if(memory_result!=memory_previous_result){
                 if(memory_result==0||memory_result==5||memory_result==6)notify(memory_message);
-                else log_line("8 GiB: %s (result %d)",memory_message,memory_result);
+                else log_line("8GB Mode: %s (result %d)",memory_message,memory_result);
                 drop_8gib_request();
                 log_state();
                 patches_drop_8gib(NULL);
@@ -1290,6 +1601,32 @@ int main(void) {
         char method[8] = "", path[64] = "";
         sscanf(req, "%7s %63s", method, path);
         int post = !strcmp(method, "POST");
+        legacy_request = !strncmp(path, "/legacy", 7) || (form_body && strstr(form_body, "legacy=1"));
+        if (!strcmp(path, "/legacy") || !strcmp(path, "/legacy/") || !strncmp(path, "/legacy?", 8)) {
+            char q[128] = "";
+            if (post) form_text(form_body, "q", q, sizeof q);
+            serve_legacy(fd, NULL, q);
+            close(fd); continue;
+        }
+        if (!strncmp(path, "/legacy/patches", 15)) {
+            char tid[16] = "", hash[16] = "", on[4] = "", q[128] = "", pmsg[2048] = "";
+            if (post) { form_text(form_body, "tid", tid, sizeof tid); form_text(form_body, "q", q, sizeof q); }
+            else if (!strncmp(path, "/legacy/patches?tid=", 20)) snprintf(tid, sizeof tid, "%.9s", path + 20);
+            if (post && !strcmp(path, "/legacy/patches/set")) {
+                form_text(form_body, "hash", hash, sizeof hash); form_text(form_body, "on", on, sizeof on);
+                if (strcmp(on, "0") && strcmp(on, "1")) snprintf(pmsg, sizeof pmsg, "Invalid patch request");
+                else game_set_patch(tid, hash, on[0] == '1', memory_available(), pmsg, sizeof pmsg);
+            }
+            serve_legacy_patches(fd, tid, q, pmsg);
+            close(fd); continue;
+        }
+        if (post && !strcmp(path, "/legacy/play")) {
+            char tid[16] = "", pmsg[400];
+            form_text(form_body, "tid", tid, sizeof tid);
+            play_start(tid, pmsg, sizeof pmsg);
+            serve_legacy(fd, pmsg, "");
+            close(fd); continue;
+        }
         if (post && !strcmp(path, "/patches/set")) {
             char tid[16], hash[16], on[4], pmsg[2048];
             if (form_value(form_body, "tid", tid, sizeof tid) || form_value(form_body, "hash", hash, sizeof hash) ||
@@ -1309,6 +1646,11 @@ int main(void) {
                 free(pp); free(st);
                 reply(fd, "200 OK", "text/plain; charset=utf-8", pmsg);
             }
+        } else if (post && !strcmp(path, "/games/play")) {
+            char tid[16], pmsg[400];
+            if (form_value(form_body, "tid", tid, sizeof tid)) reply(fd, "400 Bad Request", "text/plain", "Invalid game\n");
+            else if (play_start(tid, pmsg, sizeof pmsg)) reply(fd, "409 Conflict", "text/plain; charset=utf-8", pmsg);
+            else reply(fd, "200 OK", "text/plain; charset=utf-8", pmsg);
         } else if (post && (!strcmp(path, "/advanced/neo") || !strcmp(path, "/advanced/memory"))) {
             char on[4]; int value = !form_value(form_body, "on", on, sizeof on) && !strcmp(on, "1");
             const char *amsg;
@@ -1316,11 +1658,11 @@ int main(void) {
                 force_neo = value; launch_attach(1);
                 amsg = value ? "Pro mode for every PS4 game: on" : "Pro mode for every PS4 game: off (follows the game patches)";
             } else if (value && !memory_available()) {
-                amsg = "8 GiB needs firmware 13.20 or 13.60 with a validated memory launch hook enabled; nothing changed";
+                amsg = "8GB Mode needs firmware 13.20 or 13.60 with a validated memory launch hook enabled; nothing changed";
             } else {
                 force_8gib = value;
                 if (value) memory_request(1); else if (!auto8.active) memory_request(0);
-                amsg = value ? "Keep 8 GiB on: on" : "Keep 8 GiB on: off (8 GiB follows the game patches)";
+                amsg = value ? "Keep 8GB Mode on: on" : "Keep 8GB Mode on: off (8GB Mode follows the game patches)";
             }
             int saved = !settings_save();
             log_line("panel: %s%s", amsg, saved ? "" : " (settings not saved)");
@@ -1355,10 +1697,10 @@ int main(void) {
             }
             reply(fd, "200 OK", "text/html; charset=utf-8", "<!doctype html><meta charset=utf-8><title>NeoEnabler</title>"
                   "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. Games no longer ask for Pro mode "
-                  "or 8 GiB until the manager runs again. GPU clock restore requested.</body>");
+                  "or 8GB Mode until the manager runs again. GPU clock restore requested.</body>");
             close(fd);
             launch_attach(0);
-            notify("NeoEnabler: panel stopped (per-game Pro mode and 8 GiB stopped, GPU boost stopped)");
+            notify("NeoEnabler: panel stopped (per-game Pro mode and 8GB Mode stopped, GPU boost stopped)");
             log_state();
             break;
         } else if (!strcmp(path, "/status")) {

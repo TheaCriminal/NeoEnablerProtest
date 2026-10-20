@@ -13,6 +13,8 @@
 #define PS_DIR ROOT "/xml_orbis"
 #define PS_BACKUP_ROOT ROOT "/backup"
 #define APPMETA_DIR ROOT "/appmeta"
+#define APP_DIR ROOT "/app"
+#define PATCH_DIR ROOT "/patch"
 #define PS_NO_HTTP 1
 
 static int logs;
@@ -135,6 +137,60 @@ int main(int argc, char **argv) {
     assert(gp_same_resolution("A - 1440p (PS4 Pro mode)", "1440p (PS4 Pro mode, x)") && !gp_same_resolution("A - 1440p (PS4 Pro mode)", "B - 1800p (PS4 Pro mode)"));
     s = settings_read(&sl); assert(gp_setting(s, sl, c[1].hash) == 1 && !gp_setting(s, sl, c[0].hash)); free(s);
     free(c);
+
+    /* 8 GiB in a collection: the budget is set when eboot.bin starts, so an 8 GiB entry of another executable brings
+       the 8 GiB eboot.bin entry, replacing one without 8 GiB; entries without 8 GiB keep picking one without it. */
+    const char *col8 = "<Patch>\n"
+        "<Metadata Title=\"C\" Name=\"4K (PS4 Pro mode)\" NeoRequires=\"pro\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C\" Name=\"4K (PS4 Pro mode, requires 8 GiB enabled)\" NeoRequires=\"pro,8gib\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C2\" Name=\"Game 2 - 4K (PS4 Pro mode)\" NeoRequires=\"pro\" AppVer=\"01.00\" AppElf=\"game2.elf\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C2\" Name=\"Game 2 - 4K (PS4 Pro mode, requires 8 GiB enabled)\" NeoRequires=\"pro,8gib\" AppVer=\"01.00\" AppElf=\"game2.elf\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"C2\" Name=\"Game 2 - 1440p (PS4 Pro mode, requires 8 GiB enabled)\" NeoRequires=\"pro,8gib\" AppVer=\"01.00\" AppElf=\"game2.elf\"><PatchList/></Metadata>\n</Patch>\n";
+    put(PS_DIR "/col8.xml", col8, strlen(col8));
+    install_game("CUSA99997", "C", "01.00", PS_DIR, "col8.xml");
+    gp_patch *e = game_patches("CUSA99997", "01.00", &nc);
+    assert(nc == 5 && !e[0].needs_8gib && e[1].needs_8gib && e[3].needs_8gib);
+    assert(!game_set_patch("CUSA99997", e[2].hash, 1, 1, msg, sizeof msg));            /* no 8 GiB: eboot.bin without */
+    s = settings_read(&sl); assert(gp_setting(s, sl, e[0].hash) == 1 && !gp_setting(s, sl, e[1].hash)); free(s);
+    assert(!game_set_patch("CUSA99997", e[3].hash, 1, 1, msg, sizeof msg) && strstr(msg, "C2 needs 8GB Mode from the start of the collection"));
+    s = settings_read(&sl);                                                            /* upgraded, Game 2 switched */
+    assert(!gp_setting(s, sl, e[0].hash) && gp_setting(s, sl, e[1].hash) == 1 && !gp_setting(s, sl, e[2].hash) && gp_setting(s, sl, e[3].hash) == 1); free(s);
+    assert(!game_set_patch("CUSA99997", e[4].hash, 1, 1, msg, sizeof msg) && !strstr(msg, "enabled instead"));   /* already 8 GiB */
+    assert(!game_set_patch("CUSA99997", e[2].hash, 1, 1, msg, sizeof msg));            /* back without 8 GiB: eboot.bin kept */
+    s = settings_read(&sl); assert(gp_setting(s, sl, e[1].hash) == 1 && gp_setting(s, sl, e[2].hash) == 1); free(s);
+    assert(!game_set_patch("CUSA99997", e[1].hash, 0, 1, msg, sizeof msg));            /* last eboot.bin off: all off */
+    assert(!game_set_patch("CUSA99997", e[4].hash, 1, 1, msg, sizeof msg));            /* 8 GiB first, other resolution */
+    s = settings_read(&sl); assert(!gp_setting(s, sl, e[0].hash) && gp_setting(s, sl, e[1].hash) == 1); free(s);
+    assert(!game_set_patch("CUSA99997", e[1].hash, 0, 1, msg, sizeof msg));
+    assert(game_set_patch("CUSA99997", e[3].hash, 1, 0, msg, sizeof msg) == -1);       /* refused without 8 GiB */
+    free(e);
+    /* Versions shown in the panel: without an update, the appmeta APP_VER; with one, the update's APP_VER from the
+       appmeta param.sfo and the game's from the param.sfo inside app.pkg (entry 0x1000). */
+    const char *vx = "<Patch>\n<Metadata Title=\"V\" Name=\"4K (PS4 Pro mode)\" AppVer=\"01.00, 01.05\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n</Patch>\n";
+    put(PS_DIR "/vx.xml", vx, strlen(vx));
+    install_game("CUSA99996", "V", "01.00", PS_DIR, "vx.xml");
+    int ng; game_t *gs = games_scan(&ng), *v = NULL;
+    for (int i = 0; i < ng; i++) if (!strcmp(gs[i].tid, "CUSA99996")) v = &gs[i];
+    assert(v && !v->update && !strcmp(v->game_ver, "01.00") && !v->update_ver[0]);
+    games_free(gs, ng);
+    size_t sfo_len; char *sfo = ps_read(APPMETA_DIR "/CUSA99996/param.sfo", 4096, &sfo_len);
+    unsigned char pkg[0x40 + 256] = {0x7f, 0x43, 0x4e, 0x54};
+    assert(sfo && sfo_len <= 256);
+    pkg[0x13] = 1; pkg[0x1b] = 0x20;                                       /* one entry, table at 0x20 */
+    pkg[0x22] = 0x10; pkg[0x33] = 0x40; pkg[0x36] = (unsigned char)(sfo_len >> 8); pkg[0x37] = (unsigned char)sfo_len; /* id 0x1000, offset 0x40, size */
+    memcpy(pkg + 0x40, sfo, sfo_len); free(sfo);
+    assert(!system("mkdir -p " APP_DIR "/CUSA99996 " PATCH_DIR "/CUSA99996"));
+    put(APP_DIR "/CUSA99996/app.pkg", pkg, 0x40 + sfo_len);
+    install_game("CUSA99996", "V", "01.05", PS_DIR, "vx.xml");               /* the update's param.sfo */
+    gs = games_scan(&ng); v = NULL;
+    for (int i = 0; i < ng; i++) if (!strcmp(gs[i].tid, "CUSA99996")) v = &gs[i];
+    assert(v && v->update && !strcmp(v->game_ver, "01.00") && !strcmp(v->update_ver, "01.05"));
+    games_free(gs, ng);
+    assert(!system("rm " APP_DIR "/CUSA99996/app.pkg"));                    /* no package: the master VERSION */
+    gs = games_scan(&ng); v = NULL;
+    for (int i = 0; i < ng; i++) if (!strcmp(gs[i].tid, "CUSA99996")) v = &gs[i];
+    assert(v && !strcmp(v->game_ver, "01.00") && !strcmp(v->update_ver, "01.05"));
+    games_free(gs, ng);
     puts("PASS 8 GiB patches turned off while 8 GiB is unavailable, other patches kept, one resolution per executable");
     return 0;
 }

@@ -33,4 +33,13 @@
       <Line Type="bytes" Address="0x045e93e0" Value="000000de00000000" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Dark Souls III: The Fire Fades Edition" Name="Native 4K (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="WARNING: Not yet tested on the console. 3840x2160 output and render in PS4 Pro mode. Based on DanielSvoboda's resolution patch. Graphics private heap +2560 MiB. Enable only one resolution entry. Requires NEO Enabler with the 8 GiB memory budget." Author="DanielSvoboda (resolution), gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes32" Address="0x04e1efb0" Value="0x00000f00" />
+      <Line Type="bytes32" Address="0x04e1efb4" Value="0x00000870" />
+      <Line Type="bytes" Address="0x045e92c0" Value="0000006001000000" />
+      <Line Type="bytes" Address="0x045e9350" Value="0000006001000000" />
+      <Line Type="bytes" Address="0x045e93e0" Value="0000006001000000" />
+    </PatchList>
+  </Metadata>
 </Patch>

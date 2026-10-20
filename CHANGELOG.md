@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0
+
+- The 8 GiB memory feature is now called 8GB Mode in the panel and notifications.
+- The games page now shows one card per game with Play, which starts the game, and Patches, which opens a window in
+  the page with the game and update versions, the number of patches, a patch search and the patch checkboxes.
+- Consoles whose browser cannot show the new page get a simpler panel with the same games, Play and patch pages.
+- In a collection, enabling a patch that needs 8GB Mode for a game started from the collection menu now also
+  switches the menu game to its 8GB Mode patch, since the memory is set when the collection starts. Patches without
+  8GB Mode keep selecting the menu game patch without it.
+- Patches that need 8GB Mode and were enabled in the ps-patch-system Patch Manager are now turned off when 8GB Mode
+  is not available, and also when a game launch could not get 8GB Mode, before the game reads its patches.
+
 ## 0.3.5
 
 - The 8 GiB memory mode now works without an HV unlock on firmware 13.20 and 13.60. It turns on automatically
