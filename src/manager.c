@@ -35,7 +35,7 @@ static void log_line(const char *fmt, ...);
 #include "log_mirror.h"
 
 #define PORT 8765
-#define VERSION "NeoEnabler 0.3.5-experimental"
+#define VERSION "NeoEnabler 0.3.5-experimental-hook-padding-test"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -192,7 +192,12 @@ static char patches_message[256] = "Not checked yet";
 #define SETTINGS_PATH "/data/neo-settings"
 
 /* Firmware support is independent of a running game or an active budget. */
-#include "firmware_version.h"
+/* Preserve the original firmware query during the hook diagnosis. */
+static uint32_t fw_raw_version(void) {
+    uint32_t v = 0; size_t n = sizeof(v);
+    sysctlbyname("machdep.upd_version", &v, &n, NULL, 0);
+    return v;
+}
 static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != NULL; }
 static int memory_community_report(void) { return fw_raw_version() == 0x13600000; }
 /* Availability also requires a ready memory backend; an idle game is not required. */
@@ -1378,9 +1383,14 @@ int main(void) {
             used = strlen(body);
             bm_mailbox mail = {0}; int mail_ok = !bm_mail(&mail);
             snprintf(body + used, sizeof body - used,
-                     "memory_backend: %s\nmount_hook: %s\nmount_seq: %u\nmount_phase: %u\nmount_gate: %u\nmount_dirty: %u\n"
+                     "memory_backend: %s\nmount_hook: %s\nmount_preflight: %s\nmount_check_address: 0x%lx\n"
+                     "mount_base: 0x%lx\nmount_text_field_raw: 0x%lx\nmount_map_size: 0x%lx\nmount_frame_header: 0x%lx\n"
+                     "mount_padding_bytes: %s\nmount_slot_nonzero_bytes: %s\nmount_seq: %u\nmount_phase: %u\nmount_gate: %u\nmount_dirty: %u\n"
                      "data_owned: %d\ndata_restored: %d\ndata_constructor: %d\ndata_blocked: %d\n",
                      memory_data_mode ? "DATA (no HV)" : "TEXT (HV required)", bm.attached ? "installed" : "absent",
+                     bm.failure[0] ? bm.failure : "no failure recorded", (unsigned long)bm.check_address,
+                     (unsigned long)bm.base,(unsigned long)bm.main_text_size,(unsigned long)bm.main_map_size,(unsigned long)bm.frame_header,
+                     bm.failure_preview[0] ? bm.failure_preview : "none",bm.slot_summary[0] ? bm.slot_summary : "not sampled",
                      mail_ok ? mail.seq : 0, mail_ok ? mail.phase : 0, mail_ok ? mail.gate : 0, mail_ok ? mail.dirty : 0,
                      memory_transaction.owned, memory_transaction.restored, memory_constructor, memory_data_blocked);
             reply(fd, "200 OK", "text/plain; charset=utf-8", body);

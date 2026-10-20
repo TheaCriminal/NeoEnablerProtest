@@ -19,7 +19,7 @@ typedef struct {int dummy;} mbd_layout;
 typedef struct {int touched,owned,restored,failed;uint64_t previous;} mbd_transaction;
 typedef struct {uint64_t container,field38,maximum,extension;uint32_t app_id,category,references,flags,profile,mode;} mbd_snapshot;
 typedef struct {uint32_t seq,phase,category,gate,active,dirty;int32_t result;char title[12];} bm_mailbox;
-static struct {int attached,fatal;} bm;
+static struct {int attached,fatal;char failure[160];} bm;
 static char memory_message[256];static int memory_target;
 static mbd_layout layout;static mbd_snapshot snap;static bm_mailbox mail;
 static int eligible,apply_rc,restore_rc,apply_calls,restore_calls,mutations,remove_calls,held,command_fail;
@@ -87,6 +87,10 @@ int main(void){
    case 5:snap.extension=0;break;}
   memory_data_tick();assert(memory_data_blocked&&!restore_calls&&memory_transaction.owned&&mail.gate);
  }
+ /* Preserve the preflight reason in the user-visible memory detail. */
+ reset();bm.attached=0;strcpy(bm.failure,"BeginAppMount2 call differs at +0x1");
+ mb_snapshot detail;assert(memory_check(&detail)==-1);
+ assert(strstr(detail.detail,"BeginAppMount2 call differs"));
  puts("PASS: DATA controller HELD sequencing, refusal, constructor, rollback order, duplicate/outstanding transaction, shutdown, identity, timeout retention and quiescent recovery");
  return 0;
 }

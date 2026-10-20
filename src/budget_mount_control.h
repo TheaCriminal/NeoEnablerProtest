@@ -19,7 +19,7 @@ static int memory_check(mb_snapshot *s){
  if(!memory_data_mode)return mb_check(s);
  memset(s,0,sizeof *s);s->state=MB_UNKNOWN;
  if(!bm.attached||memory_data_blocked){
-  snprintf(s->detail,sizeof s->detail,"No-HV launch hook unavailable%s",memory_data_blocked?"; reboot required":"");return -1;
+  snprintf(s->detail,sizeof s->detail,"No-HV launch hook unavailable%s%s%s",bm.failure[0]?": ":"",bm.failure,memory_data_blocked?"; reboot required":"");return -1;
  }
  uint64_t ext;
  if(mbd_tx_read_global(memory_data,&ext)||(ext&&(!memory_transaction.owned||ext!=MBD_DELTA))){
@@ -35,7 +35,7 @@ static int memory_init(uint32_t fw,uint64_t cycles){
  memory_data_mode=memory_data!=NULL;
  if(!memory_data_mode)return 0;
  int rc=bm_install(fw,cycles);
- snprintf(memory_message,sizeof memory_message,"No-HV launch hook %s (rc=%d)",rc?"unavailable":"installed",rc);
+ snprintf(memory_message,sizeof memory_message,"No-HV launch hook %s (rc=%d)%s%s",rc?"unavailable":"installed",rc,rc&&bm.failure[0]?": ":"",rc?bm.failure:"");
  if(bm.fatal)memory_data_blocked=1;
  return rc;
 }

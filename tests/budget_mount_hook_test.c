@@ -11,7 +11,7 @@
 #define KERN_PROC_PID 1
 #define KERN_PROC_PROC 8
 struct kinfo_proc {int ki_structsize;pid_t ki_pid;char ki_stat;char ki_comm[20];};
-typedef struct {uint64_t mapbase,mapsize;} dynlib_obj_t;
+typedef struct {uint64_t mapbase,mapsize,textsize,eh_frame_hdr;} dynlib_obj_t;
 #define MAIN_BASE 0x10000000ULL
 #define LIB_BASE 0x20000000ULL
 static unsigned char main_memory[0x2100000],lib_memory[0x50000];
@@ -67,11 +67,39 @@ int main(void){
   assert(!bm_remove()&&!bm.attached&&state==2);assert(!memcmp(at(call_address,5),p->call_bytes,5));
   assert(!bm_install(fw,123456)&&bm.cave==cave_address+1024);assert(!bm_remove()); /* never reuse retained code */
   reset(fw);at(call_address,5)[0]^=1;assert(bm_install(fw,1)==-4&&!writes&&!stop_count);
+  assert(strstr(bm.failure,"BeginAppMount2 call")&&bm.check_address==call_address);
   reset(fw);at(MAIN_BASE+p->got,8)[0]^=1;assert(bm_install(fw,1)==-4&&!writes);
+  assert(strstr(bm.failure,"GOT target differs")&&bm.check_address==MAIN_BASE+p->got);
   reset(fw);at(MAIN_BASE+p->function,20)[0]^=1;assert(bm_install(fw,1)==-4&&!writes);
   reset(fw);at(LIB_BASE+p->wrapper,20)[0]^=1;assert(bm_install(fw,1)==-4&&!writes);
   reset(fw);permission=5;assert(bm_install(fw,1)==-4&&!writes);
-  reset(fw);at(MAIN_BASE+p->padding,1)[0]=1;assert(bm_install(fw,1)==-4&&!writes);
+  assert(strstr(bm.failure,"protection 5")&&bm.check_address==(call_address&~0x3fffULL));
+  /* Other code before our reserved pool must not block installation or be
+   * overwritten. Reproduce the observed 13.60 prefix, and a dense prefix. */
+  reset(fw);size_t prefix_size=p->cave-p->padding;
+  unsigned char prefix[4096];assert(prefix_size<=sizeof prefix);
+  memset(prefix,0xcc,prefix_size);memcpy(at(MAIN_BASE+p->padding,prefix_size),prefix,prefix_size);
+  assert(!bm_install(fw,1)&&bm.attached);
+  assert(!memcmp(at(MAIN_BASE+p->padding,prefix_size),prefix,prefix_size));
+  assert(!bm_remove());assert(!memcmp(at(MAIN_BASE+p->padding,prefix_size),prefix,prefix_size));
+  if(fw==0x13600000){
+   reset(fw);
+   const unsigned char observed[]={0x66,0x90,0x53,0x41,0x54,0x49,0x89,0xf4,0x57,0x56,0x52,0x51,0x41,0x50,0x41,0x51,0x48,0x83,0xec,8,0xbf,1,0,0,0,0xe8,0x82,0,0,0,0x48,0x83};
+   memcpy(at(MAIN_BASE+0x1962700,sizeof observed),observed,sizeof observed);
+   assert(!bm_install(fw,1)&&bm.attached);
+   assert(!memcmp(at(MAIN_BASE+0x1962700,sizeof observed),observed,sizeof observed));
+   assert(!bm_remove());
+  }
+  /* Any unknown nonzero data INSIDE the pool must still fail before writes. */
+  for(uint32_t slot=p->cave;slot<p->end;slot+=1024){
+   reset(fw);at(MAIN_BASE+slot,1024)[1023]=1;
+   assert(bm_install(fw,1)==-4&&!writes&&!stop_count);
+   assert(strstr(bm.failure,"Reservation occupied")&&bm.check_address==MAIN_BASE+slot);
+  }
+  /* Simulate killing the payload without Quit: changed CALL must be refused. */
+  reset(fw);assert(!bm_install(fw,1));field(MS_ENABLED,1);
+  memset(&bm,0,sizeof bm);writes=stop_count=0;
+  assert(bm_install(fw,1)==-4&&!writes&&!stop_count&&strstr(bm.failure,"BeginAppMount2 call"));
   reset(fw);readback_fail=1;assert(bm_install(fw,1)==-9&&!bm.attached&&state==2);assert(!memcmp(at(call_address,5),p->call_bytes,5));
   reset(fw);cave_write_fail=1;assert(bm_install(fw,1)==-8&&!bm.attached&&!bm.fatal&&state==2);for(size_t z=0;z<1024;z++)assert(!at(cave_address,1024)[z]);assert(!bm_install(fw,1));assert(!bm_remove());
   reset(fw);continue_fail=1;assert(bm_install(fw,1)==-101&&bm.fatal&&bm.stopped&&state==4);

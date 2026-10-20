@@ -27,6 +27,10 @@ typedef struct {
  pid_t pid; uint64_t base,lib,cave,cycles;
  unsigned char saved[5],redirect[5];
  int attached,stopped,fatal;
+ char failure[160];
+ uint64_t check_address;
+ uint64_t main_text_size,main_map_size,frame_header;
+ char failure_preview[97],slot_summary[160];
 } bm_hook;
 static bm_hook bm;
 static const bm_profile *bm_find(uint32_t fw){
@@ -67,16 +71,33 @@ static int bm_resume(void){
  if(kill(bm.pid,SIGCONT))return -1;
  bm.stopped=0;return 0;
 }
+static int bm_fail(const char *why,uint64_t address){
+ bm.check_address=address;snprintf(bm.failure,sizeof bm.failure,"%s",why);return -1;
+}
+static int bm_bytes(uint64_t address,const unsigned char *expected,size_t n,const char *name){
+ unsigned char actual[24];
+ if(n>sizeof actual||bm_read(address,actual,n)){
+  bm.check_address=address;snprintf(bm.failure,sizeof bm.failure,"%s unreadable",name);return -1;
+ }
+ if(!memcmp(actual,expected,n))return 0;
+ size_t i=0;while(i<n&&actual[i]==expected[i])i++;
+ bm.check_address=address+i;
+ snprintf(bm.failure,sizeof bm.failure,"%s differs at +0x%zx: expected %02x, read %02x",name,i,expected[i],actual[i]);
+ return -1;
+}
 static int bm_valid(void){
- const bm_profile *p=bm.profile;unsigned char b[24];uint64_t got;
+ const bm_profile *p=bm.profile;uint64_t got;
  const unsigned char pro[]={0x55,0x48,0x89,0xe5,0x41,0x57,0x41,0x56,0x41,0x55,0x41,0x54,0x53,0x48,0x81,0xec,0xe8,0x18,0,0};
  const unsigned char wrapper[]={0x55,0x48,0x89,0xe5,0x41,0x57,0x41,0x56,0x41,0x55,0x41,0x54,0x53,0x48,0x81,0xec,0x98,1,0,0};
- if(bm_read(bm.base+p->function,b,sizeof pro)||memcmp(b,pro,sizeof pro)||
-    bm_read(bm.base+p->call,b,5)||memcmp(b,p->call_bytes,5)||
-    bm_read(bm.base+p->import_,b,6)||memcmp(b,p->stub,6)||
-    bm_read(bm.base+p->got,&got,8)||got!=bm.lib+p->wrapper||
-    bm_read(got,b,sizeof wrapper)||memcmp(b,wrapper,sizeof wrapper))return -1;
- return 0;
+ if(bm_bytes(bm.base+p->function,pro,sizeof pro,"ShellCore prologue")||
+    bm_bytes(bm.base+p->call,p->call_bytes,5,"BeginAppMount2 call")||
+    bm_bytes(bm.base+p->import_,p->stub,6,"BeginAppMount2 import"))return -1;
+ if(bm_read(bm.base+p->got,&got,8))return bm_fail("libkernel_sys GOT unreadable",bm.base+p->got);
+ if(got!=bm.lib+p->wrapper){
+  bm.check_address=bm.base+p->got;
+  snprintf(bm.failure,sizeof bm.failure,"GOT target differs: expected 0x%lx, read 0x%lx",(unsigned long)(bm.lib+p->wrapper),(unsigned long)got);return -1;
+ }
+ return bm_bytes(got,wrapper,sizeof wrapper,"libkernel_sys wrapper");
 }
 /* Recognize our own disarmed retained shim; never reuse its reservation. */
 static int bm_retained(const unsigned char *b){
@@ -89,25 +110,51 @@ static int bm_retained(const unsigned char *b){
  for(size_t i=sizeof step_code;i<1024;i++)if(b[i])return 0;
  return 1;
 }
+/* Read only the fixed profile reservation range. This records evidence after
+ * a failed guard; it never makes an occupied range eligible for writing. */
+static void bm_padding_report(void){
+ const bm_profile *p=bm.profile;unsigned char bytes[1024];size_t used=0;
+ if(!p||p->end<p->cave||p->end-p->cave>8*sizeof bytes)return;
+ bm.slot_summary[0]=0;
+ for(uint32_t off=p->cave;off+sizeof bytes<=p->end;off+=sizeof bytes){
+  int count=0;
+  if(bm_read(bm.base+off,bytes,sizeof bytes))count=-1;
+  else for(size_t i=0;i<sizeof bytes;i++)if(bytes[i])count++;
+  int n=snprintf(bm.slot_summary+used,sizeof bm.slot_summary-used,"%s0x%x:%d",used?",":"",off,count);
+  if(n<0||(size_t)n>=sizeof bm.slot_summary-used)break;
+  used+=(size_t)n;
+ }
+}
 static int bm_reserve(uint64_t *out){
  const bm_profile *p=bm.profile;unsigned char b[1024];*out=0;
- for(uint32_t off=p->padding;off<p->cave;){
-  size_t n=p->cave-off;if(n>sizeof b)n=sizeof b;
-  if(bm_read(bm.base+off,b,n))return -1;
-  for(size_t i=0;i<n;i++)if(b[i])return -1;
-  off+=(uint32_t)n;
- }
+ /* padding is the file-backed text end, not the beginning of our allocation.
+  * Other payloads can use the prefix before cave. We neither read it to claim
+  * ownership nor modify it. Validate every actual reservation instead. */
+ if(p->cave<p->padding||p->end<=p->cave||(p->cave&1023)||
+    p->end!=((p->padding+0x3fffU)&~0x3fffU)||p->end-p->cave>8*sizeof b)
+  return bm_fail("Invalid firmware reservation bounds",bm.base+p->cave);
  for(uint32_t off=p->cave;off+sizeof b<=p->end;off+=sizeof b){
-  if(bm_read(bm.base+off,b,sizeof b))return -1;
+  if(bm_read(bm.base+off,b,sizeof b))return bm_fail("Launch-hook reservation unreadable",bm.base+off);
   size_t n=0;while(n<sizeof b&&!b[n])n++;
   if(n==sizeof b){if(!*out)*out=bm.base+off;}
-  else if(!bm_retained(b))return -1;
+  else if(!bm_retained(b)){
+   bm_padding_report();
+   return bm_fail("Reservation occupied, armed or unrecognized; reboot before retrying",bm.base+off);
+  }
  }
- return *out?0:-1;
+ return *out?0:bm_fail("No fresh reservation remains; reboot before retrying",bm.base+p->cave);
 }
 static int bm_permissions(void){
- return kernel_get_vmem_protection(bm.pid,(bm.base+bm.profile->call)&~0x3fffULL,0x4000)==7&&
-        kernel_get_vmem_protection(bm.pid,bm.cave&~0x3fffULL,0x4000)==7?0:-1;
+ uint64_t pages[]={(bm.base+bm.profile->call)&~0x3fffULL,bm.cave&~0x3fffULL};
+ const char *names[]={"call","reservation"};
+ for(unsigned i=0;i<2;i++){
+  int flags=kernel_get_vmem_protection(bm.pid,pages[i],0x4000);
+  if(flags!=7){
+   bm.check_address=pages[i];
+   snprintf(bm.failure,sizeof bm.failure,"ShellCore %s page protection %d; requires RWX (7)",names[i],flags);return -1;
+  }
+ }
+ return 0;
 }
 static int bm_install(uint32_t fw,uint64_t cycles){
  if(bm.attached)return 0;
@@ -117,6 +164,7 @@ static int bm_install(uint32_t fw,uint64_t cycles){
  if(kernel_dynlib_obj(bm.pid,0,&main)||kernel_dynlib_handle(bm.pid,"libkernel_sys.sprx",&handle)||
     kernel_dynlib_obj(bm.pid,handle,&lib)||main.mapsize<bm.profile->got+8)return -3;
  bm.base=main.mapbase;bm.lib=lib.mapbase;bm.cycles=cycles;
+ bm.main_text_size=main.textsize;bm.main_map_size=main.mapsize;bm.frame_header=main.eh_frame_hdr;
  if(bm_valid()||bm_reserve(&bm.cave)||bm_permissions())return -4;
  int64_t disp=(int64_t)bm.cave-(int64_t)(bm.base+bm.profile->call+5);if(disp!=(int32_t)disp)return -5;
  if(bm_stop())return -6;
