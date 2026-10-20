@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- In a collection, enabling a patch that needs 8 GiB for a game started from the collection menu now also
+  switches the menu game to its 8 GiB patch, since the memory is set when the collection starts. Patches without
+  8 GiB keep selecting the menu game patch without 8 GiB.
+
 ## 0.3.5
 
 - The 8 GiB memory mode now works without an HV unlock on firmware 13.20 and 13.60. It turns on automatically
