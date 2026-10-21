@@ -30,7 +30,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Batman: Arkham Knight (01.15) | 1620p, 1800p, Native 4K | Native 4K validated; 1620p and 1800p not tested yet |
 | Sleeping Dogs: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K, each also up to 60 fps | Native 4K and the 60 fps entries validated; 1440p, 1620p and 1800p not tested yet |
 | Uncharted: The Nathan Drake Collection (01.02) | Uncharted 1, 2 and 3: 1440p, 1620p, 1800p, Native 4K, Native 4K (8GB Mode) | Uncharted 1 and 3 validated; Uncharted 2 runs in Native 4K, its 1440p, 1620p and 1800p not tested yet |
-| The Evil Within (01.06) | 1440p, 1800p, Native 4K (8GB Mode) | 1440p and 1800p reach gameplay; Native 4K (8GB Mode) not tested yet |
+| The Evil Within (01.06) | 1440p, 1800p, Native 4K (8GB Mode) | Native 4K validated; 1440p and 1800p reach gameplay |
 
 ## GPU boost
 
