@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA00203</ID>
+    <ID>CUSA00375</ID>
+    <ID>CUSA01082</ID>
+    <ID>CUSA01190</ID>
+    <ID>CUSA01191</ID>
+  </TitleID>
+  <Metadata Title="The Evil Within" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Garlic video memory pool +512 MiB. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0xfd0dca" Value="81c900000000" />
+      <Line Type="bytes" Address="0x5fb9b8" Value="be00000000" />
+      <Line Type="bytes" Address="0xfccb8b" Value="41804d0300" />
+      <Line Type="bytes" Address="0x5a8606" Value="be00000000" />
+      <Line Type="bytes" Address="0x5a8659" Value="be00000000" />
+      <Line Type="bytes" Address="0x5fbb90" Value="be00000000" />
+      <Line Type="bytes" Address="0x59b77c" Value="e87f428c01" />
+      <Line Type="bytes" Address="0x638de3" Value="e83f6c8201" />
+      <Line Type="bytes" Address="0xfd234f" Value="83e100" />
+      <Line Type="bytes" Address="0xfcba82" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xfcf4e3" Value="31c990909090" />
+      <Line Type="bytes" Address="0x6378b0" Value="b8000a0000" />
+      <Line Type="bytes" Address="0x6378c0" Value="b8a0050000" />
+      <Line Type="bytes" Address="0x6378a0" Value="b800040000" />
+      <Line Type="bytes" Address="0x1995980" Value="000020450000b444" />
+      <Line Type="bytes" Address="0x6385ee" Value="c785f0bdffff000a0000" />
+      <Line Type="bytes" Address="0x6385f8" Value="c785f4bdffff00040000" />
+      <Line Type="bytes" Address="0x6386f9" Value="48b8000a000000040000" />
+      <Line Type="bytes" Address="0x638c8b" Value="48b8000a000000040000" />
+      <Line Type="bytes" Address="0x638d12" Value="48b8000a000000040000" />
+      <Line Type="bytes" Address="0x6548da" Value="41c70424000a0000" />
+      <Line Type="bytes" Address="0x6548e2" Value="41c707a0050000" />
+      <Line Type="bytes" Address="0x6548e9" Value="48b8000a000000040000" />
+      <Line Type="bytes" Address="0x654901" Value="be000a0000" />
+      <Line Type="bytes" Address="0x654906" Value="baa0050000" />
+      <Line Type="bytes" Address="0x62b3be" Value="c745a0a0050000" />
+      <Line Type="bytes" Address="0x62b3c9" Value="ba000a0000" />
+      <Line Type="bytes" Address="0x62b3ce" Value="b9a0050000" />
+      <Line Type="bytes" Address="0x62b3dc" Value="ba000a0000" />
+      <Line Type="bytes" Address="0x62b3e1" Value="b9a0050000" />
+      <Line Type="bytes" Address="0x62b463" Value="ba000a0000" />
+      <Line Type="bytes" Address="0x62b474" Value="ba000a0000" />
+      <Line Type="bytes" Address="0x1993280" Value="0000b444" />
+      <Line Type="bytes" Address="0x597064" Value="ba000060b5" />
+      <Line Type="bytes" Address="0x59708a" Value="be000060b5" />
+      <Line Type="bytes" Address="0x5970e0" Value="c74318000060b5" />
+      <Line Type="bytes" Address="0x597146" Value="ba000060b5" />
+      <Line Type="bytes" Address="0x5978af" Value="b8000060b5" />
+      <Line Type="bytes" Address="0x1e5fa00" Value="81ff0000e100721a81ff0000f0007312bf0000f00081fe000001007305be00000100e9397e73fe814f1000000080488b47c04885c0740a818808010000000000018b470425ff070000ffc069c000060000c1e803ffc8894708e902df5cfe" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="The Evil Within" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro (NEO) mode. Garlic video memory pool +768 MiB and map heap -256 MiB to fit the standard memory budget. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0xfd0dca" Value="81c900000000" />
+      <Line Type="bytes" Address="0x5fb9b8" Value="be00000000" />
+      <Line Type="bytes" Address="0xfccb8b" Value="41804d0300" />
+      <Line Type="bytes" Address="0x5a8606" Value="be00000000" />
+      <Line Type="bytes" Address="0x5a8659" Value="be00000000" />
+      <Line Type="bytes" Address="0x5fbb90" Value="be00000000" />
+      <Line Type="bytes" Address="0x59b77c" Value="e87f428c01" />
+      <Line Type="bytes" Address="0x638de3" Value="e83f6c8201" />
+      <Line Type="bytes" Address="0xfd234f" Value="83e100" />
+      <Line Type="bytes" Address="0xfcba82" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xfcf4e3" Value="31c990909090" />
+      <Line Type="bytes" Address="0x6378b0" Value="b8800c0000" />
+      <Line Type="bytes" Address="0x6378c0" Value="b808070000" />
+      <Line Type="bytes" Address="0x6378a0" Value="b800050000" />
+      <Line Type="bytes" Address="0x1995980" Value="000048450000e144" />
+      <Line Type="bytes" Address="0x6385ee" Value="c785f0bdffff800c0000" />
+      <Line Type="bytes" Address="0x6385f8" Value="c785f4bdffff00050000" />
+      <Line Type="bytes" Address="0x6386f9" Value="48b8800c000000050000" />
+      <Line Type="bytes" Address="0x638c8b" Value="48b8800c000000050000" />
+      <Line Type="bytes" Address="0x638d12" Value="48b8800c000000050000" />
+      <Line Type="bytes" Address="0x6548da" Value="41c70424800c0000" />
+      <Line Type="bytes" Address="0x6548e2" Value="41c70708070000" />
+      <Line Type="bytes" Address="0x6548e9" Value="48b8800c000000050000" />
+      <Line Type="bytes" Address="0x654901" Value="be800c0000" />
+      <Line Type="bytes" Address="0x654906" Value="ba08070000" />
+      <Line Type="bytes" Address="0x62b3be" Value="c745a008070000" />
+      <Line Type="bytes" Address="0x62b3c9" Value="ba800c0000" />
+      <Line Type="bytes" Address="0x62b3ce" Value="b908070000" />
+      <Line Type="bytes" Address="0x62b3dc" Value="ba800c0000" />
+      <Line Type="bytes" Address="0x62b3e1" Value="b908070000" />
+      <Line Type="bytes" Address="0x62b463" Value="ba800c0000" />
+      <Line Type="bytes" Address="0x62b474" Value="ba800c0000" />
+      <Line Type="bytes" Address="0x1993280" Value="0000e144" />
+      <Line Type="bytes" Address="0x597064" Value="ba000060c5" />
+      <Line Type="bytes" Address="0x59708a" Value="be000060c5" />
+      <Line Type="bytes" Address="0x5970e0" Value="c74318000060c5" />
+      <Line Type="bytes" Address="0x597146" Value="ba000060c5" />
+      <Line Type="bytes" Address="0x5978af" Value="b8000060c5" />
+      <Line Type="bytes" Address="0x7ca982" Value="48c783900000000000905a" />
+      <Line Type="bytes" Address="0x1e5fa00" Value="81ff00905f01721a81ff000077017312bf0000770181fe000001007305be00000100e9397e73fe814f1000000080488b47c04885c0740a818808010000000000018b470425ff070000ffc069c080070000c1e803ffc8894708e902df5cfe" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="The Evil Within" Name="Native 4K (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="WARNING: 8GB Mode entries are tested on firmware 13.20 only. 3840x2160 output and render in PS4 Pro (NEO) mode. Garlic video memory pool +1536 MiB. Enable only one resolution entry. Requires NEO Enabler with the 8 GiB memory budget." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0xfd0dca" Value="81c900000000" />
+      <Line Type="bytes" Address="0x5fb9b8" Value="be00000000" />
+      <Line Type="bytes" Address="0xfccb8b" Value="41804d0300" />
+      <Line Type="bytes" Address="0x5a8606" Value="be00000000" />
+      <Line Type="bytes" Address="0x5a8659" Value="be00000000" />
+      <Line Type="bytes" Address="0x5fbb90" Value="be00000000" />
+      <Line Type="bytes" Address="0x59b77c" Value="e87f428c01" />
+      <Line Type="bytes" Address="0x638de3" Value="e83f6c8201" />
+      <Line Type="bytes" Address="0xfd234f" Value="83e100" />
+      <Line Type="bytes" Address="0xfcba82" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xfcf4e3" Value="31c990909090" />
+      <Line Type="bytes" Address="0x6378b0" Value="b8000f0000" />
+      <Line Type="bytes" Address="0x6378c0" Value="b870080000" />
+      <Line Type="bytes" Address="0x6378a0" Value="b800060000" />
+      <Line Type="bytes" Address="0x1995980" Value="0000704500000745" />
+      <Line Type="bytes" Address="0x6385ee" Value="c785f0bdffff000f0000" />
+      <Line Type="bytes" Address="0x6385f8" Value="c785f4bdffff00060000" />
+      <Line Type="bytes" Address="0x6386f9" Value="48b8000f000000060000" />
+      <Line Type="bytes" Address="0x638c8b" Value="48b8000f000000060000" />
+      <Line Type="bytes" Address="0x638d12" Value="48b8000f000000060000" />
+      <Line Type="bytes" Address="0x6548da" Value="41c70424000f0000" />
+      <Line Type="bytes" Address="0x6548e2" Value="41c70770080000" />
+      <Line Type="bytes" Address="0x6548e9" Value="48b8000f000000060000" />
+      <Line Type="bytes" Address="0x654901" Value="be000f0000" />
+      <Line Type="bytes" Address="0x654906" Value="ba70080000" />
+      <Line Type="bytes" Address="0x62b3be" Value="c745a070080000" />
+      <Line Type="bytes" Address="0x62b3c9" Value="ba000f0000" />
+      <Line Type="bytes" Address="0x62b3ce" Value="b970080000" />
+      <Line Type="bytes" Address="0x62b3dc" Value="ba000f0000" />
+      <Line Type="bytes" Address="0x62b3e1" Value="b970080000" />
+      <Line Type="bytes" Address="0x62b463" Value="ba000f0000" />
+      <Line Type="bytes" Address="0x62b474" Value="ba000f0000" />
+      <Line Type="bytes" Address="0x1993280" Value="00000745" />
+      <Line Type="bytes" Address="0x597064" Value="ba000060f5" />
+      <Line Type="bytes" Address="0x59708a" Value="be000060f5" />
+      <Line Type="bytes" Address="0x5970e0" Value="c74318000060f5" />
+      <Line Type="bytes" Address="0x597146" Value="ba000060f5" />
+      <Line Type="bytes" Address="0x5978af" Value="b8000060f5" />
+      <Line Type="bytes" Address="0x1e5fa00" Value="81ff0040fa01721a81ff0000fe017312bf0000fe0181fe000001007305be00000100e9397e73fe814f1000000080488b47c04885c0740a818808010000000000018b470425ff070000ffc069c080080000c1e803ffc8894708e902df5cfe" />
+    </PatchList>
+  </Metadata>
+</Patch>
