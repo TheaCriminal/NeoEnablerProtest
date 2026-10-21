@@ -20,5 +20,6 @@ and enable the patches: [Game patches](../README.md#game-patches).
 | Uncharted: The Nathan Drake Collection (01.02) | 1440p, 1620p, 1800p, native 4K for each of the three games | **Requires NeoEnabler 0.3.3 or newer.** The collection starts in Uncharted 1, which sets PS4 Pro mode for Uncharted 2 and 3: an Uncharted 2 or 3 entry needs an Uncharted 1 entry on (the panel enables it). Native 4K fits the stock memory with a smaller texture pool. Each game also has a native 4K entry with 8GB Mode and the full texture pool (**tested on firmware 13.20 only**). |
 | The Evil Within (01.06) | 1440p, 1800p, native 4K | The 3D scene keeps the game's letterbox (2.5:1). 1800p fits the stock memory with a smaller map heap. Native 4K needs 8GB Mode (**tested on firmware 13.20 only**). |
 | The Evil Within 2 (01.05) | 1620p, 1800p, native 4K | The game already runs in PS4 Pro mode (2240x1260 render, 2160p output); these entries raise the render resolution, which stays fixed. Native 4K needs 8GB Mode (**tested on firmware 13.20 only**). The in-game Framerate Lock option unlocks up to 60 fps. |
+| Dragon's Dogma: Dark Arisen (01.01) | native 4K | The game already runs in PS4 Pro mode at 1440p. Combine with the community 60 FPS patch for a higher frame rate. |
 
 Test results by game and firmware: [COMPATIBILITY.md](COMPATIBILITY.md).
