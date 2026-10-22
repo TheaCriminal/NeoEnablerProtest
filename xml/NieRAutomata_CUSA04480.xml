@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA04480</ID>
+    <ID>CUSA04551</ID>
+  </TitleID>
+  <Metadata Title="NieR:Automata" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in Pro mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0xa2cd1d" Value="41bf000a0000" />
+      <Line Type="bytes" Address="0xa2cd28" Value="41bea0050000" />
+      <Line Type="bytes" Address="0xa2cd2e" Value="bb000a0000" />
+      <Line Type="bytes" Address="0x10794b8" Value="41bfa0050000" />
+      <Line Type="bytes" Address="0x10794be" Value="41bc000a0000" />
+      <Line Type="bytes" Address="0xb969d3" Value="488d990000002e" />
+      <Line Type="bytes" Address="0xb96b11" Value="bb0000d047" />
+      <Line Type="bytes" Address="0xa14b3d" Value="e8be4bd700" />
+      <Line Type="bytes" Address="0x1789700" Value="48833c25c05fea01007405e9000676ff4883c408e933b428ff" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="NieR:Automata" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in Pro mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0xa2cd1d" Value="41bf400b0000" />
+      <Line Type="bytes" Address="0xa2cd28" Value="41be54060000" />
+      <Line Type="bytes" Address="0xa2cd2e" Value="bb400b0000" />
+      <Line Type="bytes" Address="0x10794b8" Value="41bf54060000" />
+      <Line Type="bytes" Address="0x10794be" Value="41bc400b0000" />
+      <Line Type="bytes" Address="0xb969d3" Value="488d990000002e" />
+      <Line Type="bytes" Address="0xb96b11" Value="bb0000d047" />
+      <Line Type="bytes" Address="0xa14b3d" Value="e8be4bd700" />
+      <Line Type="bytes" Address="0x1789700" Value="48833c25c05fea01007405e9000676ff4883c408e933b428ff" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="NieR:Automata" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in Pro mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0xa2cd1d" Value="41bf800c0000" />
+      <Line Type="bytes" Address="0xa2cd28" Value="41be08070000" />
+      <Line Type="bytes" Address="0xa2cd2e" Value="bb800c0000" />
+      <Line Type="bytes" Address="0x10794b8" Value="41bf08070000" />
+      <Line Type="bytes" Address="0x10794be" Value="41bc800c0000" />
+      <Line Type="bytes" Address="0xb969d3" Value="488d990000002e" />
+      <Line Type="bytes" Address="0xb96b11" Value="bb0000d047" />
+      <Line Type="bytes" Address="0xa14b3d" Value="e8be4bd700" />
+      <Line Type="bytes" Address="0x1789700" Value="48833c25c05fea01007405e9000676ff4883c408e933b428ff" />
+    </PatchList>
+  </Metadata>
+</Patch>

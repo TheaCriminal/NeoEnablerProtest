@@ -23,5 +23,6 @@ and enable the patches: [Game patches](../README.md#game-patches).
 | Dragon's Dogma: Dark Arisen (01.01) | native 4K | The game already runs in PS4 Pro mode at 1440p. Combine with the community 60 FPS patch for a higher frame rate. |
 | Mad Max (01.06) | 1440p, 1800p, native 4K | |
 | inFAMOUS Second Son (01.07) | 4K checkerboard | The game already runs in PS4 Pro mode with a 3200x1800 checkerboard render; this entry raises it to 3840x2160. |
+| NieR:Automata (01.06) | 1440p, 1620p, 1800p | The game already runs in PS4 Pro mode at 1080p. |
 
 Test results by game and firmware: [COMPATIBILITY.md](COMPATIBILITY.md).
