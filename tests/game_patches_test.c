@@ -53,7 +53,7 @@ int main(void) {
     gp_patch p[16]; int n = gp_list(xml, len, "CUSA00785.xml", "01.02", p, 16);
     assert(n == 2);
     const gp_patch *q = find(p, n, "Native 4K (PS4 Pro mode, 60fps)");
-    assert(q && !strcmp(q->hash, "d753e8d4") && q->needs_pro && !q->needs_8gib && strstr(q->note, "triple buffering"));
+    assert(q && !strcmp(q->hash, "d753e8d4") && q->needs_pro && !q->needs_8gib && strstr(q->note, "without tearing"));
     assert((q = find(p, n, "Native 4K (PS4 Pro mode)")) && !strcmp(q->hash, "6378fc73"));
     assert(gp_list(xml, len, "CUSA00785.xml", "01.00", p, 16) == 0);           /* other version: nothing applies */
     free(xml);
