@@ -36,7 +36,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Mad Max (01.06) | 1440p, 1800p, Native 4K | Native 4K validated; 1440p and 1800p reach gameplay |
 | inFAMOUS Second Son (01.07) | 4K checkerboard | Validated |
 | NieR:Automata (01.06) | 1440p, 1620p, 1800p | Validated |
-| Watch Dogs (01.05) | 1440p, 1620p, 1800p, Native 4K, each also at 60fps | Validated |
+| Watch Dogs (01.05) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | Validated |
 
 ## GPU boost
 
