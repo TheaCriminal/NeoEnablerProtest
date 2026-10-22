@@ -24,6 +24,6 @@ and enable the patches: [Game patches](../README.md#game-patches).
 | Mad Max (01.06) | 1440p, 1800p, native 4K | |
 | inFAMOUS Second Son (01.07) | 4K checkerboard | The game already runs in PS4 Pro mode with a 3200x1800 checkerboard render; this entry raises it to 3840x2160. |
 | NieR:Automata (01.06) | 1440p, 1620p, 1800p | The game already runs in PS4 Pro mode at 1080p. |
-| Watch Dogs (01.05) | 1440p, 1620p, 1800p, native 4K, 60 FPS | GPU boost at 2200 MHz is recommended for native 4K. The 60 FPS entry combines with any resolution; the frame rate varies. |
+| Watch Dogs (01.05) | 1440p, 1620p, 1800p, native 4K, 60 FPS | Minor glitches in some parts of the interface. GPU boost at 2200 MHz is recommended for native 4K. The 60 FPS entry combines with any resolution; the frame rate varies. |
 
 Test results by game and firmware: [COMPATIBILITY.md](COMPATIBILITY.md).
