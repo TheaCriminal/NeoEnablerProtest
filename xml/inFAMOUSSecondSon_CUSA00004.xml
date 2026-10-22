@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA00004</ID>
+    <ID>CUSA00223</ID>
+    <ID>CUSA00263</ID>
+    <ID>CUSA00305</ID>
+    <ID>CUSA00309</ID>
+  </TitleID>
+  <Metadata Title="inFAMOUS™ Second Son" Name="4K checkerboard (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 checkerboard render in PS4 Pro (NEO) mode (the game renders 3200x1800 by default). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.07" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x5f012d" Value="c7430c000f0000" />
+      <Line Type="bytes" Address="0x5f0134" Value="c7431070080000" />
+      <Line Type="bytes" Address="0x5f0177" Value="c7831c0fdf00000f0000" />
+      <Line Type="bytes" Address="0x5f0181" Value="c783200fdf0070080000" />
+      <Line Type="bytes" Address="0x5f014d" Value="48bf8007000070080000" />
+      <Line Type="bytes" Address="0x5f0157" Value="48bec003000038040000" />
+      <Line Type="bytes" Address="0x5f01b9" Value="c7832c0fdf00c0030000" />
+      <Line Type="bytes" Address="0x5f019d" Value="ba1c020000" />
+      <Line Type="bytes" Address="0x5f01ac" Value="ba38040000" />
+      <Line Type="bytes" Address="0x5f0d42" Value="b8000f0000" />
+      <Line Type="bytes" Address="0x5f0d51" Value="ba70080000" />
+    </PatchList>
+  </Metadata>
+</Patch>

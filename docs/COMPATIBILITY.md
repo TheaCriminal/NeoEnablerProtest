@@ -34,6 +34,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | The Evil Within 2 (01.05) | 1620p, 1800p, Native 4K (8GB Mode) | Native 4K and 1800p reach gameplay; 1620p not tested yet |
 | Dragon's Dogma: Dark Arisen (01.01) | Native 4K | Validated |
 | Mad Max (01.06) | 1440p, 1800p, Native 4K | Native 4K validated; 1440p and 1800p reach gameplay |
+| inFAMOUS Second Son (01.07) | 4K checkerboard | Validated |
 
 ## GPU boost
 

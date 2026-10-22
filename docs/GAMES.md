@@ -22,5 +22,6 @@ and enable the patches: [Game patches](../README.md#game-patches).
 | The Evil Within 2 (01.05) | 1620p, 1800p, native 4K | The game already runs in PS4 Pro mode (2240x1260 render, 2160p output); these entries raise the render resolution, which stays fixed. Native 4K needs 8GB Mode (**tested on firmware 13.20 only**). The in-game Framerate Lock option unlocks up to 60 fps. |
 | Dragon's Dogma: Dark Arisen (01.01) | native 4K | The game already runs in PS4 Pro mode at 1440p. Combine with the community 60 FPS patch for a higher frame rate. |
 | Mad Max (01.06) | 1440p, 1800p, native 4K | |
+| inFAMOUS Second Son (01.07) | 4K checkerboard | The game already runs in PS4 Pro mode with a 3200x1800 checkerboard render; this entry raises it to 3840x2160. |
 
 Test results by game and firmware: [COMPATIBILITY.md](COMPATIBILITY.md).
