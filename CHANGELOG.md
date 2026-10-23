@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Patch entries for a module the game loads itself (AppElf ending in .prx or .sprx) are now applied. The patch
+  system only patches the executable a game starts with.
+
 ## 0.4.1
 
 - The web panel works again after rest mode without restarting NeoEnabler.

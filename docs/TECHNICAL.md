@@ -137,6 +137,12 @@ file when copying it to `/data/user/patches/xml_orbis/`, for example `Bloodborne
 `CUSA00900.xml`. Enable the entries in the Patch Manager or in `!_settings.xml`. Hashes are computed by the patch system from the file
 name, entry name, title, ELF and app version, so renaming an entry changes its hash.
 
+The patch system only patches the executable a game starts with. An entry whose `AppElf` is a module the game loads
+itself (a name ending in `.prx` or `.sprx`, for example `PreyDll.prx`) is applied by the manager: when the game
+process appears it reads the enabled module entries, waits up to 120 s for each module to load, writes the lines at
+the module base plus `Address` (an offset in the module) and reads them back. Supported line types: bytes, byte,
+bytes16, bytes32, bytes64, float32, float64 and utf8. The result is logged as `modules:` lines.
+
 | Game | File | Enable | Result |
 | --- | --- | --- | --- |
 | Need for Speed Rivals 01.04 | `NeedForSpeedRivals_CUSA00168.xml` | one resolution: `7f4ee42f` 4K or `fc7fe6b6` 1440p | native 4K or 1440p |
