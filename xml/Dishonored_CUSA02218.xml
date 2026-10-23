@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA02218</ID>
+    <ID>CUSA02230</ID>
+    <ID>CUSA02231</ID>
+  </TitleID>
+  <Metadata Title="Dishonored: Definitive Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x990be2" Value="e8191a7201" />
+      <Line Type="bytes" Address="0x99a995" Value="e8a17c7101" />
+      <Line Type="bytes" Address="0x99986e" Value="e8428e7101" />
+      <Line Type="bytes" Address="0x20b2600" Value="4883ec28488b44243048890424488b4424384889442408488b4424404889442410c6042500f0730201e8426f8efec6042500f07302004883c428c34883ec28488b44243048890424488b4424384889442408488b4424404889442410488b4424484889442418e815d1d4fe4883c428803c2500f0730200743b4889c248c1ea2089c181f9000087007707b900008700eb0d81f9000040027705b90000400281fa000001007305ba0000010048c1e22089c84809d0c34883ec38488b44244048890424488b4424484889442408488b4424504889442410488b4424584889442418488b4424604889442420e841c2d4fe4883c438803c2500f07302007440498b4d188b511081e2ffdfffff81ca000000808951108b510481e2ff070000ffc2c1e203448b0425b4ed44024183c07f4183e080410fafd0c1ea06ffca895108c3" />
+      <Line Type="bytes" Address="0x9919ed" Value="ba01000000" />
+      <Line Type="bytes" Address="0xdfed9a" Value="0d00000000" />
+      <Line Type="bytes" Address="0xdfa5f3" Value="804b0300" />
+      <Line Type="bytes" Address="0x999c21" Value="80490300" />
+      <Line Type="bytes" Address="0x244edb0" Value="000a0000a0050000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Dishonored: Definitive Edition" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x990be2" Value="e8191a7201" />
+      <Line Type="bytes" Address="0x99a995" Value="e8a17c7101" />
+      <Line Type="bytes" Address="0x99986e" Value="e8428e7101" />
+      <Line Type="bytes" Address="0x20b2600" Value="4883ec28488b44243048890424488b4424384889442408488b4424404889442410c6042500f0730201e8426f8efec6042500f07302004883c428c34883ec28488b44243048890424488b4424384889442408488b4424404889442410488b4424484889442418e815d1d4fe4883c428803c2500f0730200743b4889c248c1ea2089c181f9000087007707b900008700eb0d81f9000040027705b90000400281fa000001007305ba0000010048c1e22089c84809d0c34883ec38488b44244048890424488b4424484889442408488b4424504889442410488b4424584889442418488b4424604889442420e841c2d4fe4883c438803c2500f07302007440498b4d188b511081e2ffdfffff81ca000000808951108b510481e2ff070000ffc2c1e203448b0425b4ed44024183c07f4183e080410fafd0c1ea06ffca895108c3" />
+      <Line Type="bytes" Address="0x9919ed" Value="ba01000000" />
+      <Line Type="bytes" Address="0xdfed9a" Value="0d00000000" />
+      <Line Type="bytes" Address="0xdfa5f3" Value="804b0300" />
+      <Line Type="bytes" Address="0x999c21" Value="80490300" />
+      <Line Type="bytes" Address="0x244edb0" Value="800c000008070000" />
+      <Line Type="bytes" Address="0x999bba" Value="be00000088" />
+      <Line Type="bytes" Address="0x99aa4b" Value="be00000088" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Dishonored: Definitive Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x990be2" Value="e8191a7201" />
+      <Line Type="bytes" Address="0x99a995" Value="e8a17c7101" />
+      <Line Type="bytes" Address="0x99986e" Value="e8428e7101" />
+      <Line Type="bytes" Address="0x20b2600" Value="4883ec28488b44243048890424488b4424384889442408488b4424404889442410c6042500f0730201e8426f8efec6042500f07302004883c428c34883ec28488b44243048890424488b4424384889442408488b4424404889442410488b4424484889442418e815d1d4fe4883c428803c2500f0730200743b4889c248c1ea2089c181f9000087007707b900008700eb0d81f9000040027705b90000400281fa000001007305ba0000010048c1e22089c84809d0c34883ec38488b44244048890424488b4424484889442408488b4424504889442410488b4424584889442418488b4424604889442420e841c2d4fe4883c438803c2500f07302007440498b4d188b511081e2ffdfffff81ca000000808951108b510481e2ff070000ffc2c1e203448b0425b4ed44024183c07f4183e080410fafd0c1ea06ffca895108c3" />
+      <Line Type="bytes" Address="0x9919ed" Value="ba01000000" />
+      <Line Type="bytes" Address="0xdfed9a" Value="0d00000000" />
+      <Line Type="bytes" Address="0xdfa5f3" Value="804b0300" />
+      <Line Type="bytes" Address="0x999c21" Value="80490300" />
+      <Line Type="bytes" Address="0x244edb0" Value="000f000070080000" />
+      <Line Type="bytes" Address="0x999bba" Value="be00000088" />
+      <Line Type="bytes" Address="0x99aa4b" Value="be00000088" />
+    </PatchList>
+  </Metadata>
+</Patch>

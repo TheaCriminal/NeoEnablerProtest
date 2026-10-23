@@ -25,5 +25,6 @@ and enable the patches: [Game patches](../README.md#game-patches).
 | inFAMOUS Second Son (01.07) | 4K checkerboard | The game already runs in PS4 Pro mode with a 3200x1800 checkerboard render; this entry raises it to 3840x2160. |
 | NieR:Automata (01.06) | 1440p, 1620p, 1800p | The game already runs in PS4 Pro mode at 1080p. |
 | Watch Dogs (01.05) | 1440p, 1620p, 1800p, native 4K, 60 FPS, 60 FPS (triple buffering) | Minor glitches in some parts of the interface. GPU boost at 2200 MHz is recommended for native 4K. 60 FPS works alone or with any resolution (60 or 30 fps). 60 FPS (triple buffering) lets the frame rate sit between 30 and 60 and works only with a PS4 Pro mode resolution entry. |
+| Dishonored Definitive Edition (01.03) | 1440p, 1800p, Native 4K | |
 
 Test results by game and firmware: [COMPATIBILITY.md](COMPATIBILITY.md).
