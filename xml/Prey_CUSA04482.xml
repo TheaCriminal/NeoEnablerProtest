@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA04482</ID>
+    <ID>CUSA04493</ID>
+    <ID>CUSA06559</ID>
+    <ID>CUSA06560</ID>
+    <ID>CUSA07891</ID>
+  </TitleID>
+  <Metadata Title="Prey" Name="1620p (PS4 Pro mode)" Note="2880x1620 output and render in PS4 Pro mode instead of 2560x1440, without the dynamic frame buffer downscale (minimum scale 1.0), WriteCombined heap +512 MiB, r_Width/r_Height fixed at 2880x1620 (in-world touch screens). Enable only one resolution entry. Requires NeoEnabler 0.5.0 or later (PreyDll.prx entries)." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x107610f" Value="bf54060000" />
+      <Line Type="bytes" Address="0x1076117" Value="be400b0000" />
+      <Line Type="bytes" Address="0x10760c1" Value="81feffffff7f" />
+      <Line Type="bytes" Address="0x10760c7" Value="bb400b0000" />
+      <Line Type="bytes" Address="0x10760e3" Value="81faffffff7f" />
+      <Line Type="bytes" Address="0x10760e9" Value="be54060000" />
+      <Line Type="bytes" Address="0x11ecf0a" Value="48c1e316" />
+      <Line Type="bytes" Address="0xec4e10" Value="c5fa1005583d2501" />
+      <Line Type="bytes" Address="0xef5aba" Value="ba400b0000b900010400" />
+      <Line Type="bytes" Address="0xef5af3" Value="ba54060000b900010400" />
+      <Line Type="bytes" Address="0x277f000" Value="f7431800000400750444897350804b1a014889dfc3" />
+      <Line Type="bytes" Address="0xf0b095" Value="e8663f8701660f1f440000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Prey" Name="1800p (PS4 Pro mode)" Note="3200x1800 output and render in PS4 Pro mode instead of 2560x1440, without the dynamic frame buffer downscale (minimum scale 1.0), WriteCombined heap +512 MiB, r_Width/r_Height fixed at 3200x1800 (in-world touch screens). Enable only one resolution entry. Requires NeoEnabler 0.5.0 or later (PreyDll.prx entries)." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x107610f" Value="bf08070000" />
+      <Line Type="bytes" Address="0x1076117" Value="be800c0000" />
+      <Line Type="bytes" Address="0x10760c1" Value="81feffffff7f" />
+      <Line Type="bytes" Address="0x10760c7" Value="bb800c0000" />
+      <Line Type="bytes" Address="0x10760e3" Value="81faffffff7f" />
+      <Line Type="bytes" Address="0x10760e9" Value="be08070000" />
+      <Line Type="bytes" Address="0x11ecf0a" Value="48c1e316" />
+      <Line Type="bytes" Address="0xec4e10" Value="c5fa1005583d2501" />
+      <Line Type="bytes" Address="0xef5aba" Value="ba800c0000b900010400" />
+      <Line Type="bytes" Address="0xef5af3" Value="ba08070000b900010400" />
+      <Line Type="bytes" Address="0x277f000" Value="f7431800000400750444897350804b1a014889dfc3" />
+      <Line Type="bytes" Address="0xf0b095" Value="e8663f8701660f1f440000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Prey" Name="Native 4K (PS4 Pro mode)" Note="3840x2160 output and render in PS4 Pro mode instead of 2560x1440, without the dynamic frame buffer downscale (minimum scale 1.0), WriteCombined heap +1024 MiB, r_Width/r_Height fixed at 3840x2160 (in-world touch screens). Enable only one resolution entry. Requires NeoEnabler 0.5.0 or later (PreyDll.prx entries)." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x107610f" Value="bf70080000" />
+      <Line Type="bytes" Address="0x1076117" Value="be000f0000" />
+      <Line Type="bytes" Address="0x10760c1" Value="81feffffff7f" />
+      <Line Type="bytes" Address="0x10760c7" Value="bb000f0000" />
+      <Line Type="bytes" Address="0x10760e3" Value="81faffffff7f" />
+      <Line Type="bytes" Address="0x10760e9" Value="be70080000" />
+      <Line Type="bytes" Address="0x11ecf0a" Value="48c1e317" />
+      <Line Type="bytes" Address="0xec4e10" Value="c5fa1005583d2501" />
+      <Line Type="bytes" Address="0xef5aba" Value="ba000f0000b900010400" />
+      <Line Type="bytes" Address="0xef5af3" Value="ba70080000b900010400" />
+      <Line Type="bytes" Address="0x277f000" Value="f7431800000400750444897350804b1a014889dfc3" />
+      <Line Type="bytes" Address="0xf0b095" Value="e8663f8701660f1f440000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Prey" Name="60 FPS" Note="60 FPS cap (flip rate 0). Works alone or with any resolution entry. Requires NeoEnabler 0.5.0 or later." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx">
+    <PatchList>
+      <Line Type="bytes" Address="0x108b293" Value="31f690" />
+      <Line Type="bytes" Address="0x108b757" Value="4889fb31f689b3d80000008b7b70e82e5ef7fe9090" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Prey" Name="Skip intro videos" Note="Skips the startup videos (Bethesda and Arkane logos, legal screens). Requires NeoEnabler 0.5.0 or later." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx">
+    <PatchList>
+      <Line Type="bytes" Address="0x1112921" Value="eb2d" />
+      <Line Type="bytes" Address="0x1112952" Value="488d1513411401" />
+    </PatchList>
+  </Metadata>
+</Patch>
