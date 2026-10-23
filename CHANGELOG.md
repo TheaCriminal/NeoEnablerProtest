@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 - Patch entries for a module the game loads itself (AppElf ending in .prx or .sprx) are now applied. The patch
   system only patches the executable a game starts with.
