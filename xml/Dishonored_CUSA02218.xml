@@ -48,4 +48,10 @@
       <Line Type="bytes" Address="0x99aa4b" Value="be00000088" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Dishonored: Definitive Edition" Name="60 FPS (triple buffering)" Note="60 FPS cap with 3 display buffers, so the frame rate can sit between 30 and 60 instead of dropping to 30. Works alone or with any resolution entry. Flip rate change from the 60 FPS Unlock patch by illusion." Author="gasb07, illusion" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x98eb73" Value="c7436803000000" />
+      <Line Type="bytes" Address="0x9919a8" Value="be00000000" />
+    </PatchList>
+  </Metadata>
 </Patch>
