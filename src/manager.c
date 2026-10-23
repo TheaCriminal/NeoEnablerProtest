@@ -36,7 +36,7 @@ static void log_line(const char *fmt, ...);
 #include "log_mirror.h"
 
 #define PORT 8765
-#define VERSION "NeoEnabler 0.4.1"
+#define VERSION "NeoEnabler 0.5.0"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -191,6 +191,7 @@ static int write_file(const char *path, const void *data, size_t size) {
 
 #include "patch_sync.h"
 #include "games.h"
+#include "module_patches.h"
 static char patches_message[256] = "Not checked yet";
 
 #define SETTINGS_PATH "/data/neo-settings"
@@ -1660,6 +1661,7 @@ int main(void) {
         launch_poll();
         play_tick();
         binary_tick();
+        mp_tick();
         time_t now=time(NULL);
         /* Rest mode freezes this process and leaves the panel socket dead while the process lives on. The loop runs
            every 20 ms, so a long gap means it was frozen: open the panel socket again (a false gap only reopens it). */

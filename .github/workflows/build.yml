@@ -99,6 +99,8 @@ jobs:
           /tmp/neo-xml-merge-test
           cc -O2 -Wall -Wextra -Werror tests/game_patches_test.c -o /tmp/neo-game-patches-test
           /tmp/neo-game-patches-test
+          cc -O2 -Wall -Wextra -Werror tests/module_patches_test.c -o /tmp/neo-module-patches-test
+          /tmp/neo-module-patches-test
           cc -O2 -Wall -Wextra -Werror tests/patch_sync_test.c -o /tmp/neo-patch-sync-test
           /tmp/neo-patch-sync-test xml
           cc -O2 -Wall -Wextra -Werror tests/games_8gib_test.c -o /tmp/neo-games-8gib-test

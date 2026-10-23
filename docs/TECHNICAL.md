@@ -137,6 +137,12 @@ file when copying it to `/data/user/patches/xml_orbis/`, for example `Bloodborne
 `CUSA00900.xml`. Enable the entries in the Patch Manager or in `!_settings.xml`. Hashes are computed by the patch system from the file
 name, entry name, title, ELF and app version, so renaming an entry changes its hash.
 
+The patch system only patches the executable a game starts with. An entry whose `AppElf` is a module the game loads
+itself (a name ending in `.prx` or `.sprx`, for example `PreyDll.prx`) is applied by the manager: when the game
+process appears it reads the enabled module entries, waits up to 120 s for each module to load, writes the lines at
+the module base plus `Address` (an offset in the module) and reads them back. Supported line types: bytes, byte,
+bytes16, bytes32, bytes64, float32, float64 and utf8. The result is logged as `modules:` lines.
+
 | Game | File | Enable | Result |
 | --- | --- | --- | --- |
 | Need for Speed Rivals 01.04 | `NeedForSpeedRivals_CUSA00168.xml` | one resolution: `7f4ee42f` 4K or `fc7fe6b6` 1440p | native 4K or 1440p |
@@ -160,6 +166,7 @@ name, entry name, title, ELF and app version, so renaming an entry changes its h
 | Watch Dogs 01.05 | `WatchDogs_CUSA00021.xml` | one resolution: `7370d094` 1440p, `8d0034b4` 1620p, `b04c2784` 1800p or `f041d20d` Native 4K, plus `007c637a` 60 FPS (alone or with any of them) or `ea7939f7` 60 FPS (triple buffering, needs one of them) | display buffers in ALT layout set by a command-buffer walker on both submit calls, flipMode 1, fast clear off, HTILE off; HTILE-only depth clears redirected to a real D32 clear, MSAA depth included (all samples); legacy texture memory-type bits cleared; renderer GPU pool +384 MiB (+512 MiB at 4K) and the fixed 210 MiB render-target heap grown to 448/544/600/768 MiB, which otherwise overlaps live targets above 1080p; 60 FPS sets the video flip rate to 60 Hz (0x1e3669a); 60 FPS (triple buffering) also adds a third display buffer (display object 0x98 -> 0xe0 bytes, index 0-2, RegisterBuffers with three), whose code is in each resolution entry |
 | Dishonored Definitive Edition 01.03 | `Dishonored_CUSA02218.xml` | one resolution: `66ebdd3c` 1440p, `a5d72a2c` 1800p or `e5dadfa5` Native 4K, plus `ffe2345f` 60 FPS (triple buffering, alone or with any of them) | Unreal Engine 3: GScreenWidth/Height (static data) becomes the target size and feeds the engine resolution, viewport and display; display buffers in ALT layout with sizefix while they are created, flipMode 1, fast clear off, HTILE off in the Gnm depth constructor and in the engine surface setup; 1800p and Native 4K grow the video memory pool by 384 MiB; triple buffering sets 3 display buffers in the device constructor (every user of the count is generic) and flip rate 0 |
 | Dishonored 2 01.07 | `Dishonored2_CUSA03642.xml` | one resolution: `5b668a51` 1620p, `662a9961` 1800p or `26276ce8` Native 4K, plus `d61add9f` 60 FPS and `f03d75db` Skip intro videos (alone or with any of them) | native PS4 Pro game: the Pro output size (2560x1440 on a 4K TV) becomes the target size; Native 4K pins the dynamic resolution floor (rs_minimumResolutionScale) at 1.0; the TXAA current-frame weight goes from 0.1 to the engine cap 0.2; 60 FPS sets flip rate 0 (the game already has 3 display buffers); the intro videos are not queued |
+| Prey 01.12 | `Prey_CUSA04482.xml` | one resolution: `34074c89` 1620p, `094b5fb9` 1800p or `4946aa30` Native 4K, plus `b97b1b47` 60 FPS and `9f5cb303` Skip intro videos (alone or with any of them) | native PS4 Pro game, all entries patch `PreyDll.prx` (applied by the manager, 0.5.0+): Pro output and render size set in the size function, overload scene manager minimum scale 1.0, WriteCombined heap extra x4 (x8 for Native 4K), r_Width/r_Height registered at the target size and protected from neo.cfg (flag 0x40000 plus a Set(int) guard), so in-world touch screens map the cursor correctly; 60 FPS sets flip rate 0; the logo and legal videos are not queued |
 
 - Each resolution entry already includes the Pro mode fixes. Enable only one per game (in a collection, one per
   game executable, its AppElf).
