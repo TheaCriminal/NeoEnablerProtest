@@ -56,6 +56,13 @@ int main(void){
  clock_mhz=1800;assert(!gpu_poll(44));assert(gpu_poll(44)==-2&&gpu.blocked);
  unsigned stopped=writes;assert(gpu_poll(44)==-2&&writes==stopped);
  assert(!gpu_request(0,2200,44)&&last_set==1800);
+ /* Recoveries are given back once the boost has held for GPU_STABLE_POLLS polls
+  * (separate dashboard visits must not add up to a lockout). */
+ reset();clock_mhz=1800;assert(!gpu_request(1,2200,44));
+ for(unsigned i=0;i<2;i++){clock_mhz=1800;assert(!gpu_poll(44));assert(!gpu_poll(44));}
+ assert(gpu.recoveries==2);
+ for(unsigned i=0;i<GPU_STABLE_POLLS;i++){clock_mhz=2200;assert(!gpu_poll(44));}
+ assert(gpu.recoveries==0&&!gpu.blocked);
  reset();clock_mhz=1800;assert(!gpu_request(1,2200,44));unsigned before=writes;
  clock_mhz=1800;assert(!gpu_poll(44));assert(gpu_poll(-1)==1);
  assert(!gpu_poll(44)&&writes==before); /* Unknown scan breaks reset evidence. */
