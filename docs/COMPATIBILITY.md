@@ -29,6 +29,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Prey (01.12) | 1620p, 1800p, Native 4K, 60 FPS, Skip intro videos | 1800p, Native 4K, 60 FPS and Skip intro videos validated; 1620p not tested yet |
 | Yakuza 6: The Song of Life (01.05) | 1440p, 1620p, 1800p, Native 4K (8GB Mode), 60 FPS | Validated |
 | Shadow of the Colossus (01.01) | 1620p, 1800p, Native 4K | Validated |
+| Dragon Quest XI S: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K | Validated |
 | Resident Evil 6 (01.01) | 1440p, 4K | Validated |
 | The Order: 1886 (01.02) | 4K, 4K up to 60 fps | Validated |
 | Dark Souls III: The Fire Fades Edition (01.03) | 1440p, 1620p, 1800p, Native 4K (8GB Mode) | Validated |
