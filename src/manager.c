@@ -870,7 +870,7 @@ static void serve_gpu_page(int fd, const char *msg) {
         "<input type=range id=gpu-target name=mhz min=%u max=%u step=50 value=%u%s>"
         "<div><button formaction=/gpu/enable%s>Apply boost</button>"
         "<button formaction=/gpu/disable%s>Disable boost</button></div></form>"
-        "<p class=notice>Maximum allowed target: 2350 MHz. PS5=2200 | PS5Pro=2350 "
+        "<p class=notice>Use 2200 if on Base PS5. Use 2350 if on PS5 PRO. More than 2200 on Base PS5 will not work. "
         "Actual frequency may be lower. Power and thermal controls remain active.</p>"
         "<small>Applies to PS4 games in base or NEO mode. A saved target is requested on the next PS4 launch. "
         "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
