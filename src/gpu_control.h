@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #define GPU_MIN_MHZ 1800U
-#define GPU_MAX_MHZ 2300U
+#define GPU_MAX_MHZ 2350U
 #define GPU_DEFAULT_MHZ 2200U
 static int gpu_target_valid(unsigned mhz){return mhz>=GPU_MIN_MHZ&&mhz<=GPU_MAX_MHZ&&mhz%50==0;}
 #ifndef NEO_GPU_TEST
