@@ -48,7 +48,7 @@ int main(void){
  assert(gpu_poll(-1)==1&&writes==n+1); /* Unknown game state never issues SET. */
  assert(!gpu_request(0,2200,45));
  reset();clock_mhz=1800;assert(!gpu_request(1,2200,44));
- for(unsigned i=0;i<3;i++){
+ for(unsigned i=0;i<GPU_MAX_RECOVERIES;i++){
   unsigned before=writes;clock_mhz=1800;
   assert(!gpu_poll(44)&&writes==before);
   assert(!gpu_poll(44)&&writes==before+1&&last_set==2200&&gpu.baseline==1800);
