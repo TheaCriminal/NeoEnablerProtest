@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA01022</ID>
+    <ID>CUSA01013</ID>
+  </TitleID>
+  <Metadata Title="DmC Devil May Cry: Definitive Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Experimental / untested." Author="Criminal" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x00a64b77" Value="e984144b029090" />
+      <Line Type="bytes" Address="0x02f16000" Value="be000f0000ba70080000488d05cf750600e968ebb4fd" />
+      <Line Type="bytes32" Address="0x02f7d5e0" Value="0x00000f00" />
+      <Line Type="bytes32" Address="0x02f7d5e4" Value="0x00000870" />
+    </PatchList>
+  </Metadata>
+</Patch>
