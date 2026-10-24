@@ -245,6 +245,17 @@ static int bm_mail(bm_mailbox *out){
 static int bm_command(uint32_t command,uint32_t seq){
  return bm_field(MS_COMMAND,command)||bm_field(MS_RESPONSE_SEQ,seq)?-1:0;
 }
+/* Quit leaves ShellCore as it was before the manager: once the call is restored, wait for any thread that entered
+ * the shim before the restore (it raises active within microseconds of resuming), then zero the slot. A busy slot
+ * stays as a disarmed retained slot, which forwards to the original. */
+static void bm_clear_slot(void){
+ usleep(200000);
+ if(bm_stop())return;
+ bm_mailbox m;unsigned char b[5],zero[1024]={0};
+ if(!bm_read(bm.cave+MS_ENABLED,&m,sizeof m)&&!memcmp(m.magic,"NEOMS001",8)&&!m.active&&!m.gate&&!m.dirty&&
+    !bm_read(bm.base+bm.profile->call,b,5)&&!memcmp(b,bm.saved,5))bm_store(bm.cave,zero,sizeof zero);
+ if(bm_resume())bm.fatal=1;
+}
 static int bm_remove(void){
  if(!bm.attached)return bm.fatal?-1:0;
  bm_mailbox m;if(bm_mail(&m)||m.gate||m.dirty)return -1;
@@ -261,5 +272,6 @@ static int bm_remove(void){
   bm.fatal=1;return -100;
  }else bm.attached=0;
  if(bm_resume()){bm.fatal=1;return -101;}
+ if(!rc&&!bm.attached)bm_clear_slot();
  return rc;
 }
