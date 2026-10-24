@@ -1668,6 +1668,7 @@ int main(void) {
     patches_drop_8gib(NULL);
     time_t last_memory_poll=time(NULL),last_loop=last_memory_poll,last_reopen=0,last_probe=last_memory_poll;
     long long last_mirror_ms=0;
+    int quit_pending=0;
     for (;;) {
         memory_data_tick();
         launch_poll();
@@ -1713,6 +1714,12 @@ int main(void) {
                 patches_drop_8gib(NULL);
             }
             memory_previous_result=memory_result;last_memory_poll=now;
+            if(quit_pending&&!memory_shutdown()&&!gpu_request(0,gpu.target,gpu_game_pid())){
+                launch_attach(0);
+                notify("NeoEnabler: stopped after the game closed (per-game Pro mode and 8GB Mode stopped, GPU boost stopped)");
+                log_state();
+                break;
+            }
         }
         /* short wait: launch questions are answered between requests */
         if(srv<0){usleep(20000);continue;}             /* launch questions and polls above keep running */
@@ -1821,7 +1828,15 @@ int main(void) {
             notify(smsg);
             if (!strcmp(form_body, "view=gpu") && gpu_available()) serve_gpu_page(fd, smsg); else serve_page(fd, smsg);
         } else if (post && !strcmp(path, "/quit")) {
-            if (memory_shutdown()) { reply(fd, "409 Conflict", "text/plain", "Close the game and wait for DATA restoration before quitting; check memory status\n"); close(fd); continue; }
+            if (memory_shutdown()) {
+                /* 8GB Mode still owns DATA for the running game: finish Quit once the game closes and DATA is restored */
+                if (!quit_pending) log_line("panel: Quit waits for the game to close and 8GB Mode DATA restoration");
+                quit_pending = 1;
+                reply(fd, "202 Accepted", "text/html; charset=utf-8", "<!doctype html><meta charset=utf-8><title>NeoEnabler</title>"
+                      "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Quit requested. The manager stops "
+                      "after the game closes and the 8GB Mode memory is restored.</body>");
+                close(fd); continue;
+            }
             if (gpu_request(0, gpu.target, gpu_game_pid())) {
                 notify(gpu.message); serve_gpu_page(fd, "Clock restoration failed. Retry Disable before quitting."); close(fd); continue;
             }
