@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.2
+
+- System dialogs, such as the save data window, open again while a game runs with 8GB Mode. Before, the game
+  stopped responding when it opened one.
+- Quit now restores ShellCore to its state before NeoEnabler, so 8GB Mode stays available when NeoEnabler starts
+  again, including after an update. Before, it could ask for a reboot.
+- Quit while a game runs with 8GB Mode no longer fails: NeoEnabler stops by itself once the game closes and its
+  memory is restored.
+
 ## 0.5.1
 
 - The web panel comes back after rest mode also when NeoEnabler kept running through it. NeoEnabler now checks
