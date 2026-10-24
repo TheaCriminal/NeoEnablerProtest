@@ -4,7 +4,7 @@
     <ID>CUSA09660</ID>
     <ID>CUSA09032</ID>
   </TitleID>
-  <Metadata Title="Yakuza 6: The Song of Life" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Light tile grid and the tiled lighting row stride scaled to the target size (shader pool hook), save screenshot texture left at its original size. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Yakuza 6: The Song of Life" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Light tile grid and the tiled lighting row stride scaled to the target size (hook rewrites six fixed shader pool sites), save screenshot texture left at its original size. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x124f033" Value="000a0000"/>
       <Line Type="bytes" Address="0x124f03e" Value="a0050000"/>
@@ -145,11 +145,11 @@
       <Line Type="bytes" Address="0x168ff5f" Value="28"/>
       <Line Type="bytes" Address="0x169001e" Value="000a"/>
       <Line Type="bytes" Address="0x169002e" Value="a005"/>
-      <Line Type="bytes" Address="0x2d473d0" Value="505152565741504151415241530f31c1e81683e03fc1e0124189c049ba000000a8020000004b8d3402488dbe000004004839fe0f83860000008b0689c181e1ff01c0ff81f9480100c2756b3d480100c2751a817e047f008cbf7511817e08002d6a937508c706500000b0eb4a89c2c1ea0f83e27f4c8d5e044c8d96c00000004d39d37332418b0b81e100ffffff81f90000d6d2751b418b4b0481e1ff01000039d1750dc1e21081ca500000b08916eb064983c304ebc94883c604e971ffffff415b415a415941585f5e5a5958e90f6067fe"/>
+      <Line Type="bytes" Address="0x2d473d0" Value="5051525648be000000a802000000488d153b0000008b0285c0742b8b0c0689c825ff01c0ff3d480100c27514c1e90f83e17fc1e11081c9500000b08b02890c064883c204ebcf5e5a5958e9916067fe9028df1c0010ad230040e923001428240010672400f089270000000000"/>
       <Line Type="bytes" Address="0x10abade" Value="e8edb8c901"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="Yakuza 6: The Song of Life" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Light tile grid and the tiled lighting row stride scaled to the target size (shader pool hook), save screenshot texture left at its original size. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Yakuza 6: The Song of Life" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Light tile grid and the tiled lighting row stride scaled to the target size (hook rewrites six fixed shader pool sites), save screenshot texture left at its original size. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x124f033" Value="400b0000"/>
       <Line Type="bytes" Address="0x124f03e" Value="54060000"/>
@@ -290,11 +290,11 @@
       <Line Type="bytes" Address="0x168ff5f" Value="2e"/>
       <Line Type="bytes" Address="0x169001e" Value="400b"/>
       <Line Type="bytes" Address="0x169002e" Value="5406"/>
-      <Line Type="bytes" Address="0x2d473d0" Value="505152565741504151415241530f31c1e81683e03fc1e0124189c049ba00a0c6b1020000004b8d3402488dbe000004004839fe0f83860000008b0689c181e1ff01c0ff81f9480100c2756b3d480100c2751a817e047f008cbf7511817e08002d6a937508c7065a0000b0eb4a89c2c1ea0f83e27f4c8d5e044c8d96c00000004d39d37332418b0b81e100ffffff81f90000d6d2751b418b4b0481e1ff01000039d1750dc1e21081ca5a0000b08916eb064983c304ebc94883c604e971ffffff415b415a415941585f5e5a5958e90f6067fe"/>
+      <Line Type="bytes" Address="0x2d473d0" Value="5051525648be00a0c6b102000000488d153b0000008b0285c0742b8b0c0689c825ff01c0ff3d480100c27514c1e90f83e17fc1e11081c95a0000b08b02890c064883c204ebcf5e5a5958e9916067fe9028df1c0010ad230040e923001428240010672400f089270000000000"/>
       <Line Type="bytes" Address="0x10abade" Value="e8edb8c901"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="Yakuza 6: The Song of Life" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Light tile grid and the tiled lighting row stride scaled to the target size (shader pool hook), save screenshot texture left at its original size. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Yakuza 6: The Song of Life" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Light tile grid and the tiled lighting row stride scaled to the target size (hook rewrites six fixed shader pool sites), save screenshot texture left at its original size. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x124f033" Value="800c0000"/>
       <Line Type="bytes" Address="0x124f03e" Value="08070000"/>
@@ -435,11 +435,11 @@
       <Line Type="bytes" Address="0x168ff5f" Value="34"/>
       <Line Type="bytes" Address="0x169001e" Value="800c"/>
       <Line Type="bytes" Address="0x169002e" Value="0807"/>
-      <Line Type="bytes" Address="0x2d473d0" Value="505152565741504151415241530f31c1e81683e03fc1e0124189c049ba0050e2bc020000004b8d3402488dbe000004004839fe0f83860000008b0689c181e1ff01c0ff81f9480100c2756b3d480100c2751a817e047f008cbf7511817e08002d6a937508c706640000b0eb4a89c2c1ea0f83e27f4c8d5e044c8d96c00000004d39d37332418b0b81e100ffffff81f90000d6d2751b418b4b0481e1ff01000039d1750dc1e21081ca640000b08916eb064983c304ebc94883c604e971ffffff415b415a415941585f5e5a5958e90f6067fe"/>
+      <Line Type="bytes" Address="0x2d473d0" Value="5051525648be0050e2bc02000000488d153b0000008b0285c0742b8b0c0689c825ff01c0ff3d480100c27514c1e90f83e17fc1e11081c9640000b08b02890c064883c204ebcf5e5a5958e9916067fe9028df1c0010ad230040e923001428240010672400f089270000000000"/>
       <Line Type="bytes" Address="0x10abade" Value="e8edb8c901"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="Yakuza 6: The Song of Life" Name="Native 4K (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output and render in PS4 Pro mode, direct memory pool +768 MiB. Light tile grid and the tiled lighting row stride scaled to the target size (shader pool hook), save screenshot texture left at its original size. Enable only one resolution entry. Requires NeoEnabler 0.5.2 or later with 8GB Mode (older versions hang when the save window opens)." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Yakuza 6: The Song of Life" Name="Native 4K (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output and render in PS4 Pro mode, direct memory pool +768 MiB. Light tile grid and the tiled lighting row stride scaled to the target size (hook rewrites six fixed shader pool sites), save screenshot texture left at its original size. Enable only one resolution entry. Requires NeoEnabler 0.5.2 or later with 8GB Mode (older versions hang when the save window opens)." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x124f033" Value="000f0000"/>
       <Line Type="bytes" Address="0x124f03e" Value="70080000"/>
@@ -580,7 +580,7 @@
       <Line Type="bytes" Address="0x168ff5f" Value="3f"/>
       <Line Type="bytes" Address="0x169001e" Value="000f"/>
       <Line Type="bytes" Address="0x169002e" Value="7008"/>
-      <Line Type="bytes" Address="0x2d473d0" Value="505152565741504151415241530f31c1e81683e03fc1e0124189c049ba00900bd2020000004b8d3402488dbe000004004839fe0f83860000008b0689c181e1ff01c0ff81f9480100c2756b3d480100c2751a817e047f008cbf7511817e08002d6a937508c706780000b0eb4a89c2c1ea0f83e27f4c8d5e044c8d96c00000004d39d37332418b0b81e100ffffff81f90000d6d2751b418b4b0481e1ff01000039d1750dc1e21081ca780000b08916eb064983c304ebc94883c604e971ffffff415b415a415941585f5e5a5958e90f6067fe"/>
+      <Line Type="bytes" Address="0x2d473d0" Value="5051525648be00900bd202000000488d153b0000008b0285c0742b8b0c0689c825ff01c0ff3d480100c27514c1e90f83e17fc1e11081c9780000b08b02890c064883c204ebcf5e5a5958e9916067fe9028df1c0010ad230040e923001428240010672400f089270000000000"/>
       <Line Type="bytes" Address="0x10abade" Value="e8edb8c901"/>
       <Line Type="bytes" Address="0x1444309" Value="000000ac"/>
     </PatchList>
