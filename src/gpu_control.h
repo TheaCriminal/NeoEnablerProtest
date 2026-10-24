@@ -10,6 +10,7 @@
 #define GPU_MIN_MHZ 1800U
 #define GPU_MAX_MHZ 2350U      /* was 2200U; extended for PS5 Pro testing */
 #define GPU_DEFAULT_MHZ 2200U  /* default stays at the tested value */
+#define GPU_MAX_RECOVERIES 10U /* automatic re-applies allowed before giving up */
 #define GPU_STABLE_POLLS 10U   /* polls above 1800 MHz before the recovery budget is refunded */
 static int gpu_target_valid(unsigned mhz){return mhz>=GPU_MIN_MHZ&&mhz<=GPU_MAX_MHZ&&mhz%50==0;}
 #ifndef NEO_GPU_TEST
@@ -86,13 +87,13 @@ static int gpu_poll(int pid){
  }
  /* Two consecutive policy polls at exactly the standard 1800 MHz profile.
   * This is a reset heuristic, not a foreground or thermal-state measurement.
-  * At most three automatic recoveries per game/manual enable; never retry a
+  * At most GPU_MAX_RECOVERIES automatic recoveries per game/manual enable; never retry a
   * failed SET, failed read, or ambiguous process scan. */
  if(gpu.applied&&gpu.target>1800&&gpu.actual==1800){
   gpu.stable_samples=0;
   if(++gpu.reset_samples>=2){
    gpu.reset_samples=0;
-   if(gpu.recoveries>=10){
+   if(gpu.recoveries>=GPU_MAX_RECOVERIES){
     gpu.blocked=1;
     snprintf(gpu.message,sizeof gpu.message,"Repeated 1800 MHz resets; automatic recovery stopped. Check game/system state before retrying Enable.");
     return -2;
