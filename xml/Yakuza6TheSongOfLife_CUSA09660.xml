@@ -585,4 +585,9 @@
       <Line Type="bytes" Address="0x1444309" Value="000000ac"/>
     </PatchList>
   </Metadata>
+  <Metadata Title="Yakuza 6: The Song of Life" Name="60 FPS" Note="Unlocks the 30 fps cap (flip rate 0). Works alone or with any resolution entry; the frame rate varies with the resolution." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x146bf24" Value="31f690"/>
+    </PatchList>
+  </Metadata>
 </Patch>
