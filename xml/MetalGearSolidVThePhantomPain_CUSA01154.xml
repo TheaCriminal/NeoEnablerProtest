@@ -5,35 +5,35 @@
     <ID>CUSA01099</ID>
     <ID>CUSA01140</ID>
   </TitleID>
-  <Metadata Title="METAL GEAR SOLID V: THE PHANTOM PAIN" Name="1440p" Note="2560x1440 native render (checkerboard off) with 3840x2160 output in PS4 Pro mode. The game already runs in Pro mode with a 2560x1440 checkerboard render. No post-process anti-aliasing (the checkerboard resolve was the only one). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.16" AppElf="eboot.bin">
+  <Metadata Title="METAL GEAR SOLID V: THE PHANTOM PAIN" Name="1440p" Note="2560x1440 native render (checkerboard off) with 3840x2160 output in PS4 Pro mode. The game already runs in Pro mode with a 2560x1440 checkerboard render. No post-process anti-aliasing (the checkerboard resolve was the only one). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.16" AppElf="eboot.bin" NeoRequires="pro">
     <PatchList>
       <Line Type="bytes" Address="0x2bd15e8" Value="000a0000a0050000" />
       <Line Type="bytes" Address="0x9822d3" Value="e828dd00039090" />
       <Line Type="bytes" Address="0x3990000" Value="4c8d75a0c745c800000000c3" />
     </PatchList>
   </Metadata>
-  <Metadata Title="METAL GEAR SOLID V: THE PHANTOM PAIN" Name="1620p" Note="2880x1620 native render (checkerboard off) with 3840x2160 output in PS4 Pro mode. The game already runs in Pro mode with a 2560x1440 checkerboard render. No post-process anti-aliasing (the checkerboard resolve was the only one). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.16" AppElf="eboot.bin">
+  <Metadata Title="METAL GEAR SOLID V: THE PHANTOM PAIN" Name="1620p" Note="2880x1620 native render (checkerboard off) with 3840x2160 output in PS4 Pro mode. The game already runs in Pro mode with a 2560x1440 checkerboard render. No post-process anti-aliasing (the checkerboard resolve was the only one). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.16" AppElf="eboot.bin" NeoRequires="pro">
     <PatchList>
       <Line Type="bytes" Address="0x2bd15e8" Value="400b000054060000" />
       <Line Type="bytes" Address="0x9822d3" Value="e828dd00039090" />
       <Line Type="bytes" Address="0x3990000" Value="4c8d75a0c745c800000000c3" />
     </PatchList>
   </Metadata>
-  <Metadata Title="METAL GEAR SOLID V: THE PHANTOM PAIN" Name="1800p" Note="3200x1800 native render (checkerboard off) with 3840x2160 output in PS4 Pro mode. The game already runs in Pro mode with a 2560x1440 checkerboard render. No post-process anti-aliasing (the checkerboard resolve was the only one). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.16" AppElf="eboot.bin">
+  <Metadata Title="METAL GEAR SOLID V: THE PHANTOM PAIN" Name="1800p" Note="3200x1800 native render (checkerboard off) with 3840x2160 output in PS4 Pro mode. The game already runs in Pro mode with a 2560x1440 checkerboard render. No post-process anti-aliasing (the checkerboard resolve was the only one). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.16" AppElf="eboot.bin" NeoRequires="pro">
     <PatchList>
       <Line Type="bytes" Address="0x2bd15e8" Value="800c000008070000" />
       <Line Type="bytes" Address="0x9822d3" Value="e828dd00039090" />
       <Line Type="bytes" Address="0x3990000" Value="4c8d75a0c745c800000000c3" />
     </PatchList>
   </Metadata>
-  <Metadata Title="METAL GEAR SOLID V: THE PHANTOM PAIN" Name="Native 4K" Note="3840x2160 native render (checkerboard off) with 3840x2160 output in PS4 Pro mode. The game already runs in Pro mode with a 2560x1440 checkerboard render. No post-process anti-aliasing (the checkerboard resolve was the only one). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.16" AppElf="eboot.bin">
+  <Metadata Title="METAL GEAR SOLID V: THE PHANTOM PAIN" Name="Native 4K" Note="3840x2160 native render (checkerboard off) with 3840x2160 output in PS4 Pro mode. The game already runs in Pro mode with a 2560x1440 checkerboard render. No post-process anti-aliasing (the checkerboard resolve was the only one). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.16" AppElf="eboot.bin" NeoRequires="pro">
     <PatchList>
       <Line Type="bytes" Address="0x2bd15e8" Value="000f000070080000" />
       <Line Type="bytes" Address="0x9822d3" Value="e828dd00039090" />
       <Line Type="bytes" Address="0x3990000" Value="4c8d75a0c745c800000000c3" />
     </PatchList>
   </Metadata>
-  <Metadata Title="METAL GEAR SOLID V: THE PHANTOM PAIN" Name="4K checkerboard" Note="1920x2160 checkerboard render (3840x2160) instead of 1280x1440, keeping the game checkerboard resolve and its anti-aliasing. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.16" AppElf="eboot.bin">
+  <Metadata Title="METAL GEAR SOLID V: THE PHANTOM PAIN" Name="4K checkerboard" Note="1920x2160 checkerboard render (3840x2160) instead of 1280x1440, keeping the game checkerboard resolve and its anti-aliasing. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.16" AppElf="eboot.bin" NeoRequires="pro">
     <PatchList>
       <Line Type="bytes" Address="0x2bd15e8" Value="8007000070080000" />
       <Line Type="bytes" Address="0x3990000" Value="" />
