@@ -15,6 +15,14 @@ _start:
  mov [rsp+8], rsi
  mov [rsp+16], rdx
  lock inc dword ptr [rip+active]
+ test rdi, rdi                   // only game mounts (category 0xf000) are serialized;
+ jz gated                        // system dialogs mount while the game holds the gate
+ cmp dword ptr [rdi], 0xf000
+ je gated
+ call qword ptr [rip+original]   // argument registers untouched
+ mov r14, rax
+ jmp done
+gated:
  rdtsc
  shl rdx, 32
  or rax, rdx

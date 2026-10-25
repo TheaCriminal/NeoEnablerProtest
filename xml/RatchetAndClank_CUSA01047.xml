@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA01047</ID>
+  </TitleID>
+  <Metadata Title="Ratchet and Clank" Name="1728p (PS4 Pro mode)" Note="3072x1728 render in PS4 Pro mode instead of 2560x1440, scaled to the 3840x2160 output. The render width must be a multiple of 256, so the steps are 1728p and 1872p instead of 1620p and 1800p. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x1aee1ee" Value="000c0000c0060000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Ratchet and Clank" Name="1872p (PS4 Pro mode)" Note="3328x1872 render in PS4 Pro mode instead of 2560x1440, scaled to the 3840x2160 output. The render width must be a multiple of 256, so the steps are 1728p and 1872p instead of 1620p and 1800p. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x1aee1ee" Value="000d000050070000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Ratchet and Clank" Name="Native 4K (PS4 Pro mode)" Note="3840x2160 render in PS4 Pro mode instead of 2560x1440, scaled to the 3840x2160 output. The render width must be a multiple of 256, so the steps are 1728p and 1872p instead of 1620p and 1800p. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x1aee1ee" Value="000f000070080000" />
+    </PatchList>
+  </Metadata>
+</Patch>

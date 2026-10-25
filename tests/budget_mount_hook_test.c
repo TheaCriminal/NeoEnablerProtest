@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <signal.h>
+#include "step_shim_data.h"
 #define CTL_KERN 1
 #define KERN_PROC 14
 #define KERN_PROC_PID 1
@@ -16,7 +17,7 @@ typedef struct {uint64_t mapbase,mapsize,textsize,eh_frame_hdr;} dynlib_obj_t;
 #define LIB_BASE 0x20000000ULL
 static unsigned char main_memory[0x2100000],lib_memory[0x50000];
 static int state,permission,stop_count,continue_count,continue_fail,stop_timeout;
-static int writes,readback_fail,pending_readback,cave_write_fail,change_on_stop;
+static int active_at_stop,writes,readback_fail,pending_readback,cave_write_fail,change_on_stop;
 static uint64_t call_address,cave_address;
 static unsigned char *at(uint64_t a,size_t n){
  if(a>=MAIN_BASE&&a-MAIN_BASE<=sizeof main_memory&&n<=sizeof main_memory-(a-MAIN_BASE))return main_memory+(a-MAIN_BASE);
@@ -42,7 +43,7 @@ static int mock_sysctl(const int*m,unsigned n,void*b,size_t*z,const void*v,size_
  struct kinfo_proc k={.ki_structsize=sizeof k,.ki_pid=42,.ki_stat=(char)state};
  strcpy(k.ki_comm,"SceShellCore");memcpy(b,&k,sizeof k);*z=sizeof k;return 0;
 }
-static int mock_kill(pid_t p,int sig){assert(p==42);if(sig==SIGSTOP){stop_count++;if(!stop_timeout)state=4;if(change_on_stop){uint32_t x=1;memcpy(at(cave_address+change_on_stop,4),&x,4);}return 0;}assert(sig==SIGCONT);continue_count++;if(continue_fail)return -1;state=2;return 0;}
+static int mock_kill(pid_t p,int sig){assert(p==42);if(sig==SIGSTOP){stop_count++;if(active_at_stop&&stop_count==active_at_stop){uint32_t x=1;memcpy(at(cave_address+MS_ACTIVE,4),&x,4);}if(!stop_timeout)state=4;if(change_on_stop){uint32_t x=1;memcpy(at(cave_address+change_on_stop,4),&x,4);}return 0;}assert(sig==SIGCONT);continue_count++;if(continue_fail)return -1;state=2;return 0;}
 static int mock_usleep(unsigned u){(void)u;return 0;}
 #define sysctl mock_sysctl
 #define kill mock_kill
@@ -65,7 +66,13 @@ int main(void){
   bm_mailbox mail;assert(!bm_mail(&mail)&&!mail.enabled&&!mail.active);field(MS_ENABLED,1);assert(!bm_command(1,9));assert(!bm_mail(&mail)&&mail.response_seq==9&&mail.command==1);
   field(MS_GATE,1);assert(bm_remove()==-1&&bm.attached);field(MS_GATE,0);field(MS_DIRTY,1);assert(bm_remove()==-1&&bm.attached);field(MS_DIRTY,0);
   assert(!bm_remove()&&!bm.attached&&state==2);assert(!memcmp(at(call_address,5),p->call_bytes,5));
-  assert(!bm_install(fw,123456)&&bm.cave==cave_address+1024);assert(!bm_remove()); /* never reuse retained code */
+  for(size_t z=0;z<1024;z++)assert(!at(cave_address,1024)[z]); /* Quit clears its slot */
+  assert(!bm_install(fw,123456)&&bm.cave==cave_address);assert(!bm_remove());
+  /* a thread still inside the shim after the restore keeps the slot as retained code */
+  reset(fw);assert(!bm_install(fw,1));stop_count=0;active_at_stop=2;assert(!bm_remove()&&!bm.attached&&state==2&&stop_count==2);
+  active_at_stop=0;assert(!memcmp(at(cave_address,MS_ORIGINAL),step_code,MS_ORIGINAL));
+  {uint32_t z=0;memcpy(at(cave_address+MS_ACTIVE,4),&z,4);}
+  assert(!bm_install(fw,1)&&bm.cave==cave_address+1024);assert(!bm_remove()); /* never reuse retained code */
   reset(fw);at(call_address,5)[0]^=1;assert(bm_install(fw,1)==-4&&!writes&&!stop_count);
   assert(strstr(bm.failure,"BeginAppMount2 call")&&bm.check_address==call_address);
   reset(fw);at(MAIN_BASE+p->got,8)[0]^=1;assert(bm_install(fw,1)==-4&&!writes);
@@ -121,7 +128,7 @@ int main(void){
    reset(fw);assert(!bm_install(fw,1));assert(!bm_remove());uint32_t used=(uint32_t)(bm.cave-MAIN_BASE);
    memset(&bm,0,sizeof bm);bm_reuse_allowed=mode!=0;bm_reuse_slot=mode==2?used+1024:used;
    assert(!bm_install(fw,5)&&bm.attached&&!bm.recovered);
-   assert(bm.cave==(mode==1?MAIN_BASE+used:MAIN_BASE+used+1024));
+   assert(bm.cave==MAIN_BASE+used);                 /* Quit cleared it: a fresh slot again */
    assert(!memcmp(at(call_address,5),bm.redirect,5));
    uint64_t c;memcpy(&c,at(bm.cave+MS_WAIT_CYCLES,8),8);assert(c==5);
    assert(!bm_remove());

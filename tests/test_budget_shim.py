@@ -258,6 +258,31 @@ def contention_counters():
     assert s.get('gate') == 0
 
 
+def non_game_mount_bypasses_held_gate():
+    # A game holds the gate (HELD); a system dialog mount (category other than
+    # 0xf000) must reach the original API instead of failing with EBUSY.
+    s = Shim()
+    s.set('enabled', 1); s.set('wait_cycles', 5_000_000_000, 8)
+    thread, output = s.spawn()
+    assert s.wait_seq(1)
+    s.set('response_seq', 1); s.set('command', 1)
+    deadline = time.monotonic() + 0.4
+    while s.get('phase') != PHASE_HELD and time.monotonic() < deadline:
+        time.sleep(0.0005)
+    assert s.get('phase') == PHASE_HELD and s.get('gate') == 1
+    s.set('wait_cycles', 0, 8)
+    dialog = C.create_string_buffer(struct.pack('<I', 0x03000000) + b'NPXS40093\0' + bytes(32))
+    calls = len(s.calls)
+    assert s.fn(C.addressof(dialog), C.addressof(s.json), s.size_arg) == s.return_value
+    assert len(s.calls) == calls + 1 and s.calls[-1][0] == C.addressof(dialog)
+    assert s.get('refused') == 0 and s.get('blocked') == 0 and s.get('seq') == 1
+    assert s.get('gate') == 1 and s.get('phase') == PHASE_HELD
+    s.set('command', 2)
+    thread.join(3)
+    assert not thread.is_alive() and output == [s.return_value]
+    assert s.get('gate') == 0 and s.get('active') == 0
+
+
 def disarm_mid_call():
     s = Shim()
     s.set('enabled', 1); s.set('wait_cycles', 0, 8)
@@ -283,10 +308,11 @@ def main():
     stale_response_sequence_ignored()
     foreign_and_invalid_commands_ignored()
     contention_counters()
+    non_game_mount_bypasses_held_gate()
     disarm_mid_call()
     print('PASS: step shim ABI, forwarding, finished cycle, POST expiry, late CLAIM refusal,')
     print('PASS: HELD without timeout, RUNNING gate retention, stale/foreign sequences,')
-    print('PASS: invalid command refusal, mailbox clearing, contention and disarm')
+    print('PASS: invalid command refusal, mailbox clearing, contention, dialog bypass and disarm')
 
 
 if __name__ == '__main__':
