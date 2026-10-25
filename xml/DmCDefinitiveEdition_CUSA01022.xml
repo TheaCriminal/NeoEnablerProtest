@@ -4,12 +4,58 @@
     <ID>CUSA01022</ID>
     <ID>CUSA01013</ID>
   </TitleID>
-  <Metadata Title="DmC Devil May Cry: Definitive Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Experimental / untested." Author="Criminal" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+  <Metadata Title="DmC Devil May Cry: Definitive Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry." Author="Criminal" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
     <PatchList>
-      <Line Type="bytes" Address="0x00a64b77" Value="e984144b029090" />
-      <Line Type="bytes" Address="0x02f16000" Value="be000f0000ba70080000488d05cf750600e968ebb4fd" />
-      <Line Type="bytes32" Address="0x02f7d5e0" Value="0x00000f00" />
-      <Line Type="bytes32" Address="0x02f7d5e4" Value="0x00000870" />
+      <Line Type="bytes" Address="0x00e64b77" Value="e984144b029090" />
+      <Line Type="bytes" Address="0x03316000" Value="be000a0000baa0050000488d05cf750600e968ebb4fd" />
+      <Line Type="bytes" Address="0x00e64beb" Value="e810174b02" />
+      <Line Type="bytes" Address="0x03316300" Value="4883ec18488b44242048890424488b4424284889442408c60425c0df650401e8ccd3b5fdc60425c0df6504004883c418c3" />
+      <Line Type="bytes" Address="0x00e74859" Value="e9e21a4a029090" />
+      <Line Type="bytes" Address="0x03316340" Value="803c25c0df650400743b4889c248c1ea2089c181f9000087007707b900008700eb0d81f9000040027705b90000400281fa000001007305ba0000010048c1e22089c84809d0488943304889c2e9cfe4b5fd" />
+      <Line Type="bytes" Address="0x00e734d0" Value="e82b2f4a02" />
+      <Line Type="bytes" Address="0x03316400" Value="4883ec28488b44243048890424488b4424384889442408488b4424404889442410488b4424484889442418488b4424504889442420e876de54fe4883c428803c25c0df6504007441498b4c24188b511081e2ffdfffff81ca000000808951108b510481e2ff070000ffc2c1e203448b0425e4d537034183c07f4183e080410fafd0c1ea06ffca895108c3" />
+      <Line Type="bytes" Address="0x018509db" Value="41804d0300" />
+      <Line Type="bytes" Address="0x00e733f0" Value="be00000000" />
+      <Line Type="bytes" Address="0x01864626" Value="81c900000000" />
+      <Line Type="bytes" Address="0x00e73527" Value="be00000000" />
+      <Line Type="bytes32" Address="0x0337d5e0" Value="0x00000a00" />
+      <Line Type="bytes32" Address="0x0337d5e4" Value="0x000005a0" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="DmC Devil May Cry: Definitive Edition" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Enable only one resolution entry." Author="Criminal" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x00e64b77" Value="e984144b029090" />
+      <Line Type="bytes" Address="0x03316000" Value="be800c0000ba08070000488d05cf750600e968ebb4fd" />
+      <Line Type="bytes" Address="0x00e64beb" Value="e810174b02" />
+      <Line Type="bytes" Address="0x03316300" Value="4883ec18488b44242048890424488b4424284889442408c60425c0df650401e8ccd3b5fdc60425c0df6504004883c418c3" />
+      <Line Type="bytes" Address="0x00e74859" Value="e9e21a4a029090" />
+      <Line Type="bytes" Address="0x03316340" Value="803c25c0df650400743b4889c248c1ea2089c181f9000087007707b900008700eb0d81f9000040027705b90000400281fa000001007305ba0000010048c1e22089c84809d0488943304889c2e9cfe4b5fd" />
+      <Line Type="bytes" Address="0x00e734d0" Value="e82b2f4a02" />
+      <Line Type="bytes" Address="0x03316400" Value="4883ec28488b44243048890424488b4424384889442408488b4424404889442410488b4424484889442418488b4424504889442420e876de54fe4883c428803c25c0df6504007441498b4c24188b511081e2ffdfffff81ca000000808951108b510481e2ff070000ffc2c1e203448b0425e4d537034183c07f4183e080410fafd0c1ea06ffca895108c3" />
+      <Line Type="bytes" Address="0x018509db" Value="41804d0300" />
+      <Line Type="bytes" Address="0x00e733f0" Value="be00000000" />
+      <Line Type="bytes" Address="0x01864626" Value="81c900000000" />
+      <Line Type="bytes" Address="0x00e73527" Value="be00000000" />
+      <Line Type="bytes32" Address="0x0337d5e0" Value="0x00000c80" />
+      <Line Type="bytes32" Address="0x0337d5e4" Value="0x00000708" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="DmC Devil May Cry: Definitive Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry." Author="Criminal" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x00e64b77" Value="e984144b029090" />
+      <Line Type="bytes" Address="0x03316000" Value="be000f0000ba70080000488d05cf750600e968ebb4fd" />
+      <Line Type="bytes" Address="0x00e64beb" Value="e810174b02" />
+      <Line Type="bytes" Address="0x03316300" Value="4883ec18488b44242048890424488b4424284889442408c60425c0df650401e8ccd3b5fdc60425c0df6504004883c418c3" />
+      <Line Type="bytes" Address="0x00e74859" Value="e9e21a4a029090" />
+      <Line Type="bytes" Address="0x03316340" Value="803c25c0df650400743b4889c248c1ea2089c181f9000087007707b900008700eb0d81f9000040027705b90000400281fa000001007305ba0000010048c1e22089c84809d0488943304889c2e9cfe4b5fd" />
+      <Line Type="bytes" Address="0x00e734d0" Value="e82b2f4a02" />
+      <Line Type="bytes" Address="0x03316400" Value="4883ec28488b44243048890424488b4424384889442408488b4424404889442410488b4424484889442418488b4424504889442420e876de54fe4883c428803c25c0df6504007441498b4c24188b511081e2ffdfffff81ca000000808951108b510481e2ff070000ffc2c1e203448b0425e4d537034183c07f4183e080410fafd0c1ea06ffca895108c3" />
+      <Line Type="bytes" Address="0x018509db" Value="41804d0300" />
+      <Line Type="bytes" Address="0x00e733f0" Value="be00000000" />
+      <Line Type="bytes" Address="0x01864626" Value="81c900000000" />
+      <Line Type="bytes" Address="0x00e73527" Value="be00000000" />
+      <Line Type="bytes32" Address="0x0337d5e0" Value="0x00000f00" />
+      <Line Type="bytes32" Address="0x0337d5e4" Value="0x00000870" />
     </PatchList>
   </Metadata>
 </Patch>
