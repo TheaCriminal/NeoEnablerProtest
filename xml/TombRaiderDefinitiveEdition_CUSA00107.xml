@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA00107</ID>
+  </TitleID>
+  <Metadata Title="Tomb Raider: Definitive Edition" Name="1440p (PS4 Pro mode)" Note="Native 2560x1440 render and output (Pro display layout, flipMode 1, fast clear and depth HTILE off, real color clears, frame pool scaled with the resolution)." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x166f000" Value="415b4c891c253070340348893c2580703403c704251070340301000000e8de4e0effc7042510703403000000004c8b1c258070340341814b4000000001ff342530703403c3415b4c891c254070340348893c2548703403833c25107034030075134183f90e750d41b90d000000ff042584703403e8979571ff833c251070340300745e488b3c2548703403814f10000000808b4f0481e1ff070000ffc169c900060000c1e903ffc9894f083d0000f00073204889c148c1e92081f9000001007305b90000010048c1e120b80000f0004809c84889042550703403ff042514703403ff342540703403c3415b4c891c2558703403c744240801000000e8c037caffff04252070340385c0740eff0425187034038904251c703403ff342558703403c38b8394000000c1e80283e01f488b73688b536031c9817b7c0cc7fa0074628b4dd80b4ddc0b4de00b4de481e1ffffff7f744e83f80a7541c5fa102425a01e3701c5da5945e4c5fa2cc8c1e108c5da5945e0c57a2cc04409c1c1e108c5da5945dcc57a2cc04409c1c1e108c5da5945d8c57a2cc04409c1eb08ff0485007e3403c3ff0485807e34034885f67405e95ec40dffc3" />
+      <Line Type="bytes" Address="0x748192" Value="e8696ef200" />
+      <Line Type="bytes" Address="0x7481da" Value="e8216ef200" />
+      <Line Type="bytes" Address="0x748222" Value="e8d96df200" />
+      <Line Type="bytes" Address="0x754030" Value="e810b0f100" />
+      <Line Type="bytes" Address="0xd8b780" Value="e964398e00" />
+      <Line Type="bytes" Address="0x754043" Value="4181e600000000" />
+      <Line Type="bytes" Address="0x74817d" Value="be000a0000" />
+      <Line Type="bytes" Address="0x748182" Value="baa0050000" />
+      <Line Type="bytes" Address="0x7481c5" Value="be000a0000" />
+      <Line Type="bytes" Address="0x7481ca" Value="baa0050000" />
+      <Line Type="bytes" Address="0x74820d" Value="be000a0000" />
+      <Line Type="bytes" Address="0x748212" Value="baa0050000" />
+      <Line Type="bytes" Address="0x748270" Value="be000a0000" />
+      <Line Type="bytes" Address="0x748275" Value="baa0050000" />
+      <Line Type="bytes" Address="0x7484db" Value="41b8000a0000" />
+      <Line Type="bytes" Address="0x7484e1" Value="41b9a0050000" />
+      <Line Type="bytes" Address="0x753d9b" Value="69c3000a0000" />
+      <Line Type="bytes" Address="0x753db1" Value="4169c4a0050000" />
+      <Line Type="bytes" Address="0x74bfc0" Value="c706000a0000" />
+      <Line Type="bytes" Address="0x74bfc6" Value="c702a0050000" />
+      <Line Type="bytes" Address="0x75f6c2" Value="b900002021" />
+      <Line Type="bytes" Address="0x75f7b9" Value="ba00002021" />
+      <Line Type="bytes" Address="0x75f7d6" Value="be00002021" />
+      <Line Type="bytes" Address="0x75f86e" Value="be00002021" />
+      <Line Type="bytes" Address="0x75f87f" Value="be00002021" />
+      <Line Type="bytes" Address="0x754481" Value="e89bacf100" />
+      <Line Type="bytes" Address="0xd88934" Value="81c900000000" />
+      <Line Type="bytes" Address="0x754e04" Value="be00000000" />
+      <Line Type="bytes" Address="0xd8a20f" Value="83e100" />
+      <Line Type="bytes" Address="0xd78842" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78902" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd789cc" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78abc" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78c9c" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78d65" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78b75" Value="41c7470400000000" />
+      <Line Type="bytes" Address="0xd78bbf" Value="0d00000000" />
+      <Line Type="bytes" Address="0xd78e3c" Value="b800000000" />
+      <Line Type="bytes" Address="0xd78e4c" Value="83e600" />
+      <Line Type="bytes" Address="0xd7d8e5" Value="31c9909090909090" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Tomb Raider: Definitive Edition" Name="1620p (PS4 Pro mode)" Note="Native 2880x1620 render and output (Pro display layout, flipMode 1, fast clear and depth HTILE off, real color clears, frame pool scaled with the resolution)." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x166f000" Value="415b4c891c253070340348893c2580703403c704251070340301000000e8de4e0effc7042510703403000000004c8b1c258070340341814b4000000001ff342530703403c3415b4c891c254070340348893c2548703403833c25107034030075134183f90e750d41b90d000000ff042584703403e8979571ff833c251070340300745e488b3c2548703403814f10000000808b4f0481e1ff070000ffc169c980060000c1e903ffc9894f083d0080240173204889c148c1e92081f9000001007305b90000010048c1e120b8008024014809c84889042550703403ff042514703403ff342540703403c3415b4c891c2558703403c744240801000000e8c037caffff04252070340385c0740eff0425187034038904251c703403ff342558703403c38b8394000000c1e80283e01f488b73688b536031c9817b7c0cc7fa0074628b4dd80b4ddc0b4de00b4de481e1ffffff7f744e83f80a7541c5fa102425a01e3701c5da5945e4c5fa2cc8c1e108c5da5945e0c57a2cc04409c1c1e108c5da5945dcc57a2cc04409c1c1e108c5da5945d8c57a2cc04409c1eb08ff0485007e3403c3ff0485807e34034885f67405e95ec40dffc3" />
+      <Line Type="bytes" Address="0x748192" Value="e8696ef200" />
+      <Line Type="bytes" Address="0x7481da" Value="e8216ef200" />
+      <Line Type="bytes" Address="0x748222" Value="e8d96df200" />
+      <Line Type="bytes" Address="0x754030" Value="e810b0f100" />
+      <Line Type="bytes" Address="0xd8b780" Value="e964398e00" />
+      <Line Type="bytes" Address="0x754043" Value="4181e600000000" />
+      <Line Type="bytes" Address="0x74817d" Value="be400b0000" />
+      <Line Type="bytes" Address="0x748182" Value="ba54060000" />
+      <Line Type="bytes" Address="0x7481c5" Value="be400b0000" />
+      <Line Type="bytes" Address="0x7481ca" Value="ba54060000" />
+      <Line Type="bytes" Address="0x74820d" Value="be400b0000" />
+      <Line Type="bytes" Address="0x748212" Value="ba54060000" />
+      <Line Type="bytes" Address="0x748270" Value="be400b0000" />
+      <Line Type="bytes" Address="0x748275" Value="ba54060000" />
+      <Line Type="bytes" Address="0x7484db" Value="41b8400b0000" />
+      <Line Type="bytes" Address="0x7484e1" Value="41b954060000" />
+      <Line Type="bytes" Address="0x753d9b" Value="69c3400b0000" />
+      <Line Type="bytes" Address="0x753db1" Value="4169c454060000" />
+      <Line Type="bytes" Address="0x74bfc0" Value="c706400b0000" />
+      <Line Type="bytes" Address="0x74bfc6" Value="c70254060000" />
+      <Line Type="bytes" Address="0x75f6c2" Value="b90000a029" />
+      <Line Type="bytes" Address="0x75f7b9" Value="ba0000a029" />
+      <Line Type="bytes" Address="0x75f7d6" Value="be0000a029" />
+      <Line Type="bytes" Address="0x75f86e" Value="be0000a029" />
+      <Line Type="bytes" Address="0x75f87f" Value="be0000a029" />
+      <Line Type="bytes" Address="0x754481" Value="e89bacf100" />
+      <Line Type="bytes" Address="0xd88934" Value="81c900000000" />
+      <Line Type="bytes" Address="0x754e04" Value="be00000000" />
+      <Line Type="bytes" Address="0xd8a20f" Value="83e100" />
+      <Line Type="bytes" Address="0xd78842" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78902" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd789cc" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78abc" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78c9c" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78d65" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78b75" Value="41c7470400000000" />
+      <Line Type="bytes" Address="0xd78bbf" Value="0d00000000" />
+      <Line Type="bytes" Address="0xd78e3c" Value="b800000000" />
+      <Line Type="bytes" Address="0xd78e4c" Value="83e600" />
+      <Line Type="bytes" Address="0xd7d8e5" Value="31c9909090909090" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Tomb Raider: Definitive Edition" Name="1800p (PS4 Pro mode)" Note="Native 3200x1800 render and output (Pro display layout, flipMode 1, fast clear and depth HTILE off, real color clears, frame pool scaled with the resolution)." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x166f000" Value="415b4c891c253070340348893c2580703403c704251070340301000000e8de4e0effc7042510703403000000004c8b1c258070340341814b4000000001ff342530703403c3415b4c891c254070340348893c2548703403833c25107034030075134183f90e750d41b90d000000ff042584703403e8979571ff833c251070340300745e488b3c2548703403814f10000000808b4f0481e1ff070000ffc169c980070000c1e903ffc9894f083d0000770173204889c148c1e92081f9000001007305b90000010048c1e120b8000077014809c84889042550703403ff042514703403ff342540703403c3415b4c891c2558703403c744240801000000e8c037caffff04252070340385c0740eff0425187034038904251c703403ff342558703403c38b8394000000c1e80283e01f488b73688b536031c9817b7c0cc7fa0074628b4dd80b4ddc0b4de00b4de481e1ffffff7f744e83f80a7541c5fa102425a01e3701c5da5945e4c5fa2cc8c1e108c5da5945e0c57a2cc04409c1c1e108c5da5945dcc57a2cc04409c1c1e108c5da5945d8c57a2cc04409c1eb08ff0485007e3403c3ff0485807e34034885f67405e95ec40dffc3" />
+      <Line Type="bytes" Address="0x748192" Value="e8696ef200" />
+      <Line Type="bytes" Address="0x7481da" Value="e8216ef200" />
+      <Line Type="bytes" Address="0x748222" Value="e8d96df200" />
+      <Line Type="bytes" Address="0x754030" Value="e810b0f100" />
+      <Line Type="bytes" Address="0xd8b780" Value="e964398e00" />
+      <Line Type="bytes" Address="0x754043" Value="4181e600000000" />
+      <Line Type="bytes" Address="0x74817d" Value="be800c0000" />
+      <Line Type="bytes" Address="0x748182" Value="ba08070000" />
+      <Line Type="bytes" Address="0x7481c5" Value="be800c0000" />
+      <Line Type="bytes" Address="0x7481ca" Value="ba08070000" />
+      <Line Type="bytes" Address="0x74820d" Value="be800c0000" />
+      <Line Type="bytes" Address="0x748212" Value="ba08070000" />
+      <Line Type="bytes" Address="0x748270" Value="be800c0000" />
+      <Line Type="bytes" Address="0x748275" Value="ba08070000" />
+      <Line Type="bytes" Address="0x7484db" Value="41b8800c0000" />
+      <Line Type="bytes" Address="0x7484e1" Value="41b908070000" />
+      <Line Type="bytes" Address="0x753d9b" Value="69c3800c0000" />
+      <Line Type="bytes" Address="0x753db1" Value="4169c408070000" />
+      <Line Type="bytes" Address="0x74bfc0" Value="c706800c0000" />
+      <Line Type="bytes" Address="0x74bfc6" Value="c70208070000" />
+      <Line Type="bytes" Address="0x75f6c2" Value="b900002033" />
+      <Line Type="bytes" Address="0x75f7b9" Value="ba00002033" />
+      <Line Type="bytes" Address="0x75f7d6" Value="be00002033" />
+      <Line Type="bytes" Address="0x75f86e" Value="be00002033" />
+      <Line Type="bytes" Address="0x75f87f" Value="be00002033" />
+      <Line Type="bytes" Address="0x754481" Value="e89bacf100" />
+      <Line Type="bytes" Address="0xd88934" Value="81c900000000" />
+      <Line Type="bytes" Address="0x754e04" Value="be00000000" />
+      <Line Type="bytes" Address="0xd8a20f" Value="83e100" />
+      <Line Type="bytes" Address="0xd78842" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78902" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd789cc" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78abc" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78c9c" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78d65" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78b75" Value="41c7470400000000" />
+      <Line Type="bytes" Address="0xd78bbf" Value="0d00000000" />
+      <Line Type="bytes" Address="0xd78e3c" Value="b800000000" />
+      <Line Type="bytes" Address="0xd78e4c" Value="83e600" />
+      <Line Type="bytes" Address="0xd7d8e5" Value="31c9909090909090" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Tomb Raider: Definitive Edition" Name="Native 4K (PS4 Pro mode)" Note="Native 3840x2160 render and output (Pro display layout, flipMode 1, fast clear and depth HTILE off, real color clears, frame pool scaled with the resolution, TressFX hair with 5 layers per pixel instead of 8 to fit memory)." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x166f000" Value="415b4c891c253070340348893c2580703403c704251070340301000000e8de4e0effc7042510703403000000004c8b1c258070340341814b4000000001ff342530703403c3415b4c891c254070340348893c2548703403833c25107034030075134183f90e750d41b90d000000ff042584703403e8979571ff833c251070340300745e488b3c2548703403814f10000000808b4f0481e1ff070000ffc169c980080000c1e903ffc9894f083d0000400273204889c148c1e92081f9000001007305b90000010048c1e120b8000040024809c84889042550703403ff042514703403ff342540703403c3415b4c891c2558703403c744240801000000e8c037caffff04252070340385c0740eff0425187034038904251c703403ff342558703403c38b8394000000c1e80283e01f488b73688b536031c9817b7c0cc7fa0074628b4dd80b4ddc0b4de00b4de481e1ffffff7f744e83f80a7541c5fa102425a01e3701c5da5945e4c5fa2cc8c1e108c5da5945e0c57a2cc04409c1c1e108c5da5945dcc57a2cc04409c1c1e108c5da5945d8c57a2cc04409c1eb08ff0485007e3403c3ff0485807e34034885f67405e95ec40dffc3" />
+      <Line Type="bytes" Address="0x748192" Value="e8696ef200" />
+      <Line Type="bytes" Address="0x7481da" Value="e8216ef200" />
+      <Line Type="bytes" Address="0x748222" Value="e8d96df200" />
+      <Line Type="bytes" Address="0x754030" Value="e810b0f100" />
+      <Line Type="bytes" Address="0xd8b780" Value="e964398e00" />
+      <Line Type="bytes" Address="0x754043" Value="4181e600000000" />
+      <Line Type="bytes" Address="0x74817d" Value="be000f0000" />
+      <Line Type="bytes" Address="0x748182" Value="ba70080000" />
+      <Line Type="bytes" Address="0x7481c5" Value="be000f0000" />
+      <Line Type="bytes" Address="0x7481ca" Value="ba70080000" />
+      <Line Type="bytes" Address="0x74820d" Value="be000f0000" />
+      <Line Type="bytes" Address="0x748212" Value="ba70080000" />
+      <Line Type="bytes" Address="0x748270" Value="be000f0000" />
+      <Line Type="bytes" Address="0x748275" Value="ba70080000" />
+      <Line Type="bytes" Address="0x7484db" Value="41b8000f0000" />
+      <Line Type="bytes" Address="0x7484e1" Value="41b970080000" />
+      <Line Type="bytes" Address="0x753d9b" Value="69c3000f0000" />
+      <Line Type="bytes" Address="0x753db1" Value="4169c470080000" />
+      <Line Type="bytes" Address="0x74bfc0" Value="c706000f0000" />
+      <Line Type="bytes" Address="0x74bfc6" Value="c70270080000" />
+      <Line Type="bytes" Address="0x75f6c2" Value="b900004037" />
+      <Line Type="bytes" Address="0x75f7b9" Value="ba00004037" />
+      <Line Type="bytes" Address="0x75f7d6" Value="be00004037" />
+      <Line Type="bytes" Address="0x75f86e" Value="be00004037" />
+      <Line Type="bytes" Address="0x75f87f" Value="be00004037" />
+      <Line Type="bytes" Address="0x73d704" Value="6bf33c" />
+      <Line Type="bytes" Address="0x73d71c" Value="8d0c9b90909090" />
+      <Line Type="bytes" Address="0x754481" Value="e89bacf100" />
+      <Line Type="bytes" Address="0xd88934" Value="81c900000000" />
+      <Line Type="bytes" Address="0x754e04" Value="be00000000" />
+      <Line Type="bytes" Address="0xd8a20f" Value="83e100" />
+      <Line Type="bytes" Address="0xd78842" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78902" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd789cc" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78abc" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78c9c" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78d65" Value="81ce00000000" />
+      <Line Type="bytes" Address="0xd78b75" Value="41c7470400000000" />
+      <Line Type="bytes" Address="0xd78bbf" Value="0d00000000" />
+      <Line Type="bytes" Address="0xd78e3c" Value="b800000000" />
+      <Line Type="bytes" Address="0xd78e4c" Value="83e600" />
+      <Line Type="bytes" Address="0xd7d8e5" Value="31c9909090909090" />
+    </PatchList>
+  </Metadata>
+</Patch>

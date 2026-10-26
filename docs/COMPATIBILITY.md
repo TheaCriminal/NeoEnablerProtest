@@ -48,6 +48,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Watch Dogs (01.05) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 60 FPS (triple buffering) | Validated |
 | Watch Dogs 2 (01.18) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | Validated |
 | Thief (01.02) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 60 FPS validated; resolutions not tested yet |
+| Tomb Raider: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K | Native 4K validated; 1440p, 1620p and 1800p reach gameplay in a short test |
 | Spyro Reignited Trilogy (01.03) | 1620p, 1800p, Native 4K | 1800p and Native 4K validated; 1620p not tested yet |
 
 ## GPU boost
