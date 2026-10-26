@@ -47,6 +47,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | NieR:Automata (01.06) | 1440p, 1620p, 1800p | Validated |
 | Watch Dogs (01.05) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 60 FPS (triple buffering) | Validated |
 | Watch Dogs 2 (01.18) | 1440p, 1620p, 1800p, Native 4K | Validated |
+| Thief (01.02) | 1440p, 1620p, 1800p, Native 4K | Not tested yet |
 | Spyro Reignited Trilogy (01.03) | 1620p, 1800p, Native 4K | 1800p and Native 4K validated; 1620p not tested yet |
 
 ## GPU boost

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA00252</ID>
+    <ID>CUSA00250</ID>
+  </TitleID>
+  <Metadata Title="Thief" Name="1440p (PS4 Pro mode)" Note="Native 2560x1440 render and output (Pro display layout, flipMode 1, fast clear and depth HTILE off)." Author="gasb07" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x27bf000" Value="c7042510f0df02010000004883ec08e82cb731fe4883c408c7042510f0df0200000000c3415b4c891c2540f0df0248893c2548f0df02e8558dc1fe833c2510f0df0200745e488b3c2548f0df02814f10000000808b4f0481e1ff070000ffc169c900060000c1e903ffc9894f083d0000f00073204889c148c1e92081f9000001007305b90000010048c1e120b80000f0004809c84889042550f0df02ff042514f0df02ff342540f0df02c3415b4c891c2558f0df02c744240801000000e8cecd83ffff042520f0df0285c0740eff042518f0df028904251cf0df02ff342558f0df02c3" />
+      <Line Type="bytes" Address="0xade914" Value="e8e706ce01" />
+      <Line Type="bytes" Address="0xadab56" Value="e8c944ce01" />
+      <Line Type="bytes" Address="0x13db030" Value="e976403e01" />
+      <Line Type="bytes" Address="0xaea237" Value="c700000a0000" />
+      <Line Type="bytes" Address="0xaea244" Value="c780b8030000000a0000" />
+      <Line Type="bytes" Address="0xaea255" Value="c701a0050000" />
+      <Line Type="bytes" Address="0xaea25b" Value="c780bc030000a0050000" />
+      <Line Type="bytes" Address="0xade561" Value="41c703000a0000" />
+      <Line Type="bytes" Address="0xade568" Value="41c701a0050000" />
+      <Line Type="bytes" Address="0x13d80b4" Value="81c900000000" />
+      <Line Type="bytes" Address="0xadad0e" Value="be00000000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Thief" Name="1620p (PS4 Pro mode)" Note="Native 2880x1620 render and output (Pro display layout, flipMode 1, fast clear and depth HTILE off)." Author="gasb07" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x27bf000" Value="c7042510f0df02010000004883ec08e82cb731fe4883c408c7042510f0df0200000000c3415b4c891c2540f0df0248893c2548f0df02e8558dc1fe833c2510f0df0200745e488b3c2548f0df02814f10000000808b4f0481e1ff070000ffc169c980060000c1e903ffc9894f083d0080240173204889c148c1e92081f9000001007305b90000010048c1e120b8008024014809c84889042550f0df02ff042514f0df02ff342540f0df02c3415b4c891c2558f0df02c744240801000000e8cecd83ffff042520f0df0285c0740eff042518f0df028904251cf0df02ff342558f0df02c3" />
+      <Line Type="bytes" Address="0xade914" Value="e8e706ce01" />
+      <Line Type="bytes" Address="0xadab56" Value="e8c944ce01" />
+      <Line Type="bytes" Address="0x13db030" Value="e976403e01" />
+      <Line Type="bytes" Address="0xaea237" Value="c700400b0000" />
+      <Line Type="bytes" Address="0xaea244" Value="c780b8030000400b0000" />
+      <Line Type="bytes" Address="0xaea255" Value="c70154060000" />
+      <Line Type="bytes" Address="0xaea25b" Value="c780bc03000054060000" />
+      <Line Type="bytes" Address="0xade561" Value="41c703400b0000" />
+      <Line Type="bytes" Address="0xade568" Value="41c70154060000" />
+      <Line Type="bytes" Address="0x13d80b4" Value="81c900000000" />
+      <Line Type="bytes" Address="0xadad0e" Value="be00000000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Thief" Name="1800p (PS4 Pro mode)" Note="Native 3200x1800 render and output (Pro display layout, flipMode 1, fast clear and depth HTILE off)." Author="gasb07" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x27bf000" Value="c7042510f0df02010000004883ec08e82cb731fe4883c408c7042510f0df0200000000c3415b4c891c2540f0df0248893c2548f0df02e8558dc1fe833c2510f0df0200745e488b3c2548f0df02814f10000000808b4f0481e1ff070000ffc169c980070000c1e903ffc9894f083d0000770173204889c148c1e92081f9000001007305b90000010048c1e120b8000077014809c84889042550f0df02ff042514f0df02ff342540f0df02c3415b4c891c2558f0df02c744240801000000e8cecd83ffff042520f0df0285c0740eff042518f0df028904251cf0df02ff342558f0df02c3" />
+      <Line Type="bytes" Address="0xade914" Value="e8e706ce01" />
+      <Line Type="bytes" Address="0xadab56" Value="e8c944ce01" />
+      <Line Type="bytes" Address="0x13db030" Value="e976403e01" />
+      <Line Type="bytes" Address="0xaea237" Value="c700800c0000" />
+      <Line Type="bytes" Address="0xaea244" Value="c780b8030000800c0000" />
+      <Line Type="bytes" Address="0xaea255" Value="c70108070000" />
+      <Line Type="bytes" Address="0xaea25b" Value="c780bc03000008070000" />
+      <Line Type="bytes" Address="0xade561" Value="41c703800c0000" />
+      <Line Type="bytes" Address="0xade568" Value="41c70108070000" />
+      <Line Type="bytes" Address="0x13d80b4" Value="81c900000000" />
+      <Line Type="bytes" Address="0xadad0e" Value="be00000000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Thief" Name="Native 4K (PS4 Pro mode)" Note="Native 3840x2160 render and output (Pro display layout, flipMode 1, fast clear and depth HTILE off)." Author="gasb07" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x27bf000" Value="c7042510f0df02010000004883ec08e82cb731fe4883c408c7042510f0df0200000000c3415b4c891c2540f0df0248893c2548f0df02e8558dc1fe833c2510f0df0200745e488b3c2548f0df02814f10000000808b4f0481e1ff070000ffc169c980080000c1e903ffc9894f083d0000400273204889c148c1e92081f9000001007305b90000010048c1e120b8000040024809c84889042550f0df02ff042514f0df02ff342540f0df02c3415b4c891c2558f0df02c744240801000000e8cecd83ffff042520f0df0285c0740eff042518f0df028904251cf0df02ff342558f0df02c3" />
+      <Line Type="bytes" Address="0xade914" Value="e8e706ce01" />
+      <Line Type="bytes" Address="0xadab56" Value="e8c944ce01" />
+      <Line Type="bytes" Address="0x13db030" Value="e976403e01" />
+      <Line Type="bytes" Address="0xaea237" Value="c700000f0000" />
+      <Line Type="bytes" Address="0xaea244" Value="c780b8030000000f0000" />
+      <Line Type="bytes" Address="0xaea255" Value="c70170080000" />
+      <Line Type="bytes" Address="0xaea25b" Value="c780bc03000070080000" />
+      <Line Type="bytes" Address="0xade561" Value="41c703000f0000" />
+      <Line Type="bytes" Address="0xade568" Value="41c70170080000" />
+      <Line Type="bytes" Address="0x13d80b4" Value="81c900000000" />
+      <Line Type="bytes" Address="0xadad0e" Value="be00000000" />
+    </PatchList>
+  </Metadata>
+</Patch>
