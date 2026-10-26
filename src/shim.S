@@ -82,8 +82,6 @@ apply:
  jz done
  add r12, r10
  mov edx, dword ptr [r12]
- cmp edx, 2
- jne done
  mov ecx, edx
  or ecx, 0x00800000
  mov dword ptr [r12], ecx
