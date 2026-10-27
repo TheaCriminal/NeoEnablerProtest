@@ -19,6 +19,7 @@ static void reset(void){
  supported=1;read_fail=set_fail=restore_fail=0;
 }
 int main(void){
+ gpu_set_model(1); /* PS5 Pro limits (2350) for the main lifecycle tests */
  reset();assert(!gpu_poll(44)&&!writes&&!strcmp(gpu_state_text(),"disabled"));
  assert(gpu_request(1,2200,0)==1&&!writes&&gpu.enabled&&!gpu.applied);
  clock_mhz=1800;assert(!gpu_poll(44)&&writes==1&&last_set==2200&&gpu.baseline==1800);
@@ -85,5 +86,16 @@ int main(void){
  assert(neo_settings_parse("gpu_clock_enabled=10\ngpu_clock_mhz=2200\n",&c)<0&&!c.gpu_enabled);
  assert(!neo_settings_parse("gpu_clock_enabled=1\r\ngpu_clock_mhz=2200\r\n",&c)&&c.gpu_enabled);
  assert(neo_settings_format(&c,text,5)<0);
- puts("PASS GPU lifecycle, 2350 cap, no repeated SET, rollback, restoration, form validation and saved-settings restart");return 0;
+ /* Regular PS5: nothing above 2200 is accepted, saved or applied. */
+ gpu_set_model(0);reset();
+ assert(gpu_request(1,2250,44)<0&&!writes&&!gpu.enabled);
+ assert(gpu_request(1,2350,44)<0&&!writes&&!gpu.enabled);
+ assert(gpu_request(1,2200,0)==1&&gpu.target==2200&&!writes);
+ reset();gpu_configure(1,2350);assert(!gpu.enabled&&gpu.target==GPU_DEFAULT_MHZ&&!writes); /* Saved Pro value ignored. */
+ for(unsigned m=1800;m<=GPU_BASE_MAX_MHZ;m+=50){char b[32];snprintf(b,sizeof b,"mhz=%u",m);assert(gpu_form_mhz(b,&mhz)==1&&mhz==m);}
+ assert(gpu_form_mhz("mhz=2250",&mhz)==-1&&gpu_form_mhz("mhz=2350",&mhz)==-1);
+ assert(neo_settings_parse("gpu_clock_enabled=1\ngpu_clock_mhz=2350\n",&c)<0&&!c.gpu_enabled&&c.gpu_mhz==GPU_DEFAULT_MHZ); /* Pro value in a saved file on a base PS5. */
+ assert(!neo_settings_parse("gpu_clock_enabled=1\ngpu_clock_mhz=2200\n",&c)&&c.gpu_enabled&&c.gpu_mhz==2200);
+ gpu_set_model(1);reset();assert(gpu_request(1,2350,0)==1&&gpu.target==2350);
+ puts("PASS GPU lifecycle, 2200 base / 2350 Pro caps, no repeated SET, rollback, restoration, form validation and saved-settings restart");return 0;
 }
