@@ -31,6 +31,7 @@
 static void log_line(const char *fmt, ...);
 #include "memory_control.h"
 #include "gpu_control.h"
+#include "cpu_control.h"
 #include "video_settings.h"
 #include "settings.h"
 #include "http_request.h"
@@ -210,6 +211,8 @@ static int memory_community_report(void) { return fw_raw_version() == 0x13600000
 static int memory_available(void) { mb_snapshot m; return memory_supported() && !memory_check(&m); }
 /* GPU clock page and boost: the MP1 driver answering a clock read. */
 static int gpu_available(void) { unsigned mhz; return gpu_backend_supported() && !gpu_backend_read(&mhz); }
+/* CPU clock page and boost: same MP1 driver, CPU clock read. */
+static int cpu_available(void) { unsigned mhz; return cpu_backend_supported() && !cpu_backend_read(&mhz, NULL); }
 
 /* Console model: PS5 Pro model numbers are CFI-7xxx (CFI-7000, CFI-7100); every regular PS5 is CFI-1xxx or CFI-2xxx.
    The model string comes from machdep.icc.hw_model. Anything unreadable or unrecognised counts as a regular PS5,
@@ -237,10 +240,12 @@ static void settings_load(void) {
     if (ferror(f) || !feof(f)) { fclose(f); log_line("settings: unreadable or oversized file ignored"); return; }
     if (used) {
         neo_settings cfg;
-        if (neo_settings_parse(buf, &cfg)) log_line("settings: invalid GPU values; GPU boost disabled");
+        if (neo_settings_parse(buf, &cfg)) log_line("settings: invalid GPU or CPU clock values; boost disabled for the invalid one");
         force_neo = cfg.force_neo;
         force_8gib = cfg.force_8gib && memory_supported();
         gpu_configure(cfg.gpu_enabled, cfg.gpu_mhz);
+        cpu_configure(cfg.cpu_enabled, cfg.cpu_mhz);
+        if (cfg.cpu_enabled && !cpu_backend_supported()) log_line("settings: saved CPU boost ignored, CPU clock control unavailable");
         if (cfg.gpu_enabled && !gpu_backend_supported()) log_line("settings: saved GPU boost ignored on unsupported firmware");
         if (cfg.force_8gib && !memory_supported())
             log_line("settings: force_8gib=1 ignored, 8GB Mode is not supported on firmware %x.%02x",
@@ -252,8 +257,9 @@ static void settings_load(void) {
 
 static int settings_save(void) {
     neo_settings cfg = {.neo = 1, .memory = force_8gib, .gpu_enabled = gpu.enabled, .gpu_mhz = gpu.target,
+                        .cpu_enabled = cpu.enabled, .cpu_mhz = cpu.target,
                         .force_neo = force_neo, .force_8gib = force_8gib};
-    char buf[128]; int n = neo_settings_format(&cfg, buf, sizeof(buf));
+    char buf[256]; int n = neo_settings_format(&cfg, buf, sizeof(buf));
     if (n < 0 || write_file(SETTINGS_PATH ".tmp", buf, (size_t)n)) return -1;
     return rename(SETTINGS_PATH ".tmp", SETTINGS_PATH);
 }
@@ -492,6 +498,12 @@ static int gpu_game_pid(void) {
     free(buf); return valid ? candidate : -1;
 }
 
+/* Restore both clocks; both are always attempted. Nonzero when either failed. */
+static int clocks_restore(void) {
+    int pid = gpu_game_pid(); int g = gpu_request(0, gpu.target, pid); int c = cpu_request(0, cpu.target, pid);
+    return g || c;
+}
+
 static void send_all(int fd, const char *p, size_t n) {
     while (n) { ssize_t w = write(fd, p, n); if (w <= 0) return; p += w; n -= (size_t)w; }
 }
@@ -599,12 +611,14 @@ static int v4_active(const shell_t *s) { return s->pid > 0 && s->frame && v4_sta
 static void page_header(sbuf *b, const char *active) {
     uint32_t fw_raw = fw_raw_version();
     sb_printf(b, "%s<header><div class=brand><div class=mark>N</div><h1>NeoEnabler <small>FW %x.%02x</small></h1></div>"
-              "<nav aria-label='Pages'><a href=/%s>Games</a>%s%s%s</nav>"
+              "<nav aria-label='Pages'><a href=/%s>Games</a>%s%s%s%s%s%s</nav>"
               "<form method=post><button class=danger formaction=/quit>Quit</button></form></header>",
               page_head, (fw_raw >> 24) & 0xff, (fw_raw >> 16) & 0xff,
               !strcmp(active, "games") ? " aria-current=page" : "",
               gpu_available() ? "<a href=/gpu" : "", gpu_available() && !strcmp(active, "gpu") ? " aria-current=page" : "",
-              gpu_available() ? ">GPU clock</a>" : "");
+              gpu_available() ? ">GPU clock</a>" : "",
+              cpu_available() ? "<a href=/cpu" : "", cpu_available() && !strcmp(active, "cpu") ? " aria-current=page" : "",
+              cpu_available() ? ">CPU clock</a>" : "");
 }
 
 /* Status, game patches update, logs and the advanced overrides. In the legacy panel the forms carry legacy=1, so the
@@ -952,6 +966,71 @@ static void serve_gpu_page(int fd, const char *msg) {
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
 }
 
+static void serve_cpu_status(int fd) {
+    cpu_refresh(); char current[24] = "null", previous[24] = "null", detail[384], body[1024];
+    size_t at = 0;
+    for (const unsigned char *p = (const unsigned char *)cpu.message; *p && at + 3 < sizeof detail; p++) {
+        if (*p == '"' || *p == '\\') detail[at++] = '\\';
+        detail[at++] = *p < 32 ? ' ' : (char)*p;
+    }
+    detail[at] = 0;
+    if (cpu.reading_valid) snprintf(current, sizeof current, "%u", cpu.actual);
+    if (cpu.baseline_valid) snprintf(previous, sizeof previous, "%u", cpu.baseline);
+    snprintf(body, sizeof body,
+        "{\"supported\":%s,\"enabled\":%s,\"applied\":%s,\"state\":\"%s\","
+        "\"current_mhz\":%s,\"target_mhz\":%u,\"previous_mhz\":%s,\"max_mhz\":%u,\"detail\":\"%s\"}",
+        cpu_backend_supported() ? "true" : "false", cpu.enabled ? "true" : "false",
+        cpu.applied ? "true" : "false", cpu_state_text(), current, cpu.target, previous, CPU_MAX_MHZ, detail);
+    reply(fd, "200 OK", "application/json", body);
+}
+
+static void serve_cpu_page(int fd, const char *msg) {
+    cpu_refresh();
+    char current[32] = "Unavailable", previous[32] = "Not captured";
+    if (cpu.reading_valid) snprintf(current, sizeof current, "%u MHz", cpu.actual);
+    if (cpu.baseline_valid) snprintf(previous, sizeof previous, "%u MHz", cpu.baseline);
+    const char *dis = cpu_backend_supported() ? "" : " disabled";
+    char range[96];
+    snprintf(range, sizeof range, "Choose a target from %u to %u MHz.", CPU_MIN_MHZ, CPU_MAX_MHZ);
+    sbuf hb = {0};
+    page_header(&hb, "cpu");
+    static char body[16384];
+    snprintf(body, sizeof body,
+        "%s<main>"
+        "%s%s%s<div class=grid>"
+        "<div class=card><b>Current CPU clock</b><div class=metric id=cpu-current>%s</div>"
+        "<small>Live SMU reading. Updates every two seconds.</small></div>"
+        "<div class=card><b>Clock boost</b> <span class='state %s' id=cpu-state>%s</span>"
+        "<p id=cpu-detail>%s</p><small>Previous clock: <span id=cpu-previous>%s</span></small></div>"
+        "<div class='card wide'><form method=post><label for=cpu-target><b>Target CPU clock</b></label>"
+        "<p><output id=cpu-value for=cpu-target>%u</output> MHz</p>"
+        "<input type=range id=cpu-target name=mhz min=%u max=%u step=50 value=%u%s>"
+        "<div><button formaction=/cpu/enable%s>Apply boost</button>"
+        "<button formaction=/cpu/disable%s>Disable boost</button></div></form>"
+        "<p class=notice>%s Actual frequency may be lower. Power and thermal controls remain active.</p>"
+        "<small>Applies to PS4 games in base or NEO mode. A saved target is requested on the next PS4 launch. "
+        "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
+        "<form method=post><input type=hidden name=view value=cpu><button formaction=/settings/save>Save Settings</button></form>"
+        "%s</div></div><p><small>CPU boost is independent of NEO, 8GB Mode and the GPU boost. Quitting restores the captured CPU clock.<br>"
+        VERSION "</small></p></main>"
+        "<script>(function(){const r=document.getElementById('cpu-target'),o=document.getElementById('cpu-value');"
+        "r.addEventListener('input',()=>o.textContent=r.value);"
+        "async function refresh(){try{const x=await fetch('/cpu/status',{cache:'no-store'});if(!x.ok)return;const s=await x.json();"
+        "document.getElementById('cpu-current').textContent=s.current_mhz===null?'Unavailable':s.current_mhz+' MHz';"
+        "const b=document.getElementById('cpu-state');b.textContent=s.state;"
+        "b.className='state '+(s.applied&&s.state==='enabled'?'on':s.state==='disabled'?'off':'unk');"
+        "document.getElementById('cpu-previous').textContent=s.previous_mhz===null?'Not captured':s.previous_mhz+' MHz';"
+        "document.getElementById('cpu-detail').textContent=s.detail;"
+        "}catch(e){document.getElementById('cpu-current').textContent='Disconnected';}}window.neoCpuTimer=setInterval(refresh,2000);})();</script>"
+        "</body></html>",
+        hb.p ? hb.p : "", msg ? "<p class=msg>" : "", msg ? msg : "", msg ? "</p>" : "", current,
+        cpu.applied && !cpu.blocked ? "on" : cpu.enabled ? "unk" : "off", cpu_state_text(), cpu.message, previous,
+        cpu.target, CPU_MIN_MHZ, CPU_MAX_MHZ, cpu.target, dis, dis, dis, range,
+        cpu_backend_supported() ? "" : "<p>CPU clock control is unavailable.</p>");
+    free(hb.p);
+    reply(fd, "200 OK", "text/html; charset=utf-8", body);
+}
+
 #define DIAG_PATH "/data/neo-diagnostic.jsonl"
 
 static size_t generate_diagnostic(char *buf, size_t cap) {
@@ -1078,6 +1157,8 @@ static void log_state(void) {
              memory_target ? "on" : "off", m.detail);
     log_line("state: GPU %s, requested %u MHz, SMU %s%u MHz, owner PID %d: %s",
              gpu_state_text(), gpu.target, gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.owner_pid, gpu.message);
+    log_line("state: CPU %s, requested %u MHz, SMU %s%u MHz, owner PID %d: %s",
+             cpu_state_text(), cpu.target, cpu.reading_valid ? "" : "unavailable/last=", cpu.actual, cpu.owner_pid, cpu.message);
 }
 
 /* Identity of the eboot.bin of every game seen mounted, so a report shows whether two title IDs run the same binary
@@ -1271,6 +1352,8 @@ static void build_report(sbuf *b) {
               memory_target ? "on" : "off", m.detail);
     sb_printf(b, "GPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", gpu_state_text(), gpu.target,
               gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
+    sb_printf(b, "CPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", cpu_state_text(), cpu.target,
+              cpu.reading_valid ? "" : "unavailable/last=", cpu.actual, cpu.message);
     sb_printf(b, "patches: %s\n", patches_message);
     { char first[64] = ""; FILE *kf = fopen(KLOG_OLD2, "r"); if (!kf) kf = fopen(KLOG_OLD1, "r"); if (!kf) kf = fopen(KLOG_PATH, "r");
       if (kf) { if (fgets(first, 24, kf)) first[23] = 0; fclose(kf); }
@@ -1355,6 +1438,16 @@ static void gpu_tick(void) {
     if (result != previous_result || gpu.actions != previous_actions) {
         log_line("GPU: %s (result %d)", gpu.message, result);
         previous_actions = gpu.actions; previous_result = result;
+    }
+}
+
+static void cpu_tick(void) {
+    static unsigned previous_actions;
+    static int previous_result = 9999;
+    int result = cpu_poll(gpu_game_pid());
+    if (result != previous_result || cpu.actions != previous_actions) {
+        log_line("CPU: %s (result %d)", cpu.message, result);
+        previous_actions = cpu.actions; previous_result = result;
     }
 }
 
@@ -1696,6 +1789,7 @@ int main(void) {
     sceUserServiceInitialize(0);
     console_detect_model();   /* before settings_load: the saved GPU target is checked against the model limit */
     settings_load();
+    log_line("settings: cpu_clock_enabled=%d cpu_clock_mhz=%u", cpu.enabled, cpu.target);
     log_line("settings: force_neo=%d force_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u",
              force_neo, force_8gib, gpu.enabled, gpu.target);
     do_set(1, msg, sizeof(msg), 0);
@@ -1717,6 +1811,7 @@ int main(void) {
     int memory_previous_result=memory_poll();
     log_line("8GB Mode: %s", memory_message);
     gpu_tick();
+    cpu_tick();
     int li = install_launcher();
     snprintf(msg + strlen(msg), sizeof(msg) - strlen(msg), "\nWeb panel: port %d%s", PORT,
              li == 1 ? "\nShortcut installed in the Media tab" : li < 0 ? "\nFailed to install the Media tab shortcut" : "");
@@ -1763,6 +1858,7 @@ int main(void) {
             launch_tick();
             settings_watch();
             gpu_tick();
+            cpu_tick();
             int memory_result=memory_poll();
             if(memory_result!=memory_previous_result){
                 if(memory_result==0||memory_result==5||memory_result==6)notify(memory_message);
@@ -1772,9 +1868,9 @@ int main(void) {
                 patches_drop_8gib(NULL);
             }
             memory_previous_result=memory_result;last_memory_poll=now;
-            if(quit_pending&&!memory_shutdown()&&!gpu_request(0,gpu.target,gpu_game_pid())){
+            if(quit_pending&&!memory_shutdown()&&!clocks_restore()){
                 launch_attach(0);
-                notify("NeoEnabler: stopped after the game closed (per-game Pro mode and 8GB Mode stopped, GPU boost stopped)");
+                notify("NeoEnabler: stopped after the game closed (per-game Pro mode and 8GB Mode stopped, GPU and CPU boost stopped)");
                 log_state();
                 break;
             }
@@ -1884,17 +1980,33 @@ int main(void) {
                 log_line("panel: GPU enable=%d target=%u rc=%d", enable, target, rc);
                 notify(gpu.message); log_state(); serve_gpu_page(fd, gpu.message);
             }
+        } else if (post && (!strcmp(path, "/cpu/enable") || !strcmp(path, "/cpu/disable"))) {
+            int enable = !strcmp(path, "/cpu/enable"); unsigned target = cpu.target;
+            if (enable && !cpu_available()) {     /* disable stays allowed: it restores the captured clock */
+                reply(fd, "404 Not Found", "text/plain", "CPU clock control is not available on this console\n");
+            } else if (enable && cpu_form_mhz(form_body, &target) != 1) {
+                char bad[96];
+                snprintf(bad, sizeof bad, "Choose a CPU target from %u to %u MHz in 50 MHz steps\n", CPU_MIN_MHZ, CPU_MAX_MHZ);
+                reply(fd, "400 Bad Request", "text/plain", bad);
+            } else {
+                int rc = cpu_request(enable, target, gpu_game_pid());
+                if (rc == -1 && enable) snprintf(cpu.message, sizeof cpu.message, "CPU clock request unavailable or failed; check firmware and SMU access");
+                log_line("panel: CPU enable=%d target=%u rc=%d", enable, target, rc);
+                notify(cpu.message); log_state(); serve_cpu_page(fd, cpu.message);
+            }
         } else if (post && !strcmp(path, "/patches/update")) {
             log_line("panel: game patches update requested");
             patches_update();
             serve_page(fd, patches_message);
         } else if (post && !strcmp(path, "/settings/save")) {
+            int is_cpu = !strcmp(form_body, "view=cpu");
             int ok = !settings_save();
             const char *smsg = ok ? "Settings saved" : "Failed to save settings";
-            log_line("panel: save settings force_neo=%d force_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u",
-                     force_neo, force_8gib, gpu.enabled, gpu.target);
+            log_line("panel: save settings force_neo=%d force_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u cpu_clock_enabled=%d cpu_clock_mhz=%u",
+                     force_neo, force_8gib, gpu.enabled, gpu.target, cpu.enabled, cpu.target);
             notify(smsg);
-            if (!strcmp(form_body, "view=gpu") && gpu_available()) serve_gpu_page(fd, smsg); else serve_page(fd, smsg);
+            if (is_cpu && cpu_available()) serve_cpu_page(fd, smsg);
+            else if (!strcmp(form_body, "view=gpu") && gpu_available()) serve_gpu_page(fd, smsg); else serve_page(fd, smsg);
         } else if (post && !strcmp(path, "/quit")) {
             if (memory_shutdown()) {
                 /* 8GB Mode still owns DATA for the running game: finish Quit once the game closes and DATA is restored */
@@ -1905,21 +2017,21 @@ int main(void) {
                       "after the game closes and the 8GB Mode memory is restored.</body>");
                 close(fd); continue;
             }
-            if (gpu_request(0, gpu.target, gpu_game_pid())) {
-                notify(gpu.message); serve_gpu_page(fd, "Clock restoration failed. Retry Disable before quitting."); close(fd); continue;
+            if (clocks_restore()) {
+                notify(gpu.restore_pending ? gpu.message : cpu.message); serve_gpu_page(fd, "Clock restoration failed. Retry Disable before quitting."); close(fd); continue;
             }
             reply(fd, "200 OK", "text/html; charset=utf-8", "<!doctype html><meta charset=utf-8><title>NeoEnabler</title>"
                   "<body style='background:#111418;color:#e8eaed;font-family:system-ui'>Manager stopped. Games no longer ask for Pro mode "
-                  "or 8GB Mode until the manager runs again. GPU clock restore requested.</body>");
+                  "or 8GB Mode until the manager runs again. GPU and CPU clock restore requested.</body>");
             close(fd);
             launch_attach(0);
-            notify("NeoEnabler: panel stopped (per-game Pro mode and 8GB Mode stopped, GPU boost stopped)");
+            notify("NeoEnabler: panel stopped (per-game Pro mode and 8GB Mode stopped, GPU and CPU boost stopped)");
             log_state();
             break;
         } else if (!strcmp(path, "/status")) {
             shell_t s; int st = hook_state(&s);
             char games[1024]; games_text(games, sizeof(games), 0);
-            char body[3200];mb_snapshot memory;memory_check(&memory);gpu_refresh();
+            char body[3600];mb_snapshot memory;memory_check(&memory);gpu_refresh();cpu_refresh();
             snprintf(body, sizeof(body), "build: " VERSION "\nmemory_8gib: %s\nmemory_requested: %s\nmemory_detail: %s\nmemory_last_result: %s\nhook: %s\nv4 hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
                      memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled",
                      memory_target?"enabled":"disabled",memory.detail,memory_message,
@@ -1929,6 +2041,10 @@ int main(void) {
             snprintf(body + used, sizeof body - used,
                      "gpu_clock: %s\ngpu_clock_enabled: %d\ngpu_target_mhz: %u\ngpu_actual_mhz: %s%u\ngpu_detail: %s\n",
                      gpu_state_text(), gpu.enabled, gpu.target, gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
+            used = strlen(body);
+            snprintf(body + used, sizeof body - used,
+                     "cpu_clock: %s\ncpu_clock_enabled: %d\ncpu_target_mhz: %u\ncpu_actual_mhz: %s%u\ncpu_detail: %s\n",
+                     cpu_state_text(), cpu.enabled, cpu.target, cpu.reading_valid ? "" : "unavailable/last=", cpu.actual, cpu.message);
             used = strlen(body);
             snprintf(body + used, sizeof body - used,
                      "force_neo: %d\nforce_8gib: %d\nlaunch_questions: %s\nlast_question: %u\n8gib_for_launch: %s\n"
@@ -1960,6 +2076,12 @@ int main(void) {
             else serve_page(fd, "GPU clock control is not available on this console");
         } else if (!strcmp(method, "GET") && !strcmp(path, "/gpu/status")) {
             if (gpu_available()) serve_gpu_status(fd);
+            else reply(fd, "404 Not Found", "text/plain", "not found\n");
+        } else if (!strcmp(method, "GET") && !strcmp(path, "/cpu")) {
+            if (cpu_available()) serve_cpu_page(fd, NULL);
+            else serve_page(fd, "CPU clock control is not available on this console");
+        } else if (!strcmp(method, "GET") && !strcmp(path, "/cpu/status")) {
+            if (cpu_available()) serve_cpu_status(fd);
             else reply(fd, "404 Not Found", "text/plain", "not found\n");
         } else if (!strcmp(method, "GET") && !strcmp(path, "/logs")) {
             serve_logs_show(fd);
