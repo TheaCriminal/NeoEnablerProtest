@@ -7,12 +7,12 @@
  * MP1_IOCTL_SET_COREPSTATE, "CPU core#%d, Pstate %d"):
  *   GET 0xc00cae1e  struct{u32 core; u32 0; u32 value}   value = core clock in MHz (libkernel returns value*1e6 Hz)
  *   SET 0x8008ae1d  struct{u32 core_mask; u32 value}     the system sets one core at a time (mask = 1<<core)
- * GET struct layout (verified against SceShellCore and libkernel_sys 13.60):
- *   +0 core number (input)   +4 pstate value (same unit the SET takes; the shell compares it to its desired value)
+ * GET struct layout (13.60 libkernel_sys / SceShellCore, confirmed on hardware):
+ *   +0 core number (input)   +4 PSTATE INDEX (0 = fastest; seen: core0=0, cores1-7=1), NOT a frequency
  *   +8 live core clock in MHz (libkernel_sys returns this *1e6 Hz; the shell's CPU monitor prints it)
- * The live clock (+8) is what the UI shows and what the reset heuristic uses. The pstate (+4) is what restore writes
- * back, so a restore never feeds a live reading into SET. There is no fallback from +8 to +4: if +8 is not a
- * plausible MHz figure the read fails ("unavailable") instead of showing a stale request value as live.
+ * SET (0x8008ae1d) takes {1<<core, pstate index}. Writing an MHz figure such as 3500 is an invalid pstate and the
+ * driver answers EINVAL, which is the error seen before. The live clock (+8) is what the UI shows and what the
+ * reset heuristic uses; the pstate (+4) is what restore writes back. There is no fallback from +8 to +4.
  * The system has 8 cores (0..7). Nothing is written unless the baseline read succeeded.
  */
 #pragma once
@@ -41,7 +41,9 @@ typedef struct{
 } cpu_control;
 static int cpu_fail_core=-1,cpu_fail_errno;  /* where the last backend write failed, for the status text */
 static unsigned cpu_last_core[CPU_CORES];    /* live clock (+8) per core from the last read */
-static unsigned cpu_last_pstate[CPU_CORES];  /* pstate value (+4) per core from the last read, 0 = not reported */
+#define CPU_PSTATE_NONE 0xFFFFFFFFu
+#define CPU_PSTATE_MAX 63U                       /* anything above is treated as not reported */
+static unsigned cpu_last_pstate[CPU_CORES];  /* pstate index (+4) per core from the last read, CPU_PSTATE_NONE = not reported */
 static cpu_control cpu={.target=CPU_DEFAULT_MHZ,.message="CPU boost disabled"};
 #ifndef NEO_CPU_TEST
 #include <fcntl.h>
@@ -50,7 +52,7 @@ static cpu_control cpu={.target=CPU_DEFAULT_MHZ,.message="CPU boost disabled"};
 #include <errno.h>
 static inline int cpu_backend_supported(void){return 1;}
 /* Highest of the 8 live core clocks (MHz); core_out gets every core's live clock and cpu_last_pstate every core's
- * pstate value. A core whose live clock (+8) is not plausible fails the whole read. */
+ * pstate index. A core whose live clock (+8) is not plausible fails the whole read. */
 static inline int cpu_backend_read(unsigned*out,unsigned*core_out){
  int fd=open("/dev/mp1",O_RDONLY);if(fd<0)return -1;
  unsigned best=0,vals[CPU_CORES],ps[CPU_CORES];int bad=0;
@@ -59,7 +61,7 @@ static inline int cpu_backend_read(unsigned*out,unsigned*core_out){
   if(ioctl(fd,CPU_GET_IOCTL,q)){bad=1;break;}
   unsigned v=q[2];
   if(v<400||v>4000){bad=1;break;}
-  vals[c]=v;ps[c]=(q[1]>=400&&q[1]<=4000)?q[1]:0;
+  vals[c]=v;ps[c]=q[1]<=CPU_PSTATE_MAX?q[1]:CPU_PSTATE_NONE;
   if(v>best)best=v;
  }
  close(fd);if(bad)return -1;
@@ -80,7 +82,7 @@ static inline int cpu_backend_set(unsigned mhz){
  int rc=0;for(unsigned c=0;c<CPU_CORES&&!rc;c++)rc=cpu_backend_set_core(fd,c,mhz);
  close(fd);return rc;
 }
-/* Every core back to the pstate value it had when the baseline was captured. Cores already there are not written,
+/* Every core back to the pstate index it had when the baseline was captured. Cores already there are not written,
  * so a driver that refuses writes still "restores" cleanly when nothing was ever changed. */
 static inline int cpu_backend_restore(void){
  cpu_fail_core=-1;cpu_fail_errno=0;
@@ -88,7 +90,7 @@ static inline int cpu_backend_restore(void){
  int fd=open("/dev/mp1",O_RDWR);if(fd<0){cpu_fail_errno=errno;return -1;}
  int rc=0;
  for(unsigned c=0;c<CPU_CORES;c++){
-  if(!cpu.baseline_core[c])continue;
+  if(cpu.baseline_core[c]==CPU_PSTATE_NONE)continue;
   if(have&&cpu_last_pstate[c]==cpu.baseline_core[c])continue;
   if(cpu_backend_set_core(fd,c,cpu.baseline_core[c]))rc=-1;
  }
@@ -105,8 +107,8 @@ static inline void cpu_probe_add(char*out,size_t cap,size_t*at,const char*fmt,..
  va_list ap;va_start(ap,fmt);int n=vsnprintf(out+*at,cap-*at,fmt,ap);va_end(ap);
  if(n>0)*at=(*at+(size_t)n<cap)?*at+(size_t)n:cap-1;
 }
-/* Diagnostic text for the CPU clock backend. Read-only unless do_write is set. The write test only touches core 0:
- * it writes the pstate it already has, then 3200..3500 MHz, and always writes the original value back at the end. */
+/* Diagnostic text for the CPU clock backend. Read-only unless do_write is set. The write test touches core 1 only:
+ * it writes its own pstate index back, then pstate indexes 0..7, and always writes the original index back at the end. */
 static inline int cpu_probe_report(char*out,size_t cap,int do_write){
  size_t at=0;out[0]=0;
  cpu_probe_add(out,cap,&at,"CPU probe (%s)\n",do_write?"with write test":"read only");
@@ -115,30 +117,29 @@ static inline int cpu_probe_report(char*out,size_t cap,int do_write){
  uint32_t m=0;int rc,e;
  m=0;errno=0;rc=ioctl(fd,0x4004b200UL,&m);e=errno;cpu_probe_add(out,cap,&at,"mode 4004b200: rc=%d errno=%d val=%u\n",rc,e,m);
  m=0;errno=0;rc=ioctl(fd,0x4004b202UL,&m);e=errno;cpu_probe_add(out,cap,&at,"flag 4004b202: rc=%d errno=%d val=%u\n",rc,e,m);
- unsigned p0=0;
+ unsigned p1=CPU_PSTATE_NONE;
  for(unsigned c=0;c<CPU_CORES;c++){
   uint32_t q[3]={c,0,0};errno=0;rc=ioctl(fd,CPU_GET_IOCTL,q);e=errno;
-  cpu_probe_add(out,cap,&at,"core%u: rc=%d errno=%d +4(pstate)=%u +8(live)=%u\n",c,rc,e,q[1],q[2]);
-  if(!c&&!rc)p0=q[1];
+  cpu_probe_add(out,cap,&at,"core%u: rc=%d errno=%d +4(pstate idx)=%u +8(live MHz)=%u\n",c,rc,e,q[1],q[2]);
+  if(c==1&&!rc&&q[1]<=CPU_PSTATE_MAX)p1=q[1];
  }
  uint32_t w[27]={0};errno=0;rc=ioctl(fd,0x406cae01UL,w);e=errno;
  cpu_probe_add(out,cap,&at,"GET_CLK 406cae01: rc=%d errno=%d\n",rc,e);
  for(int i=0;i<27;i+=9)cpu_probe_add(out,cap,&at,"  [%2d..%2d] %u %u %u %u %u %u %u %u %u\n",i,i+8,w[i],w[i+1],w[i+2],w[i+3],w[i+4],w[i+5],w[i+6],w[i+7],w[i+8]);
  if(do_write){
   if(cpu.baseline_valid||cpu.applied)cpu_probe_add(out,cap,&at,"write test skipped: disable CPU boost first\n");
-  else if(p0<400||p0>4000)cpu_probe_add(out,cap,&at,"write test skipped: core0 pstate not readable\n");
+  else if(p1==CPU_PSTATE_NONE)cpu_probe_add(out,cap,&at,"write test skipped: core1 pstate not readable\n");
   else{
-   unsigned list[]={p0,3200,3300,3400,3500};
-   for(int i=0;i<5;i++){
-    unsigned v=list[i];int dup=0;for(int j=0;j<i;j++)if(list[j]==v)dup=1;
-    if(dup)continue;
-    uint32_t s[2]={1,v};errno=0;rc=ioctl(fd,CPU_SET_IOCTL,s);e=errno;usleep(100000);
-    uint32_t q[3]={0,0,0};ioctl(fd,CPU_GET_IOCTL,q);
-    cpu_probe_add(out,cap,&at,"SET core0=%u: rc=%d errno=%d -> +4=%u +8=%u\n",v,rc,e,q[1],q[2]);
+   cpu_probe_add(out,cap,&at,"write test on core1 (original pstate %u), mask=2\n",p1);
+   unsigned list[9];int n=0;list[n++]=p1;for(unsigned i=0;i<8;i++)if(i!=p1)list[n++]=i;
+   for(int i=0;i<n;i++){
+    uint32_t s[2]={2,list[i]};errno=0;rc=ioctl(fd,CPU_SET_IOCTL,s);e=errno;usleep(300000);
+    uint32_t q[3]={1,0,0};ioctl(fd,CPU_GET_IOCTL,q);
+    cpu_probe_add(out,cap,&at,"SET core1 pstate=%u: rc=%d errno=%d -> +4=%u +8=%u\n",list[i],rc,e,q[1],q[2]);
    }
-   uint32_t s[2]={1,p0};errno=0;rc=ioctl(fd,CPU_SET_IOCTL,s);e=errno;usleep(100000);
-   uint32_t q[3]={0,0,0};ioctl(fd,CPU_GET_IOCTL,q);
-   cpu_probe_add(out,cap,&at,"restore core0=%u: rc=%d errno=%d -> +4=%u +8=%u\n",p0,rc,e,q[1],q[2]);
+   uint32_t s[2]={2,p1};errno=0;rc=ioctl(fd,CPU_SET_IOCTL,s);e=errno;usleep(300000);
+   uint32_t q[3]={1,0,0};ioctl(fd,CPU_GET_IOCTL,q);
+   cpu_probe_add(out,cap,&at,"restore core1 pstate=%u: rc=%d errno=%d -> +4=%u +8=%u\n",p1,rc,e,q[1],q[2]);
   }
  }
  close(fd);return 0;
@@ -149,14 +150,11 @@ static inline void cpu_configure(int enable,unsigned mhz){
  cpu.target=cpu_target_valid(mhz)?mhz:CPU_DEFAULT_MHZ;
 }
 static inline int cpu_refresh(void){
- unsigned actual=0;memset(cpu_last_pstate,0,sizeof cpu_last_pstate);
+ unsigned actual=0;for(unsigned c=0;c<CPU_CORES;c++)cpu_last_pstate[c]=CPU_PSTATE_NONE;
  cpu.reading_valid=!cpu_backend_read(&actual,cpu_last_core);
  if(cpu.reading_valid){
-  unsigned req=0;
-  for(unsigned c=0;c<CPU_CORES;c++){
-   if(!cpu_last_pstate[c])cpu_last_pstate[c]=cpu_last_core[c];  /* backend reported no pstate: use the live clock */
-   if(cpu_last_pstate[c]>req)req=cpu_last_pstate[c];
-  }
+  unsigned req=CPU_PSTATE_NONE;   /* fastest (lowest) pstate index currently in use */
+  for(unsigned c=0;c<CPU_CORES;c++)if(cpu_last_pstate[c]<req)req=cpu_last_pstate[c];
   cpu.actual=actual;cpu.requested=req;
  }
  return cpu.reading_valid?0:-1;

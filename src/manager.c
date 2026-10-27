@@ -1015,7 +1015,7 @@ static void serve_cpu_page(int fd, const char *msg) {
         "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
         "<form method=post><input type=hidden name=view value=cpu><button formaction=/settings/save>Save Settings</button></form>"
         "<p><small><a href=/cpu/probe>Diagnostics (read only)</a></small></p>"
-        "<form method=post><button formaction=/cpu/probe/write>Run write test (core 0, restores afterwards)</button></form>"
+        "<form method=post><button formaction=/cpu/probe/write>Run write test (core 1, restores afterwards)</button></form>"
         "%s</div></div><p><small>CPU boost is independent of NEO, 8GB Mode and the GPU boost. Quitting restores the captured CPU clock.<br>"
         VERSION "</small></p></main>"
         "<script>(function(){const r=document.getElementById('cpu-target'),o=document.getElementById('cpu-value');"
