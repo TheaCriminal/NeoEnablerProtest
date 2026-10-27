@@ -31,6 +31,7 @@
 static void log_line(const char *fmt, ...);
 #include "memory_control.h"
 #include "gpu_control.h"
+#include "video_settings.h"
 #include "settings.h"
 #include "http_request.h"
 #include "log_mirror.h"
@@ -255,6 +256,36 @@ static int settings_save(void) {
     char buf[128]; int n = neo_settings_format(&cfg, buf, sizeof(buf));
     if (n < 0 || write_file(SETTINGS_PATH ".tmp", buf, (size_t)n)) return -1;
     return rename(SETTINGS_PATH ".tmp", SETTINGS_PATH);
+}
+
+/* 120 Hz video output: a flag of ps-patch-system itself (apply_120hz_videoout in its settings.xml), not a NeoEnabler
+   setting, so it is read from and written to that file and nothing is kept in /data/neo-settings. Only that
+   attribute changes; the file is replaced in one step so a failed write leaves the old one. */
+static char *video_xml_read(size_t *n) {
+    size_t len = 0; char *raw = ps_read(SETTINGS_XML, 64 << 10, &len);
+    if (!raw) return NULL;
+    char *t = malloc(len + 1);
+    if (t) { memcpy(t, raw, len); t[len] = 0; }
+    free(raw); *n = len;
+    return t;
+}
+/* 1 on, 0 off, -1 unavailable (file missing/unreadable or no recognisable flag). */
+static int video_120hz_state(void) {
+    size_t n; char *t = video_xml_read(&n);
+    if (!t) return -1;
+    int r = hz120_get(t); free(t);
+    return r;
+}
+static int video_120hz_set(int on) {
+    size_t n; char *t = video_xml_read(&n);
+    if (!t) return -1;
+    size_t cap = n + 64; char *out = malloc(cap);
+    int len = out ? hz120_set(t, on, out, cap) : -1;
+    free(t);
+    int rc = -1;
+    if (len >= 0 && !write_file(SETTINGS_XML ".neo.tmp", out, (size_t)len)) rc = rename(SETTINGS_XML ".neo.tmp", SETTINGS_XML);
+    free(out);
+    return rc;
 }
 
 /* Returns 0 already installed, 1 installed now, <0 error. "Installed" means registered in the system
@@ -577,6 +608,7 @@ static void page_header(sbuf *b, const char *active) {
 static void page_status(sbuf *b, int legacy) {
     int mem_ok = memory_available();
     const char *hid = legacy ? "<input type=hidden name=legacy value=1>" : "";
+    int hz120 = video_120hz_state();
     shell_t s; int st = hook_state(&s);
     if (st == HOOK_OFF && v4_active(&s)) st = HOOK_ON;
     mb_snapshot memory; memory_check(&memory);
@@ -601,7 +633,10 @@ static void page_status(sbuf *b, int legacy) {
               "<button formaction=/advanced/neo>%s</button></form>"
               "<form method=post style='margin-top:12px'>%s<input type=hidden name=on value=%d><b>Keep 8GB Mode on</b> "
               "<span class='state %s'>%s</span><br><small>For every Pro mode launch, until turned off.</small><br>"
-              "<button formaction=/advanced/memory%s>%s</button></form></details>"
+              "<button formaction=/advanced/memory%s>%s</button></form>"
+              "<form method=post style='margin-top:12px'>%s<input type=hidden name=on value=%d><b>120 Hz video output</b> "
+              "<span class='state %s'>%s</span><br><small>ps-patch-system setting; it may only take effect the next time a game starts.</small><br>"
+              "<button formaction=/advanced/hz120%s>%s</button></form></details>"
               "<small style='text-align:center'>" VERSION "</small></aside>",
               st == HOOK_ON && running_pro == 1 ? "on" : "off",
               st != HOOK_ON ? state_text(st) : running_pro == 1 ? "enabled" : running_pro == 0 ? "disabled" : "ready",
@@ -612,7 +647,9 @@ static void page_status(sbuf *b, int legacy) {
               hid, !force_neo, force_neo ? "on" : "off", force_neo ? "on" : "off", force_neo ? "Turn off" : "Turn on",
               hid, !force_8gib, force_8gib && mem_ok ? "on" : "off",
               !force_8gib ? "off" : mem_ok ? "on" : "requested, not available", !force_8gib && !mem_ok ? " disabled" : "",
-              force_8gib ? "Turn off" : "Turn on");
+              force_8gib ? "Turn off" : "Turn on",
+              hid, hz120 != 1, hz120 == 1 ? "on" : "off", hz120 == 1 ? "enabled" : hz120 == 0 ? "disabled" : "unavailable",
+              hz120 < 0 ? " disabled" : "", hz120 == 1 ? "Turn off" : "Turn on");
 }
 
 /* Set for a request of the legacy panel (its paths, or legacy=1 in the form): pages answer with the legacy panel. */
@@ -1821,6 +1858,14 @@ int main(void) {
             int saved = !settings_save();
             log_line("panel: %s%s", amsg, saved ? "" : " (settings not saved)");
             notify(amsg); log_state(); serve_page(fd, amsg);
+        } else if (post && !strcmp(path, "/advanced/hz120")) {
+            char on[4]; int value = !form_value(form_body, "on", on, sizeof on) && !strcmp(on, "1");
+            const char *amsg;
+            if (video_120hz_state() < 0) amsg = "120 Hz video output: ps-patch-system settings not found; nothing changed";
+            else if (video_120hz_set(value)) amsg = "120 Hz video output: could not write the ps-patch-system settings; nothing changed";
+            else amsg = value ? "120 Hz video output: on" : "120 Hz video output: off";
+            log_line("panel: %s", amsg);
+            notify(amsg); serve_page(fd, amsg);
         } else if (post && (!strcmp(path, "/gpu/enable") || !strcmp(path, "/gpu/disable"))) {
             int enable = !strcmp(path, "/gpu/enable"); unsigned target = gpu.target;
             if (enable && !gpu_available()) {     /* disable stays allowed: it restores the captured clock */
