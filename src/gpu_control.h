@@ -7,8 +7,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#define GPU_MAX_MHZ 2350U      /* was 2200U; extended for PS5 Pro testing */
-#define GPU_DEFAULT_MHZ 2200U  /* default stays at the tested value */
+#define GPU_MIN_MHZ 1800U
+#define GPU_MAX_MHZ 2350U      
+#define GPU_DEFAULT_MHZ 2200U 
 #define GPU_MAX_RECOVERIES 10U /* automatic re-applies allowed before giving up */
 #define GPU_STABLE_POLLS 10U   /* polls above 1800 MHz before the recovery budget is refunded */
 static int gpu_target_valid(unsigned mhz){return mhz>=GPU_MIN_MHZ&&mhz<=GPU_MAX_MHZ&&mhz%50==0;}
