@@ -212,7 +212,7 @@ static int memory_available(void) { mb_snapshot m; return memory_supported() && 
 /* GPU clock page and boost: the MP1 driver answering a clock read. */
 static int gpu_available(void) { unsigned mhz; return gpu_backend_supported() && !gpu_backend_read(&mhz); }
 /* CPU clock page and boost: same MP1 driver, CPU clock read. */
-static int cpu_available(void) { unsigned mhz; return cpu_backend_supported() && !cpu_backend_read(&mhz, NULL); }
+static int cpu_available(void) { return cpu_backend_supported() && cpu_backend_responds(); }   /* page stays reachable for diagnostics even if the live clock field is unreadable */
 
 /* Console model: PS5 Pro model numbers are CFI-7xxx (CFI-7000, CFI-7100); every regular PS5 is CFI-1xxx or CFI-2xxx.
    The model string comes from machdep.icc.hw_model. Anything unreadable or unrecognised counts as a regular PS5,
@@ -1014,6 +1014,8 @@ static void serve_cpu_page(int fd, const char *msg) {
         "<small>Applies to PS4 games in base or NEO mode. A saved target is requested on the next PS4 launch. "
         "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
         "<form method=post><input type=hidden name=view value=cpu><button formaction=/settings/save>Save Settings</button></form>"
+        "<p><small><a href=/cpu/probe>Diagnostics (read only)</a></small></p>"
+        "<form method=post><button formaction=/cpu/probe/write>Run write test (core 0, restores afterwards)</button></form>"
         "%s</div></div><p><small>CPU boost is independent of NEO, 8GB Mode and the GPU boost. Quitting restores the captured CPU clock.<br>"
         VERSION "</small></p></main>"
         "<script>(function(){const r=document.getElementById('cpu-target'),o=document.getElementById('cpu-value');"
@@ -2086,6 +2088,13 @@ int main(void) {
         } else if (!strcmp(method, "GET") && !strcmp(path, "/cpu/status")) {
             if (cpu_available()) serve_cpu_status(fd);
             else reply(fd, "404 Not Found", "text/plain", "not found\n");
+        } else if (!strcmp(method, "GET") && !strcmp(path, "/cpu/probe")) {
+            static char probe[4096]; cpu_probe_report(probe, sizeof probe, 0);
+            reply(fd, "200 OK", "text/plain; charset=utf-8", probe);
+        } else if (post && !strcmp(path, "/cpu/probe/write")) {
+            static char probe[4096]; cpu_probe_report(probe, sizeof probe, 1);
+            log_line("panel: CPU probe write test run");
+            reply(fd, "200 OK", "text/plain; charset=utf-8", probe);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/logs")) {
             serve_logs_show(fd);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/logs/download")) {
