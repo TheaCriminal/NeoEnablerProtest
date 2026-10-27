@@ -8,11 +8,16 @@
 #include <string.h>
 #include <stdlib.h>
 #define GPU_MIN_MHZ 1800U
-#define GPU_MAX_MHZ 2350U      
+#define GPU_MAX_MHZ 2350U      /* PS5 Pro ceiling (absolute upper bound for any console) */
+#define GPU_BASE_MAX_MHZ 2200U /* regular PS5 ceiling */
 #define GPU_DEFAULT_MHZ 2200U 
 #define GPU_MAX_RECOVERIES 10U /* automatic re-applies allowed before giving up */
 #define GPU_STABLE_POLLS 10U   /* polls above 1800 MHz before the recovery budget is refunded */
-static int gpu_target_valid(unsigned mhz){return mhz>=GPU_MIN_MHZ&&mhz<=GPU_MAX_MHZ&&mhz%50==0;}
+/* Highest target for this console. Safe default is the regular PS5 limit; the manager calls
+ * gpu_set_model(1) at startup only when it has positively identified a PS5 Pro. */
+static unsigned gpu_model_max=GPU_BASE_MAX_MHZ;
+static void gpu_set_model(int pro){gpu_model_max=pro?GPU_MAX_MHZ:GPU_BASE_MAX_MHZ;}
+static int gpu_target_valid(unsigned mhz){return mhz>=GPU_MIN_MHZ&&mhz<=gpu_model_max&&mhz%50==0;}
 #ifndef NEO_GPU_TEST
 #include <fcntl.h>
 #include <unistd.h>

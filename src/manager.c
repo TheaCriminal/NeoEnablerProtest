@@ -210,6 +210,21 @@ static int memory_available(void) { mb_snapshot m; return memory_supported() && 
 /* GPU clock page and boost: the MP1 driver answering a clock read. */
 static int gpu_available(void) { unsigned mhz; return gpu_backend_supported() && !gpu_backend_read(&mhz); }
 
+/* Console model: PS5 Pro model numbers are CFI-7xxx (CFI-7000, CFI-7100); every regular PS5 is CFI-1xxx or CFI-2xxx.
+   The model string comes from machdep.icc.hw_model. Anything unreadable or unrecognised counts as a regular PS5,
+   so the GPU target stays capped at 2200 MHz unless a Pro is positively identified. */
+static int console_is_pro;
+static void console_detect_model(void) {
+    char model[64] = {0}; size_t n = sizeof(model) - 1;
+    if (sysctlbyname("machdep.icc.hw_model", model, &n, NULL, 0)) n = 0;
+    model[n < sizeof(model) ? n : sizeof(model) - 1] = 0;
+    for (char *p = model; *p; p++) if (*p < 32 || *p > 126) *p = ' ';
+    console_is_pro = strstr(model, "CFI-7") != NULL;
+    gpu_set_model(console_is_pro);
+    log_line("console: model \"%s\" -> %s, GPU target limit %u MHz", model[0] ? model : "unknown",
+             console_is_pro ? "PS5 Pro" : "PS5", gpu_model_max);
+}
+
 /* Advanced overrides: Pro mode for every PS4 game, and 8 GiB kept on. */
 static int force_neo, force_8gib;
 
@@ -843,7 +858,7 @@ static void serve_gpu_status(int fd) {
         "{\"supported\":%s,\"enabled\":%s,\"applied\":%s,\"state\":\"%s\","
         "\"current_mhz\":%s,\"target_mhz\":%u,\"previous_mhz\":%s,\"max_mhz\":%u,\"detail\":\"%s\"}",
         gpu_backend_supported() ? "true" : "false", gpu.enabled ? "true" : "false",
-        gpu.applied ? "true" : "false", gpu_state_text(), current, gpu.target, previous, GPU_MAX_MHZ, detail);
+        gpu.applied ? "true" : "false", gpu_state_text(), current, gpu.target, previous, gpu_model_max, detail);
     reply(fd, "200 OK", "application/json", body);
 }
 
@@ -855,6 +870,8 @@ static void serve_gpu_page(int fd, const char *msg) {
     if (gpu.reading_valid) snprintf(current, sizeof current, "%u MHz", gpu.actual);
     if (gpu.baseline_valid) snprintf(previous, sizeof previous, "%u MHz", gpu.baseline);
     const char *dis = gpu_backend_supported() ? "" : " disabled";
+    char range[96];
+    snprintf(range, sizeof range, "%s: choose a target from %u to %u MHz.", console_is_pro ? "PS5 Pro" : "PS5", GPU_MIN_MHZ, gpu_model_max);
     sbuf hb = {0};
     page_header(&hb, "gpu");
     static char body[16384];
@@ -870,8 +887,7 @@ static void serve_gpu_page(int fd, const char *msg) {
         "<input type=range id=gpu-target name=mhz min=%u max=%u step=50 value=%u%s>"
         "<div><button formaction=/gpu/enable%s>Apply boost</button>"
         "<button formaction=/gpu/disable%s>Disable boost</button></div></form>"
-        "<p class=notice>Use 2200 if on Base PS5. Use 2350 if on PS5 PRO. More than 2200 on Base PS5 will not work. "
-        "Actual frequency may be lower. Power and thermal controls remain active.</p>"
+        "<p class=notice>%s Actual frequency may be lower. Power and thermal controls remain active.</p>"
         "<small>Applies to PS4 games in base or NEO mode. A saved target is requested on the next PS4 launch. "
         "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
         "<form method=post><input type=hidden name=view value=gpu><button formaction=/settings/save>Save Settings</button></form>"
@@ -889,7 +905,7 @@ static void serve_gpu_page(int fd, const char *msg) {
         "</body></html>",
         hb.p ? hb.p : "", msg ? "<p class=msg>" : "", msg ? msg : "", msg ? "</p>" : "", current,
         gpu.applied && !gpu.blocked ? "on" : gpu.enabled ? "unk" : "off", gpu_state_text(), gpu.message, previous,
-        gpu.target, GPU_MIN_MHZ, GPU_MAX_MHZ, gpu.target, dis, dis, dis,
+        gpu.target, GPU_MIN_MHZ, gpu_model_max, gpu.target, dis, dis, dis, range,
         gpu_backend_supported() ? "" : "<p>GPU clock control is unavailable.</p>");
     free(hb.p);
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
@@ -1637,6 +1653,7 @@ int main(void) {
     log_line("%s started", VERSION);
     set_process_name("neo-manager.elf");
     sceUserServiceInitialize(0);
+    console_detect_model();   /* before settings_load: the saved GPU target is checked against the model limit */
     settings_load();
     log_line("settings: force_neo=%d force_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u",
              force_neo, force_8gib, gpu.enabled, gpu.target);
@@ -1809,7 +1826,9 @@ int main(void) {
             if (enable && !gpu_available()) {     /* disable stays allowed: it restores the captured clock */
                 reply(fd, "404 Not Found", "text/plain", "GPU clock control is not available on this console\n");
             } else if (enable && gpu_form_mhz(form_body, &target) != 1) {
-                reply(fd, "400 Bad Request", "text/plain", "Choose a GPU target from 1800 to 2350 MHz in 50 MHz steps\n");
+                char bad[96];
+                snprintf(bad, sizeof bad, "Choose a GPU target from %u to %u MHz in 50 MHz steps\n", GPU_MIN_MHZ, gpu_model_max);
+                reply(fd, "400 Bad Request", "text/plain", bad);
             } else {
                 int rc = gpu_request(enable, target, gpu_game_pid());
                 if (rc == -1 && enable) snprintf(gpu.message, sizeof gpu.message, "GPU clock request unavailable or failed; check firmware and SMU access");
