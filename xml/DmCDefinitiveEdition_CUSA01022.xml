@@ -4,7 +4,7 @@
     <ID>CUSA01022</ID>
     <ID>CUSA01013</ID>
   </TitleID>
-  <Metadata Title="DmC Devil May Cry: Definitive Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry." Author="Criminal" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+  <Metadata Title="DmC Devil May Cry: Definitive Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. 120 FPS supported if 120 hz toggled in advanced settings" Author="Criminal" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x00e64b77" Value="e984144b029090" />
       <Line Type="bytes" Address="0x03316000" Value="be000a0000baa0050000488d05cf750600e968ebb4fd" />
@@ -22,7 +22,7 @@
       <Line Type="bytes32" Address="0x0337d5e4" Value="0x000005a0" />
     </PatchList>
   </Metadata>
-  <Metadata Title="DmC Devil May Cry: Definitive Edition" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Enable only one resolution entry." Author="Criminal" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+  <Metadata Title="DmC Devil May Cry: Definitive Edition" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Enable only one resolution entry. 120 FPS supported if 120 hz toggled in advanced setting" Author="Criminal" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x00e64b77" Value="e984144b029090" />
       <Line Type="bytes" Address="0x03316000" Value="be800c0000ba08070000488d05cf750600e968ebb4fd" />
@@ -40,7 +40,7 @@
       <Line Type="bytes32" Address="0x0337d5e4" Value="0x00000708" />
     </PatchList>
   </Metadata>
-  <Metadata Title="DmC Devil May Cry: Definitive Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry." Author="Criminal" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+  <Metadata Title="DmC Devil May Cry: Definitive Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. 120 FPS supported if 120 hz toggled in advanced setting" Author="Criminal" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x00e64b77" Value="e984144b029090" />
       <Line Type="bytes" Address="0x03316000" Value="be000f0000ba70080000488d05cf750600e968ebb4fd" />
