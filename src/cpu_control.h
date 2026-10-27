@@ -157,10 +157,9 @@ static inline int cpu_restore(void){
   cpu.blocked=1;cpu.restore_pending=1;
   snprintf(cpu.message,sizeof cpu.message,"Clock restoration failed (core %d, errno %d). Retry Disable before enabling boost.",cpu_fail_core,cpu_fail_errno);return -3;
  }
- unsigned previous=cpu.baseline;
  cpu.baseline_valid=0;cpu.applied=0;cpu.owner_pid=0;cpu.restore_pending=0;cpu.blocked=0;
  cpu_sleep_ms(100);cpu_refresh();
- snprintf(cpu.message,sizeof cpu.message,"Boost off; previous clock requested: %u MHz",previous);
+ snprintf(cpu.message,sizeof cpu.message,"CPU boost disabled");
  return 0;
 }
 static inline void cpu_owner_changed(int pid){
