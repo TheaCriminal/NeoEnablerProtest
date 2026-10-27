@@ -928,7 +928,7 @@ static void serve_gpu_page(int fd, const char *msg) {
     if (gpu.reading_valid) snprintf(current, sizeof current, "%u MHz", gpu.actual);
     if (gpu.baseline_valid) snprintf(previous, sizeof previous, "%u MHz", gpu.baseline);
     const char *dis = gpu_backend_supported() ? "" : " disabled";
-    char range[96];
+    char range[160];
     snprintf(range, sizeof range, "%s: choose a target from %u to %u MHz.", console_is_pro ? "PS5 Pro" : "PS5", GPU_MIN_MHZ, gpu_model_max);
     sbuf hb = {0};
     page_header(&hb, "gpu");
@@ -993,8 +993,8 @@ static void serve_cpu_page(int fd, const char *msg) {
     if (cpu.reading_valid) snprintf(current, sizeof current, "%u MHz", cpu.actual);
     if (cpu.baseline_valid) snprintf(previous, sizeof previous, "%u MHz", cpu.baseline);
     const char *dis = cpu_backend_supported() ? "" : " disabled";
-    char range[96];
-    snprintf(range, sizeof range, "Choose a target from %u to %u MHz.", CPU_MIN_MHZ, CPU_MAX_MHZ);
+    char range[160];
+    snprintf(range, sizeof range, "Any target from %u to %u MHz holds every core at the fastest state the driver offers.", CPU_MIN_MHZ, CPU_MAX_MHZ);
     sbuf hb = {0};
     page_header(&hb, "cpu");
     static char body[16384];
@@ -1002,7 +1002,7 @@ static void serve_cpu_page(int fd, const char *msg) {
         "%s<main>"
         "%s%s%s<div class=grid>"
         "<div class=card><b>Current CPU clock</b><div class=metric id=cpu-current>%s</div>"
-        "<small>Live SMU reading. Updates every two seconds.</small></div>"
+        "<small>Slowest core, live SMU reading. Updates every two seconds.</small></div>"
         "<div class=card><b>Clock boost</b> <span class='state %s' id=cpu-state>%s</span>"
         "<p id=cpu-detail>%s</p><small>Previous clock: <span id=cpu-previous>%s</span></small></div>"
         "<div class='card wide'><form method=post><label for=cpu-target><b>Target CPU clock</b></label>"
