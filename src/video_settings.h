@@ -1,13 +1,23 @@
 /* GPL-3.0-only. 120 Hz video output flag of ps-patch-system: the apply_120hz_videoout attribute of the <Settings>
- * element in /data/user/patches/settings.xml. Text only, no device access. Every other attribute and line is
+ * element in /data/user/patches/!_settings.xml (HZ120_XML). Text only, no device access. Every other attribute and line is
  * kept exactly as it is. */
 #pragma once
 #include <stdio.h>
 #include <string.h>
+/* ps-patch-system keeps this global flag in its own file, not in the per-game patch settings. */
+#ifndef HZ120_XML
+#define HZ120_XML "/data/user/patches/!_settings.xml"
+#endif
 #define HZ120_KEY "apply_120hz_videoout="
-/* 1 on, 0 off, -1 attribute missing or not exactly "0"/"1". */
+/* The <Settings element must be a whole tag name (not <SettingsX). */
+static int hz120_has_settings_tag(const char*xml){
+ const char*p=strstr(xml,"<Settings");if(!p)return 0;
+ char c=p[9];return c==' '||c=='/'||c=='>'||c=='\t'||c=='\r'||c=='\n';
+}
+/* 1 on, 0 off, -1 not a usable settings file or a malformed value. A <Settings> element without the attribute
+ * is off (ps-patch-system adds the attribute when it is first turned on). */
 static int hz120_get(const char*xml){
- const char*p=strstr(xml,HZ120_KEY);if(!p)return -1;
+ const char*p=strstr(xml,HZ120_KEY);if(!p)return hz120_has_settings_tag(xml)?0:-1;
  p+=sizeof HZ120_KEY-1;if(*p!='"'&&*p!='\'')return -1;
  if(p[2]!=*p)return -1;
  return p[1]=='1'?1:p[1]=='0'?0:-1;

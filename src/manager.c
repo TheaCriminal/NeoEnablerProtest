@@ -258,12 +258,16 @@ static int settings_save(void) {
     return rename(SETTINGS_PATH ".tmp", SETTINGS_PATH);
 }
 
-/* 120 Hz video output: a flag of ps-patch-system itself (apply_120hz_videoout in its settings.xml), not a NeoEnabler
+/* 120 Hz video output: a flag of ps-patch-system itself (apply_120hz_videoout in its !_settings.xml), not a NeoEnabler
    setting, so it is read from and written to that file and nothing is kept in /data/neo-settings. Only that
    attribute changes; the file is replaced in one step so a failed write leaves the old one. */
 static char *video_xml_read(size_t *n) {
-    size_t len = 0; char *raw = ps_read(SETTINGS_XML, 64 << 10, &len);
-    if (!raw) return NULL;
+    size_t len = 0; char *raw = ps_read(HZ120_XML, 64 << 10, &len);
+    if (!raw) {
+        static int logged;
+        if (!logged) { logged = 1; log_line("120 Hz: cannot read %s", HZ120_XML); }
+        return NULL;
+    }
     char *t = malloc(len + 1);
     if (t) { memcpy(t, raw, len); t[len] = 0; }
     free(raw); *n = len;
@@ -283,7 +287,7 @@ static int video_120hz_set(int on) {
     int len = out ? hz120_set(t, on, out, cap) : -1;
     free(t);
     int rc = -1;
-    if (len >= 0 && !write_file(SETTINGS_XML ".neo.tmp", out, (size_t)len)) rc = rename(SETTINGS_XML ".neo.tmp", SETTINGS_XML);
+    if (len >= 0 && !write_file(HZ120_XML ".neo.tmp", out, (size_t)len)) rc = rename(HZ120_XML ".neo.tmp", HZ120_XML);
     free(out);
     return rc;
 }
