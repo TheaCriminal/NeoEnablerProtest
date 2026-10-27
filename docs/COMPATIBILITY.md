@@ -50,6 +50,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Thief (01.02) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 60 FPS validated; resolutions not tested yet |
 | Tomb Raider: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K | Native 4K validated; 1440p, 1620p and 1800p reach gameplay in a short test |
 | Dragon Age: Inquisition (01.12) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 1800p and 60 FPS validated; Native 4K played; 1440p and 1620p reach gameplay in a short test |
+| Middle-earth: Shadow of Mordor - Game of the Year Edition (01.05) | 1440p, 1620p, 1800p, Native 4K | Native 4K and 1800p validated; 1440p and 1620p not tested yet |
 | Spyro Reignited Trilogy (01.03) | 1620p, 1800p, Native 4K | 1800p and Native 4K validated; 1620p not tested yet |
 
 ## GPU boost
