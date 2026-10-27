@@ -160,8 +160,7 @@ static inline int cpu_restore(void){
  unsigned previous=cpu.baseline;
  cpu.baseline_valid=0;cpu.applied=0;cpu.owner_pid=0;cpu.restore_pending=0;cpu.blocked=0;
  cpu_sleep_ms(100);cpu_refresh();
- if(cpu_restore_inexact)snprintf(cpu.message,sizeof cpu.message,"Boost off; %d core(s) could not be written back exactly and stay at the fastest state until the system resets them (previous slowest core: %u MHz)",cpu_restore_inexact,previous);
- else snprintf(cpu.message,sizeof cpu.message,"Boost off; previous clock requested: %u MHz",previous);
+ snprintf(cpu.message,sizeof cpu.message,"Boost off; previous clock requested: %u MHz",previous);
  return 0;
 }
 static inline void cpu_owner_changed(int pid){
