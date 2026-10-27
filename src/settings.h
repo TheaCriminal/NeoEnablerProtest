@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "cpu_control.h"   /* CPU_DEFAULT_MHZ, cpu_form_mhz; gpu_control.h must be included before this file */
 /* neo and memory_8gib are the keys of managers before per-game patches; force_neo and force_8gib are the
  * advanced overrides (Pro mode for every PS4 game, 8 GiB kept on). */
 typedef struct{int neo,memory,gpu_enabled;unsigned gpu_mhz;int force_neo,force_8gib;int cpu_enabled;unsigned cpu_mhz;} neo_settings;
