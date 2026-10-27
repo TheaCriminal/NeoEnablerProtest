@@ -2,6 +2,8 @@
 <Patch>
   <TitleID>
     <ID>CUSA00220</ID>
+    <ID>CUSA00503</ID>
+    <ID>CUSA00728</ID>
   </TitleID>
   <Metadata Title="Dragon Age: Inquisition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="eboot.bin">
     <PatchList>

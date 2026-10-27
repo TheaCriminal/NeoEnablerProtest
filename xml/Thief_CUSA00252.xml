@@ -2,6 +2,7 @@
 <Patch>
   <TitleID>
     <ID>CUSA00252</ID>
+    <ID>CUSA00250</ID>
   </TitleID>
   <Metadata Title="Thief" Name="1440p (PS4 Pro mode)" Note="Native 2560x1440 render and output (Pro display layout, flipMode 1, fast clear and depth HTILE off)." Author="gasb07" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin" NeoRequires="pro">
     <PatchList>

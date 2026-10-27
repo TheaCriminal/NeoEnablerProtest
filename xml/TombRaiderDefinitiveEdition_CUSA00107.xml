@@ -2,6 +2,9 @@
 <Patch>
   <TitleID>
     <ID>CUSA00107</ID>
+    <ID>CUSA00109</ID>
+    <ID>CUSA00302</ID>
+    <ID>CUSA00317</ID>
   </TitleID>
   <Metadata Title="Tomb Raider: Definitive Edition" Name="1440p (PS4 Pro mode)" Note="Native 2560x1440 render and output (Pro display layout, flipMode 1, fast clear and depth HTILE off, real color clears, frame pool scaled with the resolution)." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin" NeoRequires="pro">
     <PatchList>

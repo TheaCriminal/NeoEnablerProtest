@@ -2,6 +2,7 @@
 <Patch>
   <TitleID>
     <ID>CUSA18600</ID>
+    <ID>CUSA19120</ID>
   </TitleID>
   <Metadata Title="DRAGON QUEST XI S" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 render in PS4 Pro mode with 3840x2160 output: the engine 4K output path is enabled and the game's screen percentage setter is fixed at 66.67%. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
     <PatchList>

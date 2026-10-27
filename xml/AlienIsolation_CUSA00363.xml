@@ -2,6 +2,7 @@
 <Patch>
   <TitleID>
     <ID>CUSA00363</ID>
+    <ID>CUSA00362</ID>
   </TitleID>
   <Metadata Title="Alien: Isolation" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode with SMAA T2x anti-aliasing (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
     <PatchList>

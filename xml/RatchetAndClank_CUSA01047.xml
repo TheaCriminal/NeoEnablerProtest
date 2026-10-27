@@ -2,6 +2,10 @@
 <Patch>
   <TitleID>
     <ID>CUSA01047</ID>
+    <ID>CUSA01073</ID>
+    <ID>CUSA01928</ID>
+    <ID>CUSA02020</ID>
+    <ID>CUSA02772</ID>
   </TitleID>
   <Metadata Title="Ratchet and Clank" Name="1728p (PS4 Pro mode)" Note="3072x1728 render in PS4 Pro mode instead of 2560x1440, scaled to the 3840x2160 output. The render width must be a multiple of 256, so the steps are 1728p and 1872p instead of 1620p and 1800p. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin" NeoRequires="pro">
     <PatchList>
