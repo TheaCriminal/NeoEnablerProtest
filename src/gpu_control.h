@@ -8,11 +8,34 @@
 #include <string.h>
 #include <stdlib.h>
 #define GPU_MIN_MHZ 1800U
-#define GPU_MAX_MHZ 2350U      /* was 2200U; extended for PS5 Pro testing */
-#define GPU_DEFAULT_MHZ 2200U  /* default stays at the tested value */
-#define GPU_MAX_RECOVERIES 10U /* automatic re-applies allowed before giving up */
-#define GPU_STABLE_POLLS 10U   /* polls above 1800 MHz before the recovery budget is refunded */
-static int gpu_target_valid(unsigned mhz){return mhz>=GPU_MIN_MHZ&&mhz<=GPU_MAX_MHZ&&mhz%50==0;}
+#define GPU_MAX_MHZ_BASE 2200U
+#define GPU_MAX_MHZ_PRO  2350U
+#define GPU_DEFAULT_MHZ  2200U
+#define GPU_MAX_RECOVERIES 10U
+#define GPU_STABLE_POLLS 10U
+/* Detect PS5 Pro via model string (CFI-70xx / CFI-71xx). */
+static int gpu_is_ps5_pro(void) {
+    static int cached = -1;
+    if (cached >= 0) return cached;
+    char model[64] = {0};
+    /* sceKernelGetHwModelName is available on jailbroken firmware */
+    if (sceKernelGetHwModelName(model) == 0 && strncmp(model, "CFI-7", 5) == 0)
+        cached = 1;
+    else
+        cached = 0;
+    return cached;
+}
+
+static unsigned gpu_max_mhz(void) {
+    return gpu_is_ps5_pro() ? GPU_MAX_MHZ_PRO : GPU_MAX_MHZ_BASE;
+}
+
+static const char *gpu_console_name(void) {
+    return gpu_is_ps5_pro() ? "PS5 Pro" : "PS5";
+}
+static int gpu_target_valid(unsigned mhz) {
+    return mhz >= GPU_MIN_MHZ && mhz <= gpu_max_mhz() && (mhz % 50) == 0;
+}
 #ifndef NEO_GPU_TEST
 #include <fcntl.h>
 #include <unistd.h>
