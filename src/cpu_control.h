@@ -33,11 +33,13 @@ typedef struct{
  unsigned target,baseline,actual,baseline_core[CPU_CORES],actions,reset_samples,recoveries,stable_samples;
  char message[192];
 } cpu_control;
+static int cpu_fail_core=-1,cpu_fail_errno;  /* where the last backend write failed, for the status text */
 static cpu_control cpu={.target=CPU_DEFAULT_MHZ,.message="CPU boost disabled"};
 #ifndef NEO_CPU_TEST
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <errno.h>
 static inline int cpu_backend_supported(void){return 1;}
 /* Highest of the 8 core clocks (MHz) and, when core_out is given, every core's clock. */
 static inline int cpu_backend_read(unsigned*out,unsigned*core_out){
@@ -55,19 +57,29 @@ static inline int cpu_backend_read(unsigned*out,unsigned*core_out){
  *out=best;return 0;
 }
 static inline int cpu_backend_set_core(int fd,unsigned core,unsigned mhz){
- uint32_t q[2]={1u<<core,mhz};return ioctl(fd,CPU_SET_IOCTL,q);
+ uint32_t q[2]={1u<<core,mhz};
+ if(ioctl(fd,CPU_SET_IOCTL,q)){cpu_fail_core=(int)core;cpu_fail_errno=errno;return -1;}
+ return 0;
 }
-/* Every core to one clock. Nonzero when any core failed (already-set cores are left for the caller's restore). */
+/* Every core to one clock. Stops at the first refused write; cores written before it are the caller's to restore. */
 static inline int cpu_backend_set(unsigned mhz){
+ cpu_fail_core=-1;cpu_fail_errno=0;
  if(mhz<400||mhz>CPU_MAX_MHZ)return -1;
- int fd=open("/dev/mp1",O_RDWR);if(fd<0)return -1;
- int rc=0;for(unsigned c=0;c<CPU_CORES;c++)if(cpu_backend_set_core(fd,c,mhz))rc=-1;
+ int fd=open("/dev/mp1",O_RDWR);if(fd<0){cpu_fail_errno=errno;return -1;}
+ int rc=0;for(unsigned c=0;c<CPU_CORES&&!rc;c++)rc=cpu_backend_set_core(fd,c,mhz);
  close(fd);return rc;
 }
-/* Every core back to the clock it had when the baseline was captured. */
+/* Every core back to the clock it had when the baseline was captured. Cores already there are not written,
+ * so a driver that refuses writes still "restores" cleanly when nothing was ever changed. */
 static inline int cpu_backend_restore(void){
- int fd=open("/dev/mp1",O_RDWR);if(fd<0)return -1;
- int rc=0;for(unsigned c=0;c<CPU_CORES;c++)if(cpu_backend_set_core(fd,c,cpu.baseline_core[c]))rc=-1;
+ cpu_fail_core=-1;cpu_fail_errno=0;
+ unsigned now[CPU_CORES],best=0;int have=!cpu_backend_read(&best,now);
+ int fd=open("/dev/mp1",O_RDWR);if(fd<0){cpu_fail_errno=errno;return -1;}
+ int rc=0;
+ for(unsigned c=0;c<CPU_CORES;c++){
+  if(have&&now[c]==cpu.baseline_core[c])continue;
+  if(cpu_backend_set_core(fd,c,cpu.baseline_core[c]))rc=-1;
+ }
  close(fd);return rc;
 }
 #endif
@@ -86,7 +98,7 @@ static inline int cpu_restore(void){
  cpu.actions++;
  if(cpu_backend_restore()){
   cpu.blocked=1;cpu.restore_pending=1;
-  snprintf(cpu.message,sizeof cpu.message,"Clock restoration failed. Retry Disable before enabling boost.");return -3;
+  snprintf(cpu.message,sizeof cpu.message,"Clock restoration failed (core %d, errno %d). Retry Disable before enabling boost.",cpu_fail_core,cpu_fail_errno);return -3;
  }
  unsigned previous=cpu.baseline;
  cpu.baseline_valid=0;cpu.applied=0;cpu.owner_pid=0;cpu.restore_pending=0;cpu.blocked=0;
@@ -145,8 +157,9 @@ static inline int cpu_poll(int pid){
   if(!cpu.baseline_valid){cpu.baseline=cpu.actual;memcpy(cpu.baseline_core,cpu_last_core,sizeof cpu.baseline_core);cpu.baseline_valid=1;cpu.owner_pid=pid;}
   cpu.actions++;
   if(cpu_backend_set(cpu.target)){
+   int fcore=cpu_fail_core,ferr=cpu_fail_errno;
    int restored=cpu_restore();cpu.blocked=1;
-   if(!restored)snprintf(cpu.message,sizeof cpu.message,"Boost request failed; previous clock restored. Retry Enable.");
+   if(!restored)snprintf(cpu.message,sizeof cpu.message,"Boost request refused by the driver (core %d, errno %d); previous clock kept. Retry Enable.",fcore,ferr);
    return restored?-3:-2;
   }
   cpu.applied=1;cpu_refresh();
@@ -158,7 +171,17 @@ static inline int cpu_poll(int pid){
 static inline int cpu_request(int enable,unsigned mhz,int pid){
  if(enable&&(!cpu_target_valid(mhz)||!cpu_backend_supported()))return -1;
  cpu_owner_changed(pid);
- if(!enable){cpu.enabled=0;return cpu_restore();}
+ if(!enable){
+  cpu.enabled=0;int retry=cpu.restore_pending;int rc=cpu_restore();
+  if(rc&&retry){
+   /* The driver refused the restore twice. Keep the manager usable (Quit, Enable) instead of failing forever;
+    * the clocks go back to normal on their own at the next game launch. */
+   cpu.baseline_valid=0;cpu.applied=0;cpu.owner_pid=0;cpu.restore_pending=0;cpu.blocked=0;
+   snprintf(cpu.message,sizeof cpu.message,"Could not restore the CPU clock (core %d, errno %d); boost state cleared. The clock returns to normal at the next game launch.",cpu_fail_core,cpu_fail_errno);
+   return 0;
+  }
+  return rc;
+ }
  if(cpu.restore_pending){snprintf(cpu.message,sizeof cpu.message,"Retry Disable to restore the previous clock first");return -3;}
  cpu.enabled=1;cpu.target=mhz;cpu.blocked=0;cpu.applied=0;cpu.reset_samples=0;cpu.recoveries=0;cpu.stable_samples=0;
  return cpu_poll(pid);

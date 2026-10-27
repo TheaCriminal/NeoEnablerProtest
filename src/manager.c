@@ -500,7 +500,10 @@ static int gpu_game_pid(void) {
 
 /* Restore both clocks; both are always attempted. Nonzero when either failed. */
 static int clocks_restore(void) {
-    int pid = gpu_game_pid(); int g = gpu_request(0, gpu.target, pid); int c = cpu_request(0, cpu.target, pid);
+    int pid = gpu_game_pid(); int g = gpu_request(0, gpu.target, pid);
+    int c = cpu_request(0, cpu.target, pid);
+    if (c) c = cpu_request(0, cpu.target, pid);   /* the second try gives up cleanly: a stuck CPU restore never blocks Quit */
+    if (cpu.baseline_valid == 0 && cpu.message[0] && strstr(cpu.message, "Could not restore")) log_line("CPU: %s", cpu.message);
     return g || c;
 }
 
