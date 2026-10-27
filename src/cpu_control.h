@@ -1,26 +1,19 @@
-/* GPL-3.0-only. PS4-only CPU clock policy using the stock MP1 driver.
- * Mirror of gpu_control.h: apply on request/new game, with bounded recovery when the system lowers the cores again.
- * Runs in the manager's HTTP thread.
+/* GPL-3.0-only. PS4-only CPU boost using the stock MP1 driver. Runs in the manager's HTTP thread.
  *
- * What the driver really offers (13.60 libkernel_sys / SceShellCore, confirmed with the on-console probe):
- *   GET 0xc00cae1e  struct{u32 core; u32 pstate; u32 live_mhz}
- *       +4 = pstate index of that core (0 = fastest), +8 = live core clock in MHz
- *   SET 0x8008ae1d  struct{u32 core_mask; u32 pstate}     one core at a time (mask = 1<<core)
- * The driver takes PSTATE INDEXES, not frequencies: writing an MHz figure gives EINVAL. Measured on a PS5 Pro in
- * PS4 mode, state (read back) -> clock: 0 -> 3200, 1 -> 2844 (the system's usual state for cores 1-7), 2 -> 2327,
- * 3 -> 1828, 4 -> 1600, 5 -> 1280 MHz. A write of 0 gives state 0; a write of n>=1 read back as state n+1, so state 1
- * itself cannot be written. There is nothing above state 0, so 3500 MHz is not reachable through this ioctl.
- *
- * Policy: "boost" holds every core at pstate 0, the fastest state the driver offers, and puts any core the
- * system lowers back. Any target in CPU_MIN_MHZ..CPU_MAX_MHZ selects it (the next state down is far below 2850).
- * Disable writes the captured pstates back; a state that cannot be written exactly is never replaced by a slower one.
+ * Boost = every core at pstate 0, the fastest state the driver offers (3200 MHz on a PS5 Pro in PS4 mode; the driver
+ * has no state above it). The policy applies on request or new game, puts any core the system lowers back, and on
+ * Disable writes the captured pstates back (never leaving a core slower than it started).
+ *   GET 0xc00cae1e  struct{u32 core; u32 pstate; u32 live_mhz}   pstate 0 = fastest, live_mhz = core clock
+ *   SET 0x8008ae1d  struct{u32 core_mask; u32 pstate}            one core at a time (mask = 1<<core)
+ * The driver takes pstate indexes, not frequencies, and a write of n>=1 reads back as n+1, so pstate 1 (the
+ * system's usual state for cores 1-7, 2844 MHz) cannot be written exactly.
+ * The MHz target is only a saved setting: any value in CPU_MIN_MHZ..CPU_MAX_MHZ selects pstate 0.
  */
 #pragma once
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #define CPU_MIN_MHZ 2850U       /* lowest selectable target: 2.85 GHz (every target selects the fastest pstate) */
 #define CPU_MAX_MHZ 3500U       /* upper bound accepted for a saved/typed target */
 #define CPU_DEFAULT_MHZ 3000U
@@ -48,12 +41,16 @@ static int cpu_restore_inexact;              /* cores the last restore could not
 static unsigned cpu_last_core[CPU_CORES];    /* live clock (+8) per core from the last read */
 static unsigned cpu_last_pstate[CPU_CORES];  /* pstate index (+4) per core from the last read, CPU_PSTATE_NONE = not reported */
 static cpu_control cpu={.target=CPU_DEFAULT_MHZ,.message="CPU boost disabled"};
+#ifdef NEO_CPU_TEST
+static inline void cpu_sleep_ms(unsigned ms){(void)ms;}
+#endif
 #ifndef NEO_CPU_TEST
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <errno.h>
 static inline int cpu_backend_supported(void){return 1;}
+static inline void cpu_sleep_ms(unsigned ms){usleep(ms*1000U);}
 /* Lowest of the 8 live core clocks (MHz), so a single slowed core shows. core_out gets every core's live clock and
  * cpu_last_pstate every core's pstate index. A core whose live clock (+8) is not plausible fails the whole read. */
 static inline int cpu_backend_read(unsigned*out,unsigned*core_out){
@@ -108,65 +105,21 @@ static inline int cpu_backend_restore(void){
   if(b==CPU_PSTATE_NONE)continue;
   if(!cpu_get_core(fd,c,&st)&&st==b)continue;
   if(cpu_backend_set_core(fd,c,b)){rc=-1;continue;}
-  usleep(50000);
-  if(!cpu_get_core(fd,c,&st)&&st!=CPU_PSTATE_NONE&&st!=b){
+  for(int w=0;w<10;w++){            /* the state needs a moment to settle; do not judge it too early */
+   usleep(20000);
+   if(!cpu_get_core(fd,c,&st)||st==b)break;
+  }
+  if(st!=CPU_PSTATE_NONE&&st!=b){
    cpu_restore_inexact++;
    if(st>b&&cpu_backend_set_core(fd,c,CPU_FAST_PSTATE))rc=-1;
   }
  }
  close(fd);return rc;
 }
-/* True when the driver answers a core read at all, whatever the values are. Keeps the CPU page reachable for
- * diagnostics even when the live clock field is not plausible. */
+/* True when the driver answers a core read at all, whatever the values are. */
 static inline int cpu_backend_responds(void){
  int fd=open("/dev/mp1",O_RDONLY);if(fd<0)return 0;
  uint32_t q[3]={0,0,0};int rc=ioctl(fd,CPU_GET_IOCTL,q);close(fd);return rc==0;
-}
-static inline void cpu_probe_add(char*out,size_t cap,size_t*at,const char*fmt,...){
- if(*at>=cap)return;
- va_list ap;va_start(ap,fmt);int n=vsnprintf(out+*at,cap-*at,fmt,ap);va_end(ap);
- if(n>0)*at=(*at+(size_t)n<cap)?*at+(size_t)n:cap-1;
-}
-/* Diagnostic text for the CPU clock backend. Read-only unless do_write is set. The write test touches core 1 only:
- * it writes pstates 0..7 and then puts the core back (never slower than it started). */
-static inline int cpu_probe_report(char*out,size_t cap,int do_write){
- size_t at=0;out[0]=0;
- cpu_probe_add(out,cap,&at,"CPU probe (%s)\n",do_write?"with write test":"read only");
- int fd=open("/dev/mp1",do_write?O_RDWR:O_RDONLY);
- if(fd<0){cpu_probe_add(out,cap,&at,"open /dev/mp1 failed, errno %d\n",errno);return -1;}
- uint32_t m=0;int rc,e;
- m=0;errno=0;rc=ioctl(fd,0x4004b200UL,&m);e=errno;cpu_probe_add(out,cap,&at,"mode 4004b200: rc=%d errno=%d val=%u\n",rc,e,m);
- m=0;errno=0;rc=ioctl(fd,0x4004b202UL,&m);e=errno;cpu_probe_add(out,cap,&at,"flag 4004b202: rc=%d errno=%d val=%u\n",rc,e,m);
- unsigned p1=CPU_PSTATE_NONE;
- for(unsigned c=0;c<CPU_CORES;c++){
-  uint32_t q[3]={c,0,0};errno=0;rc=ioctl(fd,CPU_GET_IOCTL,q);e=errno;
-  cpu_probe_add(out,cap,&at,"core%u: rc=%d errno=%d +4(pstate idx)=%u +8(live MHz)=%u\n",c,rc,e,q[1],q[2]);
-  if(c==1&&!rc&&q[1]<=CPU_PSTATE_MAX)p1=q[1];
- }
- uint32_t w[27]={0};errno=0;rc=ioctl(fd,0x406cae01UL,w);e=errno;
- cpu_probe_add(out,cap,&at,"GET_CLK 406cae01: rc=%d errno=%d\n",rc,e);
- for(int i=0;i<27;i+=9)cpu_probe_add(out,cap,&at,"  [%2d..%2d] %u %u %u %u %u %u %u %u %u\n",i,i+8,w[i],w[i+1],w[i+2],w[i+3],w[i+4],w[i+5],w[i+6],w[i+7],w[i+8]);
- if(do_write){
-  if(cpu.baseline_valid||cpu.applied)cpu_probe_add(out,cap,&at,"write test skipped: disable CPU boost first\n");
-  else if(p1==CPU_PSTATE_NONE)cpu_probe_add(out,cap,&at,"write test skipped: core1 pstate not readable\n");
-  else{
-   cpu_probe_add(out,cap,&at,"write test on core1 (original pstate %u), mask=2\n",p1);
-   for(unsigned v=0;v<8;v++){
-    uint32_t s[2]={2,v};errno=0;rc=ioctl(fd,CPU_SET_IOCTL,s);e=errno;usleep(300000);
-    uint32_t q[3]={1,0,0};ioctl(fd,CPU_GET_IOCTL,q);
-    cpu_probe_add(out,cap,&at,"SET core1 pstate=%u: rc=%d errno=%d -> +4=%u +8=%u\n",v,rc,e,q[1],q[2]);
-   }
-   uint32_t s[2]={2,p1};errno=0;rc=ioctl(fd,CPU_SET_IOCTL,s);e=errno;usleep(300000);
-   uint32_t q[3]={1,0,0};ioctl(fd,CPU_GET_IOCTL,q);
-   cpu_probe_add(out,cap,&at,"restore core1 write %u: rc=%d errno=%d -> +4=%u +8=%u\n",p1,rc,e,q[1],q[2]);
-   if(q[1]>p1&&q[1]<=CPU_PSTATE_MAX){
-    uint32_t f[2]={2,CPU_FAST_PSTATE};errno=0;rc=ioctl(fd,CPU_SET_IOCTL,f);e=errno;usleep(300000);
-    q[1]=0;q[2]=0;ioctl(fd,CPU_GET_IOCTL,q);
-    cpu_probe_add(out,cap,&at,"left slower than start, set fastest: rc=%d errno=%d -> +4=%u +8=%u\n",rc,e,q[1],q[2]);
-   }
-  }
- }
- close(fd);return 0;
 }
 #endif
 static inline void cpu_configure(int enable,unsigned mhz){
@@ -188,6 +141,15 @@ static inline int cpu_refresh(void){
  }
  return cpu.reading_valid?0:-1;
 }
+/* After a write the cores take a moment to land on the new state. Re-read for up to ~300 ms so the status text
+ * and the recovery check do not judge the state too early. */
+static inline unsigned cpu_settle(void){
+ for(int i=0;i<15;i++){
+  cpu_sleep_ms(20);cpu_refresh();
+  if(cpu.reading_valid&&!cpu_slow_cores())break;
+ }
+ return cpu_slow_cores();
+}
 static inline int cpu_restore(void){
  if(!cpu.baseline_valid){cpu.applied=0;cpu.restore_pending=0;return 0;}
  cpu.actions++;
@@ -197,7 +159,7 @@ static inline int cpu_restore(void){
  }
  unsigned previous=cpu.baseline;
  cpu.baseline_valid=0;cpu.applied=0;cpu.owner_pid=0;cpu.restore_pending=0;cpu.blocked=0;
- cpu_refresh();
+ cpu_sleep_ms(100);cpu_refresh();
  if(cpu_restore_inexact)snprintf(cpu.message,sizeof cpu.message,"Boost off; %d core(s) could not be written back exactly and stay at the fastest state until the system resets them (previous slowest core: %u MHz)",cpu_restore_inexact,previous);
  else snprintf(cpu.message,sizeof cpu.message,"Boost off; previous clock requested: %u MHz",previous);
  return 0;
@@ -257,7 +219,7 @@ static inline int cpu_poll(int pid){
    if(!restored)snprintf(cpu.message,sizeof cpu.message,"Boost request refused by the driver (core %d, errno %d); previous clock kept. Retry Enable.",fcore,ferr);
    return restored?-3:-2;
   }
-  cpu.applied=1;cpu_refresh();slow=cpu_slow_cores();
+  cpu.applied=1;slow=cpu_settle();
  }
  if(!cpu.reading_valid)snprintf(cpu.message,sizeof cpu.message,"Boost requested; SMU reading unavailable");
  else if(slow)snprintf(cpu.message,sizeof cpu.message,"Boost requested; %u core(s) not at the fastest state yet (slowest %u MHz)",slow,cpu.actual);

@@ -928,7 +928,7 @@ static void serve_gpu_page(int fd, const char *msg) {
     if (gpu.reading_valid) snprintf(current, sizeof current, "%u MHz", gpu.actual);
     if (gpu.baseline_valid) snprintf(previous, sizeof previous, "%u MHz", gpu.baseline);
     const char *dis = gpu_backend_supported() ? "" : " disabled";
-    char range[160];
+    char range[96];
     snprintf(range, sizeof range, "%s: choose a target from %u to %u MHz.", console_is_pro ? "PS5 Pro" : "PS5", GPU_MIN_MHZ, gpu_model_max);
     sbuf hb = {0};
     page_header(&hb, "gpu");
@@ -993,8 +993,6 @@ static void serve_cpu_page(int fd, const char *msg) {
     if (cpu.reading_valid) snprintf(current, sizeof current, "%u MHz", cpu.actual);
     if (cpu.baseline_valid) snprintf(previous, sizeof previous, "%u MHz", cpu.baseline);
     const char *dis = cpu_backend_supported() ? "" : " disabled";
-    char range[160];
-    snprintf(range, sizeof range, "Any target from %u to %u MHz holds every core at the fastest state the driver offers.", CPU_MIN_MHZ, CPU_MAX_MHZ);
     sbuf hb = {0};
     page_header(&hb, "cpu");
     static char body[16384];
@@ -1005,21 +1003,17 @@ static void serve_cpu_page(int fd, const char *msg) {
         "<small>Slowest core, live SMU reading. Updates every two seconds.</small></div>"
         "<div class=card><b>Clock boost</b> <span class='state %s' id=cpu-state>%s</span>"
         "<p id=cpu-detail>%s</p><small>Previous clock: <span id=cpu-previous>%s</span></small></div>"
-        "<div class='card wide'><form method=post><label for=cpu-target><b>Target CPU clock</b></label>"
-        "<p><output id=cpu-value for=cpu-target>%u</output> MHz</p>"
-        "<input type=range id=cpu-target name=mhz min=%u max=%u step=50 value=%u%s>"
+        "<div class='card wide'><form method=post><input type=hidden name=mhz value=%u>"
         "<div><button formaction=/cpu/enable%s>Apply boost</button>"
         "<button formaction=/cpu/disable%s>Disable boost</button></div></form>"
-        "<p class=notice>%s Actual frequency may be lower. Power and thermal controls remain active.</p>"
-        "<small>Applies to PS4 games in base or NEO mode. A saved target is requested on the next PS4 launch. "
+        "<p class=notice>Boost holds every core at the fastest CPU state (P-state 0) while a PS4 game runs, "
+        "and puts any core the system lowers back. Power and thermal controls remain active.</p>"
+        "<small>Applies to PS4 games in base or NEO mode. A saved setting is applied on the next PS4 launch. "
         "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
         "<form method=post><input type=hidden name=view value=cpu><button formaction=/settings/save>Save Settings</button></form>"
-        "<p><small><a href=/cpu/probe>Diagnostics (read only)</a></small></p>"
-        "<form method=post><button formaction=/cpu/probe/write>Run write test (core 1, restores afterwards)</button></form>"
         "%s</div></div><p><small>CPU boost is independent of NEO, 8GB Mode and the GPU boost. Quitting restores the captured CPU clock.<br>"
         VERSION "</small></p></main>"
-        "<script>(function(){const r=document.getElementById('cpu-target'),o=document.getElementById('cpu-value');"
-        "r.addEventListener('input',()=>o.textContent=r.value);"
+        "<script>(function(){"
         "async function refresh(){try{const x=await fetch('/cpu/status',{cache:'no-store'});if(!x.ok)return;const s=await x.json();"
         "document.getElementById('cpu-current').textContent=s.current_mhz===null?'Unavailable':s.current_mhz+' MHz';"
         "const b=document.getElementById('cpu-state');b.textContent=s.state;"
@@ -1030,7 +1024,7 @@ static void serve_cpu_page(int fd, const char *msg) {
         "</body></html>",
         hb.p ? hb.p : "", msg ? "<p class=msg>" : "", msg ? msg : "", msg ? "</p>" : "", current,
         cpu.applied && !cpu.blocked ? "on" : cpu.enabled ? "unk" : "off", cpu_state_text(), cpu.message, previous,
-        cpu.target, CPU_MIN_MHZ, CPU_MAX_MHZ, cpu.target, dis, dis, dis, range,
+        cpu.target, dis, dis,
         cpu_backend_supported() ? "" : "<p>CPU clock control is unavailable.</p>");
     free(hb.p);
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
@@ -2088,13 +2082,6 @@ int main(void) {
         } else if (!strcmp(method, "GET") && !strcmp(path, "/cpu/status")) {
             if (cpu_available()) serve_cpu_status(fd);
             else reply(fd, "404 Not Found", "text/plain", "not found\n");
-        } else if (!strcmp(method, "GET") && !strcmp(path, "/cpu/probe")) {
-            static char probe[4096]; cpu_probe_report(probe, sizeof probe, 0);
-            reply(fd, "200 OK", "text/plain; charset=utf-8", probe);
-        } else if (post && !strcmp(path, "/cpu/probe/write")) {
-            static char probe[4096]; cpu_probe_report(probe, sizeof probe, 1);
-            log_line("panel: CPU probe write test run");
-            reply(fd, "200 OK", "text/plain; charset=utf-8", probe);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/logs")) {
             serve_logs_show(fd);
         } else if (!strcmp(method, "GET") && !strcmp(path, "/logs/download")) {
