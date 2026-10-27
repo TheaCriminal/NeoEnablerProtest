@@ -639,7 +639,7 @@ static void page_status(sbuf *b, int legacy) {
               "<span class='state %s'>%s</span><br><small>For every Pro mode launch, until turned off.</small><br>"
               "<button formaction=/advanced/memory%s>%s</button></form>"
               "<form method=post style='margin-top:12px'>%s<input type=hidden name=on value=%d><b>120 Hz video output</b> "
-              "<span class='state %s'>%s</span><br><small>ps-patch-system setting; it may only take effect the next time a game starts.</small><br>"
+              "<span class='state %s'>%s</span><br><small>Lowers input lag especially with VRR. 120 fps in some titles. Can cause issues.</small><br>"
               "<button formaction=/advanced/hz120%s>%s</button></form></details>"
               "<small style='text-align:center'>" VERSION "</small></aside>",
               st == HOOK_ON && running_pro == 1 ? "on" : "off",
