@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA00363</ID>
+  </TitleID>
+  <Metadata Title="Alien: Isolation" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x15810e0" Value="415b4c891c254070270248893c2548702702e8c9c850ff488b3c2548702702814f10000000808b4f0481e1ff070000ffc169c900060000c1e903ffc9894f084889c148c1e92081f9000001007305b90000010089c281fa0000f0007305ba0000f00048c1e12089d04809c84889042550702702ff042514702702ff342540702702c3415b4c891c25587027028b44240889042524702702c744240801000000e89cf150ffff04252070270285c0740eff0425187027028904251c702702ff342558702702c3" />
+      <Line Type="bytes" Address="0x1022aea" Value="e8f1e55500" />
+      <Line Type="bytes" Address="0xa94a02" Value="e85bc7ae00" />
+      <Line Type="bytes" Address="0xa8dd2a" Value="81c900000000" />
+      <Line Type="bytes" Address="0xa89b17" Value="31c99090" />
+      <Line Type="bytes" Address="0x9edea9" Value="000a0000" />
+      <Line Type="bytes" Address="0x9edeb3" Value="a0050000" />
+      <Line Type="bytes" Address="0x9edebd" Value="000a0000" />
+      <Line Type="bytes" Address="0x9edec7" Value="a0050000" />
+      <Line Type="bytes" Address="0x9edf60" Value="000a0000" />
+      <Line Type="bytes" Address="0x9edf68" Value="a0050000" />
+      <Line Type="bytes" Address="0x9edef9" Value="00002045" />
+      <Line Type="bytes" Address="0x9edf03" Value="0000b444" />
+      <Line Type="bytes" Address="0x9edf0d" Value="00002045" />
+      <Line Type="bytes" Address="0x9edf17" Value="0000b444" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Alien: Isolation" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x15810e0" Value="415b4c891c254070270248893c2548702702e8c9c850ff488b3c2548702702814f10000000808b4f0481e1ff070000ffc169c980070000c1e903ffc9894f084889c148c1e92081f9000001007305b90000010089c281fa000077017305ba0000770148c1e12089d04809c84889042550702702ff042514702702ff342540702702c3415b4c891c25587027028b44240889042524702702c744240801000000e89cf150ffff04252070270285c0740eff0425187027028904251c702702ff342558702702c3" />
+      <Line Type="bytes" Address="0x1022aea" Value="e8f1e55500" />
+      <Line Type="bytes" Address="0xa94a02" Value="e85bc7ae00" />
+      <Line Type="bytes" Address="0xa8dd2a" Value="81c900000000" />
+      <Line Type="bytes" Address="0xa89b17" Value="31c99090" />
+      <Line Type="bytes" Address="0x9edea9" Value="800c0000" />
+      <Line Type="bytes" Address="0x9edeb3" Value="08070000" />
+      <Line Type="bytes" Address="0x9edebd" Value="800c0000" />
+      <Line Type="bytes" Address="0x9edec7" Value="08070000" />
+      <Line Type="bytes" Address="0x9edf60" Value="800c0000" />
+      <Line Type="bytes" Address="0x9edf68" Value="08070000" />
+      <Line Type="bytes" Address="0x9edef9" Value="00004845" />
+      <Line Type="bytes" Address="0x9edf03" Value="0000e144" />
+      <Line Type="bytes" Address="0x9edf0d" Value="00004845" />
+      <Line Type="bytes" Address="0x9edf17" Value="0000e144" />
+      <Line Type="bytes" Address="0x1023164" Value="0000007c" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Alien: Isolation" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x15810e0" Value="415b4c891c254070270248893c2548702702e8c9c850ff488b3c2548702702814f10000000808b4f0481e1ff070000ffc169c980080000c1e903ffc9894f084889c148c1e92081f9000001007305b90000010089c281fa0000fe017305ba0000fe0148c1e12089d04809c84889042550702702ff042514702702ff342540702702c3415b4c891c25587027028b44240889042524702702c744240801000000e89cf150ffff04252070270285c0740eff0425187027028904251c702702ff342558702702c3" />
+      <Line Type="bytes" Address="0x1022aea" Value="e8f1e55500" />
+      <Line Type="bytes" Address="0xa94a02" Value="e85bc7ae00" />
+      <Line Type="bytes" Address="0xa8dd2a" Value="81c900000000" />
+      <Line Type="bytes" Address="0xa89b17" Value="31c99090" />
+      <Line Type="bytes" Address="0x9edea9" Value="000f0000" />
+      <Line Type="bytes" Address="0x9edeb3" Value="70080000" />
+      <Line Type="bytes" Address="0x9edebd" Value="000f0000" />
+      <Line Type="bytes" Address="0x9edec7" Value="70080000" />
+      <Line Type="bytes" Address="0x9edf60" Value="000f0000" />
+      <Line Type="bytes" Address="0x9edf68" Value="70080000" />
+      <Line Type="bytes" Address="0x9edef9" Value="00007045" />
+      <Line Type="bytes" Address="0x9edf03" Value="00000745" />
+      <Line Type="bytes" Address="0x9edf0d" Value="00007045" />
+      <Line Type="bytes" Address="0x9edf17" Value="00000745" />
+      <Line Type="bytes" Address="0x1023164" Value="0000007c" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Alien: Isolation" Name="60 FPS" Note="Unlocks the 30 fps cap in menus and gameplay. Works alone or with any resolution entry. 60 FPS patch by Jao, with a fix for the 30 fps limit the game sets again in gameplay." Author="gasb07, Jao" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x1022c6c" Value="00" />
+      <Line Type="bytes" Address="0x9740e0" Value="31f60f1f800000000090" />
+    </PatchList>
+  </Metadata>
+</Patch>
