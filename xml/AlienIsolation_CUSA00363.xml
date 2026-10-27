@@ -62,10 +62,11 @@
       <Line Type="bytes" Address="0x1023164" Value="0000007c" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Alien: Isolation" Name="60 FPS" Note="Unlocks the 30 fps cap in menus and gameplay. Works alone or with any resolution entry. 60 FPS patch by Jao, with a fix for the 30 fps limit the game sets again in gameplay." Author="gasb07, Jao" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
+  <Metadata Title="Alien: Isolation" Name="60 FPS" Note="Unlocks the 30 fps cap in menus and gameplay. Works alone or with any resolution entry. 60 FPS patch by Jao, with a fix for the 30 fps limit the game sets again in gameplay and triple buffering (no drop to 30 fps when a frame takes longer than 16.7 ms)." Author="gasb07, Jao" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1022c6c" Value="00" />
       <Line Type="bytes" Address="0x9740e0" Value="31f60f1f800000000090" />
+      <Line Type="bytes" Address="0x9711e2" Value="03" />
     </PatchList>
   </Metadata>
 </Patch>
