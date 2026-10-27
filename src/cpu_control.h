@@ -141,10 +141,10 @@ static inline int cpu_refresh(void){
  }
  return cpu.reading_valid?0:-1;
 }
-/* After a write the cores take a moment to land on the new state. Re-read for up to ~300 ms so the status text
+/* After a write the cores take a moment to land on the new state. Re-read for up to ~2000 ms so the status text
  * and the recovery check do not judge the state too early. */
 static inline unsigned cpu_settle(void){
- for(int i=0;i<15;i++){
+ for(int i=0;i<100;i++){
   cpu_sleep_ms(20);cpu_refresh();
   if(cpu.reading_valid&&!cpu_slow_cores())break;
  }
