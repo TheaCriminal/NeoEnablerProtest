@@ -52,6 +52,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Middle-earth: Shadow of Mordor - Game of the Year Edition (01.05) | 1440p, 1620p, 1800p, Native 4K | Native 4K and 1800p validated; 1440p and 1620p not tested yet |
 | Alien: Isolation (01.04) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 1440p, 1800p and Native 4K reach clean gameplay; 1620p and SMAA T2x not tested yet; 60 FPS validated in gameplay (Native 4K about 55 fps with triple buffering) |
 | Spyro Reignited Trilogy (01.03) | 1620p, 1800p, Native 4K | 1800p and Native 4K validated; 1620p not tested yet |
+| Rayman Legends (01.01) | 1440p, 1620p, 1800p, Native 4K | All validated |
 
 ## GPU boost
 

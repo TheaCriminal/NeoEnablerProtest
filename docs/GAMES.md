@@ -40,5 +40,6 @@ and enable the patches: [Game patches](../README.md#game-patches).
 | Dragon Quest XI S: Definitive Edition (01.01) | 1440p, 1620p, 1800p, native 4K | Native PS4 Pro game (stock Pro render is 1080p). Stock memory. **Tested on firmware 13.20 only.** |
 | Metal Gear Solid V: The Phantom Pain (01.16) | 1440p, 1620p, 1800p, native 4K, 4K checkerboard | Native PS4 Pro game (stock Pro render is 2560x1440 checkerboard). The native entries turn checkerboard off and have no anti-aliasing; 4K checkerboard keeps the game's anti-aliasing. Stock memory. **Tested on firmware 13.20 only.** |
 | Spyro Reignited Trilogy (01.00 disc, shown as 01.03) | 1620p, 1800p, native 4K | The game already runs in PS4 Pro mode: it renders 2560x1440 into a 1080p output. The entries output 2160p and need the PS5 video output set to 2160p; with 1080p output they render below the stock 1440p. 1620p leaves the most headroom for illusion's 60 FPS patch. |
+| Rayman Legends (01.01) | 1440p, 1620p, 1800p, native 4K | Stock memory (no 8GB Mode). |
 
 Test results by game and firmware: [COMPATIBILITY.md](COMPATIBILITY.md).
