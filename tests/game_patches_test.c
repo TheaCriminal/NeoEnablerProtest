@@ -51,7 +51,7 @@ int main(void) {
        against !_settings.xml on a console). */
     size_t len; char *xml = slurp("xml/TheOrder1886_CUSA00785.xml", &len);
     gp_patch p[16]; int n = gp_list(xml, len, "CUSA00785.xml", "01.02", p, 16);
-    assert(n == 2);
+    assert(n == 3);   /* two resolutions and the copied 60 FPS Unlock */
     const gp_patch *q = find(p, n, "Native 4K (PS4 Pro mode, 60fps)");
     assert(q && !strcmp(q->hash, "d753e8d4") && q->needs_pro && !q->needs_8gib && strstr(q->note, "without tearing"));
     assert((q = find(p, n, "Native 4K (PS4 Pro mode)")) && !strcmp(q->hash, "6378fc73"));

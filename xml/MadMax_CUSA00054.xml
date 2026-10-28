@@ -71,4 +71,9 @@
       <Line Type="bytes" Address="0x174bc00" Value="415b4c891c255030ab01c744240801000000e8f9dcd2ffff34255030ab01c33d0040fa0172273d0000400273204889c148c1e92081f9000001007305b90000010048c1e120b8000040024809c8488b4da84885c9c3415b4c891c259830ab0148893425a030ab01e834c0bdff488b3c25a030ab01814f24000000808b471825ff070000ffc069c080080000c1e803ffc889471cff34259830ab01c3" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Mad Max" Name="60 FPS Unlock" Note="Unlocks the 30 fps cap. Works alone or with any resolution entry. 60 FPS patch by illusion." Author="illusion" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x0132b900" Value="be00000000909090"/>
+    </PatchList>
+  </Metadata>
 </Patch>

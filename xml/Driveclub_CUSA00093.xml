@@ -88,4 +88,11 @@
       <Line Type="bytes" Address="0xa6306e" Value="9090" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Driveclub" Name="60 FPS" Note="Patch version 2.0 features deltatime." Author="illusion, u/Charlie_Muggins" PatchVer="2.0" AppVer="01.28" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x01184800" Value="b801000000"/>
+      <Line Type="bytes" Address="0x01184725" Value="48b001"/>
+      <Line Type="bytes" Address="0x00a6306e" Value="9090"/>
+    </PatchList>
+  </Metadata>
 </Patch>

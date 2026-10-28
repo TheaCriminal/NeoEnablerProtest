@@ -59,4 +59,9 @@
       <Line Type="bytes" Address="0x385e159" Value="be00000000" />
     </PatchList>
   </Metadata>
+  <Metadata Title="WATCH_DOGS 2" Name="120 FPS" NeoRequires="120hz" Author="gasb07" PatchVer="1.0" AppVer="01.18" AppElf="eboot.bin" Note="Runs the game above 60 fps, up to 120 fps depending on the scene and resolution. The manager turns on the 120 Hz video output when you enable it, and your TV or monitor must accept 120 Hz. Works alone or with any resolution entry. Only one frame rate entry can be on at a time.">
+    <PatchList>
+      <Line Type="bytes" Address="0x385e159" Value="be00000000" />
+    </PatchList>
+  </Metadata>
 </Patch>

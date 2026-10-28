@@ -12,4 +12,9 @@
       <Line Type="bytes" Address="0x148fb4a" Value="b9000f0000" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Dragon's Dogma: Dark Arisen" Name="60 FPS" Note="Unlocks the 30 fps cap. Works alone or with any resolution entry. 60 FPS patch by illusion." Author="illusion" PatchVer="1.1" AppVer="01.01" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes32" Address="0x018e1cb4" Value="0x42700000"/>
+    </PatchList>
+  </Metadata>
 </Patch>

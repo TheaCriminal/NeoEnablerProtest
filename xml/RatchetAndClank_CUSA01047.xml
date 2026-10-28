@@ -22,4 +22,10 @@
       <Line Type="bytes" Address="0x1aee1ee" Value="000f000070080000" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Ratchet and Clank" Name="60 FPS Unlock" Note="Unlocks the 30 fps cap. Works alone or with any resolution entry. 60 FPS patch by illusion." Author="illusion" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x01b23444" Value="4d69fc48010000"/>
+      <Line Type="bytes" Address="0x01b2344b" Value="6641c7461e803f"/>
+    </PatchList>
+  </Metadata>
 </Patch>

@@ -25,4 +25,12 @@
       <Line Type="bytes" Address="0x2b5dc66" Value="b80000803fc5f96ec0eb1f" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Spyro Reignited Trilogy" Name="60 FPS" Note="Unlocks the 30 fps cap. Works alone or with any resolution entry. 60 FPS patch by illusion." Author="illusion" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x030cb321" Value="48e82b040000"/>
+      <Line Type="bytes" Address="0x030cb752" Value="c6835007000000"/>
+      <Line Type="bytes" Address="0x030cb759" Value="8a8350070000"/>
+      <Line Type="bytes" Address="0x030cb75f" Value="c3"/>
+    </PatchList>
+  </Metadata>
 </Patch>

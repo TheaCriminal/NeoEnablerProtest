@@ -24,15 +24,15 @@ and enable the patches: [Game patches](../README.md#game-patches).
 | Mad Max (01.06) | 1440p, 1800p, native 4K | |
 | inFAMOUS Second Son (01.07) | 4K checkerboard | The game already runs in PS4 Pro mode with a 3200x1800 checkerboard render; this entry raises it to 3840x2160. |
 | NieR:Automata (01.06) | 1440p, 1620p, 1800p | The game already runs in PS4 Pro mode at 1080p. |
-| Watch Dogs (01.05) | 1440p, 1620p, 1800p, native 4K, 60 FPS, 60 FPS (triple buffering) | Minor glitches in some parts of the interface. GPU boost at 2200 MHz is recommended for native 4K. 60 FPS works alone or with any resolution (60 or 30 fps). 60 FPS (triple buffering) lets the frame rate sit between 30 and 60 and works only with a PS4 Pro mode resolution entry. |
-| Watch Dogs 2 (01.18) | 1440p, 1620p, 1800p, native 4K, 60 FPS | Native PS4 Pro game: native render instead of the 1620p checkerboard. Stock memory (no 8GB Mode). Motion blur is off and anti-aliasing is stronger in the resolution entries. 60 FPS works alone or with any resolution. |
+| Watch Dogs (01.05) | 1440p, 1620p, 1800p, native 4K, 60 FPS (triple buffering) | Minor glitches in some parts of the interface. GPU boost at 2200 MHz is recommended for native 4K. 60 FPS (triple buffering) lets the frame rate sit between 30 and 60 and works only with a PS4 Pro mode resolution entry. |
+| Watch Dogs 2 (01.18) | 1440p, 1620p, 1800p, native 4K, 60 FPS, 120 FPS | Native PS4 Pro game: native render instead of the 1620p checkerboard. Stock memory (no 8GB Mode). Motion blur is off and anti-aliasing is stronger in the resolution entries. 60 FPS works alone or with any resolution. 120 FPS needs a TV or monitor that accepts 120 Hz; the manager turns the 120 Hz output on. Only one frame rate entry can be on at a time. |
 | Thief (01.02) | 1440p, 1620p, 1800p, native 4K, 60 FPS | Stock memory (no 8GB Mode). 60 FPS removes the 30 fps limit (up to 60, varies with the scene) and works alone or with any resolution. |
 | Tomb Raider: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K | Stock memory (no 8GB Mode). Native 4K has slightly lower hair detail to fit in memory. |
-| Dragon Age: Inquisition (01.12) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | Base PS4 game. Stock memory (no 8GB Mode). 60 FPS is the patch by illusion plus a fix for a periodic hitch while moving; it works alone or with any resolution entry. With 60 FPS, 1800p holds 60 fps and Native 4K runs around 48 fps. |
+| Dragon Age: Inquisition (01.12) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 120 FPS | Base PS4 game. Stock memory (no 8GB Mode). 60 FPS is the patch by illusion plus a fix for a periodic hitch while moving; it works alone or with any resolution entry. With 60 FPS, 1800p holds 60 fps and Native 4K runs around 48 fps. 120 FPS is the same patch with a 120 fps limit; it needs a TV or monitor that accepts 120 Hz, and the manager turns the 120 Hz output on. Only one frame rate entry can be on at a time. |
 | Middle-earth: Shadow of Mordor - Game of the Year Edition (01.05) | 1440p, 1620p, 1800p, Native 4K | PS4 Pro game. Select the quality mode in the game options. Stock memory (no 8GB Mode). |
-| Alien: Isolation (01.04) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | Base PS4 game. Stock memory (no 8GB Mode). The resolution entries use stronger anti-aliasing. 60 FPS is the patch by Jao plus a fix for the 30 fps limit in gameplay and smoother frame pacing; it works alone or with any resolution entry. |
+| Alien: Isolation (01.04) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 120 FPS | Base PS4 game. Stock memory (no 8GB Mode). The resolution entries use stronger anti-aliasing. 60 FPS is the patch by Jao plus a fix for the 30 fps limit in gameplay and smoother frame pacing; it works alone or with any resolution entry. 120 FPS is based on the 60 FPS patch by Jao and the 120 FPS patch by Joey85. It needs a TV or monitor that accepts 120 Hz; the manager turns the 120 Hz output on. Only one frame rate entry can be on at a time. |
 | Dishonored Definitive Edition (01.03) | 1440p, 1800p, Native 4K, 60 FPS (triple buffering) | 60 FPS (triple buffering) lets the frame rate sit between 30 and 60 and works alone or with any resolution entry. |
-| Dishonored 2 (01.07) | 1620p, 1800p, Native 4K, 60 FPS, Skip intro videos | The game already runs in PS4 Pro mode at 1440p. Native 4K renders at full 4K (no dynamic resolution); GPU boost at 2200 MHz is recommended. All resolution entries use sharper anti-aliasing. 60 FPS works alone or with any resolution entry. |
+| Dishonored 2 (01.07) | 1620p, 1800p, Native 4K, 60 FPS, 120 FPS, Skip intro videos | The game already runs in PS4 Pro mode at 1440p. Native 4K renders at full 4K (no dynamic resolution); GPU boost at 2200 MHz is recommended. All resolution entries use sharper anti-aliasing. 60 FPS works alone or with any resolution entry. 120 FPS needs a TV or monitor that accepts 120 Hz; the manager turns the 120 Hz output on. Only one frame rate entry can be on at a time. |
 | Prey (01.12) | 1620p, 1800p, native 4K, 60 FPS, Skip intro videos | **Requires NeoEnabler 0.5.0 or newer.** The game already runs in PS4 Pro mode at 1440p with dynamic resolution; these entries render at a fixed full resolution. 60 FPS works alone or with any resolution entry. |
 | Ratchet & Clank (01.09) | 1728p, 1872p, native 4K | Native PS4 Pro game. The game only allows these steps, so 1728p and 1872p replace 1620p and 1800p. **Tested on firmware 13.20 only.** |
 | Yakuza 6: The Song of Life (01.05) | 1440p, 1620p, 1800p, native 4K, 60 FPS | 60 FPS works alone or with any resolution entry. Native 4K needs 8GB Mode and **NeoEnabler 0.5.2 or newer** (older versions hang when the save window opens). **Tested on firmware 13.20 only.** |
@@ -41,5 +41,29 @@ and enable the patches: [Game patches](../README.md#game-patches).
 | Metal Gear Solid V: The Phantom Pain (01.16) | 1440p, 1620p, 1800p, native 4K, 4K checkerboard | Native PS4 Pro game (stock Pro render is 2560x1440 checkerboard). The native entries turn checkerboard off and have no anti-aliasing; 4K checkerboard keeps the game's anti-aliasing. Stock memory. **Tested on firmware 13.20 only.** |
 | Spyro Reignited Trilogy (01.00 disc, shown as 01.03) | 1620p, 1800p, native 4K | The game already runs in PS4 Pro mode: it renders 2560x1440 into a 1080p output. The entries output 2160p and need the PS5 video output set to 2160p; with 1080p output they render below the stock 1440p. 1620p leaves the most headroom for illusion's 60 FPS patch. |
 | Rayman Legends (01.01) | 1440p, 1620p, 1800p, native 4K | Stock memory (no 8GB Mode). |
+
+## Frame rate entries from ps-patch-system
+
+The 60 FPS entries below are copied from the ps-patch-system patch database with their original authors, and were not tested by this project. A 120 FPS entry has the same patch lines as a 60 FPS entry and also turns on the 120 Hz video output (the 120 Hz mode follows the enabled patches of each game and turns off when the game closes); it exists only where it was tested and reached more than 60 fps. Only one frame rate entry can be on at a time. Thief and Prey have no 120 FPS entry: the 120 Hz output of ps-patch-system does not reach them.
+
+| Game | Entry | Game version | Credit |
+|---|---|---|---|
+| Batman: Arkham Knight | 60 FPS Unlock | 01.15 | illusion |
+| Bloodborne | 60 FPS (With Deltatime) | 01.09 | Lance McDonald (manfightdragon) |
+| Dragon's Dogma: Dark Arisen | 60 FPS | 01.01 | illusion |
+| Driveclub | 60 FPS | 01.28 | illusion, u/Charlie_Muggins |
+| Just Cause 3 | 60 FPS | 01.05 | illusion |
+| Mad Max | 60 FPS Unlock | 01.06 | illusion |
+| Middle-earth: Shadow of Mordor - Game of the Year Edition | 60 FPS | 01.05 | Jao |
+| Middle-earth: Shadow of Mordor - Game of the Year Edition | 120 FPS | 01.05 | Jao |
+| Ratchet and Clank | 60 FPS Unlock | 01.09 | illusion |
+| Ratchet and Clank | 120 FPS Unlock | 01.09 | illusion |
+| Sleeping Dogs: Definitive Edition | 60 FPS Unlock | 01.01 | illusion |
+| Spyro Reignited Trilogy | 60 FPS | 01.03 | illusion |
+| The Evil Within | 60 FPS Unlock | 01.06 | illusion |
+| The Evil Within | 120 FPS Unlock | 01.06 | illusion |
+| The Order 1886 | 60 FPS Unlock | 01.02 | illusion |
+| Dishonored: Definitive Edition | 120 FPS (triple buffering) | 01.03 | gasb07, illusion |
+| Yakuza 6: The Song of Life | 120 FPS | 01.05 | gasb07 |
 
 Test results by game and firmware: [COMPATIBILITY.md](COMPATIBILITY.md).
