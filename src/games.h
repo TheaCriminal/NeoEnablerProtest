@@ -11,6 +11,9 @@
 #ifndef APPMETA_DIR
 #define APPMETA_DIR "/system_data/priv/appmeta"
 #endif
+#ifndef APPMETA_EXT_DIR
+#define APPMETA_EXT_DIR APPMETA_DIR "/external"   /* games installed on an external drive */
+#endif
 #ifndef APP_DIR
 #define APP_DIR "/user/app"
 #endif
@@ -34,11 +37,18 @@ static int game_tid(const char *s) {
            strspn(s + 4, "0123456789") == 5;
 }
 
+/* Path of a metadata file of a game: the internal appmeta folder, else the one of games on an external drive. */
+static const char *appmeta_file(const char *tid, const char *file, char *path, size_t cap) {
+    struct stat st;
+    snprintf(path, cap, APPMETA_DIR "/%.9s/%s", tid, file);
+    if (stat(path, &st)) snprintf(path, cap, APPMETA_EXT_DIR "/%.9s/%s", tid, file);
+    return path;
+}
+
 /* Name and version (the one ps-patch-system matches) of an installed game; 0 when its param.sfo is readable. */
 static int game_info(const char *tid, char *name, size_t name_cap, char *ver, size_t ver_cap) {
     char path[96]; size_t n;
-    snprintf(path, sizeof path, APPMETA_DIR "/%.9s/param.sfo", tid);
-    char *sfo = ps_read(path, 64 << 10, &n);
+    char *sfo = ps_read(appmeta_file(tid, "param.sfo", path, sizeof path), 64 << 10, &n);
     if (!sfo) return -1;
     char app[16], version[16];
     gp_sfo((unsigned char *)sfo, n, "TITLE", name, name_cap);
@@ -81,8 +91,7 @@ static int game_pkg_version(const char *path, char *ver, size_t cap) {
 static void game_versions(game_t *g) {
     char path[96]; size_t n;
     g->game_ver[0] = g->update_ver[0] = 0;
-    snprintf(path, sizeof path, APPMETA_DIR "/%.9s/param.sfo", g->tid);
-    char app[16] = "", master[16] = "", *sfo = ps_read(path, 64 << 10, &n);
+    char app[16] = "", master[16] = "", *sfo = ps_read(appmeta_file(g->tid, "param.sfo", path, sizeof path), 64 << 10, &n);
     if (sfo) {
         gp_sfo((unsigned char *)sfo, n, "APP_VER", app, sizeof app);
         gp_sfo((unsigned char *)sfo, n, "VERSION", master, sizeof master);
@@ -122,33 +131,40 @@ static int game_cmp(const void *a, const void *b) {
 /* Installed games that have at least one patch needing Pro mode for their version, sorted by name. */
 static game_t *games_scan(int *count) {
     *count = 0;
-    DIR *d = opendir(APPMETA_DIR);
-    if (!d) return NULL;
-    int cap = 32, n = 0; struct dirent *e;
+    int cap = 32, n = 0;
     game_t *g = malloc(sizeof(game_t) * (size_t)cap);
-    if (!g) { closedir(d); return NULL; }
-    while ((e = readdir(d))) {
-        if (!game_tid(e->d_name)) continue;
-        game_t x = {0};
-        snprintf(x.tid, sizeof x.tid, "%.9s", e->d_name);
-        char path[96]; struct stat st;
-        snprintf(path, sizeof path, PS_DIR "/%s.xml", x.tid);
-        if (stat(path, &st) || game_info(x.tid, x.name, sizeof x.name, x.version, sizeof x.version)) continue;
-        x.patches = game_patches(x.tid, x.version, &x.count);
-        int pro = 0;
-        for (int i = 0; i < x.count; i++) pro |= x.patches[i].needs_pro;
-        if (!pro) { free(x.patches); continue; }
-        snprintf(path, sizeof path, PATCH_DIR "/%s", x.tid);
-        x.update = !stat(path, &st) && S_ISDIR(st.st_mode);
-        game_versions(&x);
-        if (n == cap) {
-            game_t *bigger = realloc(g, sizeof(game_t) * (size_t)(cap *= 2));
-            if (!bigger) { free(x.patches); break; }
-            g = bigger;
+    if (!g) return NULL;
+    const char *dirs[] = { APPMETA_DIR, APPMETA_EXT_DIR };
+    for (int di = 0; di < 2; di++) {
+        DIR *d = opendir(dirs[di]);
+        struct dirent *e;
+        if (!d) continue;
+        while ((e = readdir(d))) {
+            if (!game_tid(e->d_name)) continue;
+            int dup = 0;
+            for (int i = 0; i < n; i++) dup |= !strcmp(g[i].tid, e->d_name);
+            if (dup) continue;
+            game_t x = {0};
+            snprintf(x.tid, sizeof x.tid, "%.9s", e->d_name);
+            char path[96]; struct stat st;
+            snprintf(path, sizeof path, PS_DIR "/%s.xml", x.tid);
+            if (stat(path, &st) || game_info(x.tid, x.name, sizeof x.name, x.version, sizeof x.version)) continue;
+            x.patches = game_patches(x.tid, x.version, &x.count);
+            int pro = 0;
+            for (int i = 0; i < x.count; i++) pro |= x.patches[i].needs_pro;
+            if (!pro) { free(x.patches); continue; }
+            snprintf(path, sizeof path, PATCH_DIR "/%s", x.tid);
+            x.update = !stat(path, &st) && S_ISDIR(st.st_mode);
+            game_versions(&x);
+            if (n == cap) {
+                game_t *bigger = realloc(g, sizeof(game_t) * (size_t)(cap *= 2));
+                if (!bigger) { free(x.patches); break; }
+                g = bigger;
+            }
+            g[n++] = x;
         }
-        g[n++] = x;
+        closedir(d);
     }
-    closedir(d);
     qsort(g, (size_t)n, sizeof(game_t), game_cmp);
     *count = n;
     return g;

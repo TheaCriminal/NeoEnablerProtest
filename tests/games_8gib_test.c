@@ -191,6 +191,13 @@ int main(int argc, char **argv) {
     for (int i = 0; i < ng; i++) if (!strcmp(gs[i].tid, "CUSA99996")) v = &gs[i];
     assert(v && !strcmp(v->game_ver, "01.00") && !strcmp(v->update_ver, "01.05"));
     games_free(gs, ng);
+    /* A game on an external drive keeps its param.sfo under appmeta/external. */
+    assert(!system("mkdir -p " APPMETA_DIR "/external && mv " APPMETA_DIR "/CUSA00190 " APPMETA_DIR "/external/"));
+    gs = games_scan(&ng); v = NULL;
+    for (int i = 0; i < ng; i++) if (!strcmp(gs[i].tid, "CUSA00190")) v = &gs[i];
+    assert(v && !strcmp(v->name, "KILLZONE SHADOW FALL") && !strcmp(v->game_ver, "01.81"));
+    games_free(gs, ng);
+    assert(!game_info("CUSA00190", name, sizeof name, ver, sizeof ver) && !strcmp(ver, "01.81"));
     puts("PASS 8 GiB patches turned off while 8 GiB is unavailable, other patches kept, one resolution per executable");
     return 0;
 }
