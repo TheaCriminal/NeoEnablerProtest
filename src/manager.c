@@ -648,16 +648,16 @@ static void page_status(sbuf *b, int legacy) {
               "<form method=post>%s<a href=/logs target=_blank><button type=button>Show Logs</button></a>"
               "<a href=/logs/download><button type=button>Download Logs</button></a>"
               "<button formaction=/logs/save>Save Logs</button><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
-              "<details class=card><summary>Advanced</summary>"
-              "<form method=post>%s<input type=hidden name=on value=%d><b>Pro mode for every PS4 game</b> "
-              "<span class='state %s'>%s</span><br><small>Ignores the patch selection.</small><br>"
+              "<div class=card><h2>Advanced</h2>"
+              "<form method=post>%s<input type=hidden name=on value=%d><b>120 Hz video output</b> "
+              "<span class='state %s'>%s</span><br><small>Lowers input lag especially with VRR. 120 fps in some titles. Can cause issues.</small><br>"
+              "<button formaction=/advanced/hz120%s>%s</button></form>"
+              "<form method=post style='margin-top:12px'>%s<input type=hidden name=on value=%d><b>Pro mode for every PS4 game</b> "
+              "<span class='state %s'>%s</span><br><small>Not recommended, it can cause issues without a dedicated patch.</small><br>"
               "<button formaction=/advanced/neo>%s</button></form>"
               "<form method=post style='margin-top:12px'>%s<input type=hidden name=on value=%d><b>Keep 8GB Mode on</b> "
-              "<span class='state %s'>%s</span><br><small>For every Pro mode launch, until turned off.</small><br>"
-              "<button formaction=/advanced/memory%s>%s</button></form>"
-              "<form method=post style='margin-top:12px'>%s<input type=hidden name=on value=%d><b>120 Hz video output</b> "
-              "<span class='state %s'>%s</span><br><small>Lowers input lag especially with VRR. 120 fps in some titles. Can cause issues.</small><br>"
-              "<button formaction=/advanced/hz120%s>%s</button></form></details>"
+              "<span class='state %s'>%s</span><br><small>Not recommended, it can cause issues without a dedicated patch.</small><br>"
+              "<button formaction=/advanced/memory%s>%s</button></form></div>"
               "<small style='text-align:center'>" VERSION "</small></aside>",
               st == HOOK_ON && running_pro == 1 ? "on" : "off",
               st != HOOK_ON ? state_text(st) : running_pro == 1 ? "enabled" : running_pro == 0 ? "disabled" : "ready",
@@ -665,12 +665,12 @@ static void page_status(sbuf *b, int legacy) {
               memory.state == MB_8GIB ? "enabled" : !fw_raw_version() ? "firmware unavailable" : !memory_supported() ? "not supported" : !mem_ok ? "unavailable" : "ready",
               memory_community_report() ? "<br><small>Firmware 13.60: Bloodborne 4K with 8GB Mode reported working; more test reports welcome</small>" : "",
               running, patches_esc, hid, hid,
+              hid, hz120 != 1, hz120 == 1 ? "on" : "off", hz120 == 1 ? "enabled" : hz120 == 0 ? "disabled" : "unavailable",
+              hz120 < 0 ? " disabled" : "", hz120 == 1 ? "Turn off" : "Turn on",
               hid, !force_neo, force_neo ? "on" : "off", force_neo ? "on" : "off", force_neo ? "Turn off" : "Turn on",
               hid, !force_8gib, force_8gib && mem_ok ? "on" : "off",
               !force_8gib ? "off" : mem_ok ? "on" : "requested, not available", !force_8gib && !mem_ok ? " disabled" : "",
-              force_8gib ? "Turn off" : "Turn on",
-              hid, hz120 != 1, hz120 == 1 ? "on" : "off", hz120 == 1 ? "enabled" : hz120 == 0 ? "disabled" : "unavailable",
-              hz120 < 0 ? " disabled" : "", hz120 == 1 ? "Turn off" : "Turn on");
+              force_8gib ? "Turn off" : "Turn on");
 }
 
 /* Set for a request of the legacy panel (its paths, or legacy=1 in the form): pages answer with the legacy panel. */
