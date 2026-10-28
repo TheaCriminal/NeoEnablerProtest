@@ -9,6 +9,8 @@
   output was already on, it stays on. Entries named "120 FPS" or "120 Hz" are recognised without the flag, and the
   panel shows a "120 Hz" tag on them.
 - The Status card, the status page and the logs report now show the 120 Hz mode.
+- A module patch Line can carry a Module attribute (for example Module="materialsystem_ps4.prx") to write into another
+  module of the game from the same entry. The entry waits until every module it names is loaded.
 - Only one frame rate entry ("60 FPS", "120 FPS" and similar) can be on per game and executable. Enabling one turns
   off the other.
 
