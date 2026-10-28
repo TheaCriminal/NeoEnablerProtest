@@ -7,7 +7,7 @@
     <ID>CUSA01190</ID>
     <ID>CUSA01191</ID>
   </TitleID>
-  <Metadata Title="The Evil Within" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+  <Metadata Title="The Evil Within" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0xfd0dca" Value="81c900000000" />
       <Line Type="bytes" Address="0x5fb9b8" Value="be00000000" />
@@ -50,7 +50,7 @@
       <Line Type="bytes" Address="0x1e5fa00" Value="81ff0000e100721a81ff0000f0007312bf0000f00081fe000001007305be00000100e9397e73fe814f1000000080488b47c04885c0740a818808010000000000018b470425ff070000ffc069c000060000c1e803ffc8894708e902df5cfe" />
     </PatchList>
   </Metadata>
-  <Metadata Title="The Evil Within" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+  <Metadata Title="The Evil Within" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0xfd0dca" Value="81c900000000" />
       <Line Type="bytes" Address="0x5fb9b8" Value="be00000000" />
@@ -94,7 +94,7 @@
       <Line Type="bytes" Address="0x1e5fa00" Value="81ff00905f01721a81ff000077017312bf0000770181fe000001007305be00000100e9397e73fe814f1000000080488b47c04885c0740a818808010000000000018b470425ff070000ffc069c080070000c1e803ffc8894708e902df5cfe" />
     </PatchList>
   </Metadata>
-  <Metadata Title="The Evil Within" Name="Native 4K (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler with the 8 GiB memory budget." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+  <Metadata Title="The Evil Within" Name="Native 4K (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler with 8GB Mode." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0xfd0dca" Value="81c900000000" />
       <Line Type="bytes" Address="0x5fb9b8" Value="be00000000" />

@@ -5,7 +5,7 @@
     <ID>CUSA00103</ID>
     <ID>CUSA02703</ID>
   </TitleID>
-  <Metadata Title="Mad Max" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+  <Metadata Title="Mad Max" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x4e8dab" Value="e8502e2601" />
       <Line Type="bytes" Address="0x1327dff" Value="e81b3e42009090" />
@@ -27,7 +27,7 @@
       <Line Type="bytes" Address="0x174bc00" Value="415b4c891c255030ab01c744240801000000e8f9dcd2ffff34255030ab01c33d0000e10072273d0000f00073204889c148c1e92081f9000001007305b90000010048c1e120b80000f0004809c8488b4da84885c9c3415b4c891c259830ab0148893425a030ab01e834c0bdff488b3c25a030ab01814f24000000808b471825ff070000ffc069c000060000c1e803ffc889471cff34259830ab01c3" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Mad Max" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+  <Metadata Title="Mad Max" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x4e8dab" Value="e8502e2601" />
       <Line Type="bytes" Address="0x1327dff" Value="e81b3e42009090" />
@@ -49,7 +49,7 @@
       <Line Type="bytes" Address="0x174bc00" Value="415b4c891c255030ab01c744240801000000e8f9dcd2ffff34255030ab01c33d00905f0172273d0000770173204889c148c1e92081f9000001007305b90000010048c1e120b8000077014809c8488b4da84885c9c3415b4c891c259830ab0148893425a030ab01e834c0bdff488b3c25a030ab01814f24000000808b471825ff070000ffc069c080070000c1e803ffc889471cff34259830ab01c3" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Mad Max" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+  <Metadata Title="Mad Max" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x4e8dab" Value="e8502e2601" />
       <Line Type="bytes" Address="0x1327dff" Value="e81b3e42009090" />

@@ -7,7 +7,7 @@
     <ID>CUSA06560</ID>
     <ID>CUSA07891</ID>
   </TitleID>
-  <Metadata Title="Prey" Name="1620p (PS4 Pro mode)" Note="2880x1620 output and render in PS4 Pro mode instead of 2560x1440, without the dynamic frame buffer downscale (minimum scale 1.0), WriteCombined heap +512 MiB, r_Width/r_Height fixed at 2880x1620 (in-world touch screens). Enable only one resolution entry. Requires NeoEnabler 0.5.0 or later (PreyDll.prx entries)." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx" NeoRequires="pro">
+  <Metadata Title="Prey" Name="1620p (PS4 Pro mode)" Note="2880x1620 output and render in PS4 Pro mode instead of 2560x1440, always at full resolution (no dynamic resolution). Enable only one resolution entry. Requires NeoEnabler 0.5.0 or later." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx" NeoRequires="pro">
     <PatchList>
       <Line Type="bytes" Address="0x107610f" Value="bf54060000" />
       <Line Type="bytes" Address="0x1076117" Value="be400b0000" />
@@ -23,7 +23,7 @@
       <Line Type="bytes" Address="0xf0b095" Value="e8663f8701660f1f440000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Prey" Name="1800p (PS4 Pro mode)" Note="3200x1800 output and render in PS4 Pro mode instead of 2560x1440, without the dynamic frame buffer downscale (minimum scale 1.0), WriteCombined heap +512 MiB, r_Width/r_Height fixed at 3200x1800 (in-world touch screens). Enable only one resolution entry. Requires NeoEnabler 0.5.0 or later (PreyDll.prx entries)." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx" NeoRequires="pro">
+  <Metadata Title="Prey" Name="1800p (PS4 Pro mode)" Note="3200x1800 output and render in PS4 Pro mode instead of 2560x1440, always at full resolution (no dynamic resolution). Enable only one resolution entry. Requires NeoEnabler 0.5.0 or later." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx" NeoRequires="pro">
     <PatchList>
       <Line Type="bytes" Address="0x107610f" Value="bf08070000" />
       <Line Type="bytes" Address="0x1076117" Value="be800c0000" />
@@ -39,7 +39,7 @@
       <Line Type="bytes" Address="0xf0b095" Value="e8663f8701660f1f440000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Prey" Name="Native 4K (PS4 Pro mode)" Note="3840x2160 output and render in PS4 Pro mode instead of 2560x1440, without the dynamic frame buffer downscale (minimum scale 1.0), WriteCombined heap +1024 MiB, r_Width/r_Height fixed at 3840x2160 (in-world touch screens). Enable only one resolution entry. Requires NeoEnabler 0.5.0 or later (PreyDll.prx entries)." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx" NeoRequires="pro">
+  <Metadata Title="Prey" Name="Native 4K (PS4 Pro mode)" Note="3840x2160 output and render in PS4 Pro mode instead of 2560x1440, always at full resolution (no dynamic resolution). Enable only one resolution entry. Requires NeoEnabler 0.5.0 or later." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx" NeoRequires="pro">
     <PatchList>
       <Line Type="bytes" Address="0x107610f" Value="bf70080000" />
       <Line Type="bytes" Address="0x1076117" Value="be000f0000" />
@@ -55,7 +55,7 @@
       <Line Type="bytes" Address="0xf0b095" Value="e8663f8701660f1f440000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Prey" Name="60 FPS" Note="60 FPS cap (flip rate 0). Works alone or with any resolution entry. Requires NeoEnabler 0.5.0 or later." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx">
+  <Metadata Title="Prey" Name="60 FPS" Note="Unlocks the 30 fps cap. Works alone or with any resolution entry. Requires NeoEnabler 0.5.0 or later." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="PreyDll.prx">
     <PatchList>
       <Line Type="bytes" Address="0x108b293" Value="31f690" />
       <Line Type="bytes" Address="0x108b757" Value="4889fb31f689b3d80000008b7b70e82e5ef7fe9090" />

@@ -3,7 +3,7 @@
   <TitleID>
     <ID>CUSA00021</ID>
   </TitleID>
-  <Metadata Title="Watch Dogs" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Minor glitches in some parts of the interface. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Watch Dogs" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Minor glitches in some parts of the interface. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x400fdf" Value="48b8000a0000a0050000" />
       <Line Type="bytes" Address="0x2123d20" Value="e9db3ea402" />
@@ -25,7 +25,7 @@
       <Line Type="bytes" Address="0x1c922e2" Value="0000001c" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Watch Dogs" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro (NEO) mode. Minor glitches in some parts of the interface. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Watch Dogs" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Minor glitches in some parts of the interface. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x400fdf" Value="48b8400b000054060000" />
       <Line Type="bytes" Address="0x2123d20" Value="e9db3ea402" />
@@ -47,7 +47,7 @@
       <Line Type="bytes" Address="0x1c922e2" Value="00000022" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Watch Dogs" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro (NEO) mode. Minor glitches in some parts of the interface. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Watch Dogs" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Minor glitches in some parts of the interface. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x400fdf" Value="48b8800c000008070000" />
       <Line Type="bytes" Address="0x2123d20" Value="e9db3ea402" />
@@ -69,7 +69,7 @@
       <Line Type="bytes" Address="0x1c922e2" Value="00008025" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Watch Dogs" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Minor glitches in some parts of the interface. GPU boost at 2200 MHz is recommended. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Watch Dogs" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Minor glitches in some parts of the interface. GPU boost at 2200 MHz is recommended. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x400fdf" Value="48b8000f000070080000" />
       <Line Type="bytes" Address="0x2123d20" Value="e9db3ea402" />
@@ -91,12 +91,12 @@
       <Line Type="bytes" Address="0x1c922e2" Value="00000030" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Watch Dogs" Name="60 FPS" Note="Unlocks the 30 Hz video flip rate to 60 Hz. Works in base and PS4 Pro mode, alone or with any resolution entry. With two display buffers the frame rate alternates between 60 and 30 fps." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Watch Dogs" Name="60 FPS" Note="Unlocks the 30 fps cap. Works in base and PS4 Pro mode, alone or with any resolution entry. The frame rate switches between 60 and 30 fps." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1e3669a" Value="be00000000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Watch Dogs" Name="60 FPS (triple buffering)" Note="60 Hz flip rate plus a third display buffer, so the frame rate can sit between 30 and 60 fps (slight stutter). Works only together with one of the PS4 Pro mode resolution entries, which carry its code; do not enable it alone or with the plain 60 FPS entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Watch Dogs" Name="60 FPS (triple buffering)" Note="Unlocks the 30 fps cap. The frame rate can sit between 30 and 60 fps (slight stutter). Works only together with one of the PS4 Pro mode resolution entries; do not enable it alone or with the plain 60 FPS entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1e3669a" Value="be00000000" />
       <Line Type="bytes" Address="0x1e38da2" Value="bfe0000000" />

@@ -4,25 +4,25 @@
     <ID>CUSA02152</ID>
     <ID>CUSA01939</ID>
   </TitleID>
-  <Metadata Title="Middle-earth: Shadow of Mordor - Game of the Year Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 render in PS4 Pro (NEO) mode with the in-game quality mode (the game renders at 1080p in that mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Middle-earth: Shadow of Mordor - Game of the Year Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 render in PS4 Pro mode with the in-game quality mode (the game renders at 1080p in that mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1bc4c74" Value="abaa2a3f" />
       <Line Type="bytes" Address="0x468890" Value="c5fa10834cc802000f1f8400000000000f1f4000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Middle-earth: Shadow of Mordor - Game of the Year Edition" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 render in PS4 Pro (NEO) mode with the in-game quality mode (the game renders at 1080p in that mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Middle-earth: Shadow of Mordor - Game of the Year Edition" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 render in PS4 Pro mode with the in-game quality mode (the game renders at 1080p in that mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1bc4c74" Value="0000403f" />
       <Line Type="bytes" Address="0x468890" Value="c5fa10834cc802000f1f8400000000000f1f4000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Middle-earth: Shadow of Mordor - Game of the Year Edition" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 render in PS4 Pro (NEO) mode with the in-game quality mode (the game renders at 1080p in that mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Middle-earth: Shadow of Mordor - Game of the Year Edition" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 render in PS4 Pro mode with the in-game quality mode (the game renders at 1080p in that mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1bc4c74" Value="5555553f" />
       <Line Type="bytes" Address="0x468890" Value="c5fa10834cc802000f1f8400000000000f1f4000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Middle-earth: Shadow of Mordor - Game of the Year Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 render in PS4 Pro (NEO) mode with the in-game quality mode (the game renders at 1080p in that mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Middle-earth: Shadow of Mordor - Game of the Year Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 render in PS4 Pro mode with the in-game quality mode (the game renders at 1080p in that mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1bc4c74" Value="0000803f" />
       <Line Type="bytes" Address="0x468890" Value="c5fa10834cc802000f1f8400000000000f1f4000" />
