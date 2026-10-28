@@ -206,7 +206,6 @@ static uint32_t fw_raw_version(void) {
     return v;
 }
 static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != NULL; }
-static int memory_community_report(void) { return fw_raw_version() == 0x13600000; }
 /* Availability also requires a ready memory backend; an idle game is not required. */
 static int memory_available(void) { mb_snapshot m; return memory_supported() && !memory_check(&m); }
 /* GPU clock page and boost: the MP1 driver answering a clock read. */
@@ -639,7 +638,7 @@ static void page_status(sbuf *b, int legacy) {
     sb_printf(b, "<aside>"
               "<div class=card><h2>Status</h2>"
               "<div>PS4 Pro mode <span class='state %s'>%s</span></div>"
-              "<div style='margin-top:6px'>8GB Mode <span class='state %s'>%s</span>%s</div>"
+              "<div style='margin-top:6px'>8GB Mode <span class='state %s'>%s</span></div>"
               "<p><small>Pro mode and 8GB Mode follow the enabled patches of each game. 8GB Mode returns to the original "
               "memory when the game closes.</small></p><b>Game running</b><ul>%s</ul></div>"
               "<div class=card><h2>Game patches</h2><p>%s</p><small>Downloads the patches from the NeoEnabler repository "
@@ -664,7 +663,6 @@ static void page_status(sbuf *b, int legacy) {
               st != HOOK_ON ? state_text(st) : running_pro == 1 ? "enabled" : running_pro == 0 ? "disabled" : "ready",
               memory.state == MB_8GIB ? "on" : "off",
               memory.state == MB_8GIB ? "enabled" : !fw_raw_version() ? "firmware unavailable" : !memory_supported() ? "not supported" : !mem_ok ? "unavailable" : "ready",
-              memory_community_report() ? "<br><small>Firmware 13.60: Bloodborne 4K with 8GB Mode reported working; more test reports welcome</small>" : "",
               running, patches_esc, hid, hid,
               hid, hz120 != 1, hz120 == 1 ? "on" : "off", hz120 == 1 ? "enabled" : hz120 == 0 ? "disabled" : "unavailable",
               hz120 < 0 ? " disabled" : "", hz120 == 1 ? "Turn off" : "Turn on",
