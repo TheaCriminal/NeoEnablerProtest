@@ -62,8 +62,8 @@ The 60 FPS entries below are copied from the ps-patch-system patch database with
 | Spyro Reignited Trilogy | 60 FPS | 01.03 | illusion |
 | The Evil Within | 60 FPS Unlock | 01.06 | illusion |
 | The Evil Within | 120 FPS Unlock | 01.06 | illusion |
-| The Evil Within | 60 FPS | 01.06 | Jao |
-| The Evil Within | 120 FPS | 01.06 | Jao |
 | The Order 1886 | 60 FPS Unlock | 01.02 | illusion |
+| Dishonored: Definitive Edition | 120 FPS (triple buffering) | 01.03 | gasb07, illusion |
+| Yakuza 6: The Song of Life | 120 FPS | 01.05 | gasb07 |
 
 Test results by game and firmware: [COMPATIBILITY.md](COMPATIBILITY.md).

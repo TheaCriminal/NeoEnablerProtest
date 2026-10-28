@@ -205,6 +205,6 @@ Frame rate entries copied from ps-patch-system (60 FPS) and their 120 FPS copies
 | Spyro Reignited Trilogy | 60 FPS | 01.03 | `69c6cbbe` |
 | The Evil Within | 60 FPS Unlock | 01.06 | `f860727b` |
 | The Evil Within | 120 FPS Unlock | 01.06 | `3843181c` |
-| The Evil Within | 60 FPS | 01.06 | `b656f477` |
-| The Evil Within | 120 FPS | 01.06 | `bd2ea97e` |
 | The Order 1886 | 60 FPS Unlock | 01.02 | `dd73cb08` |
+| Dishonored: Definitive Edition | 120 FPS (triple buffering) | 01.03 | `85a414c8` |
+| Yakuza 6: The Song of Life | 120 FPS | 01.05 | `741f6b0b` |
