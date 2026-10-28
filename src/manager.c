@@ -642,8 +642,9 @@ static void page_status(sbuf *b, int legacy) {
               "<div class=card><h2>Status</h2>"
               "<div>PS4 Pro mode <span class='state %s'>%s</span></div>"
               "<div style='margin-top:6px'>8GB Mode <span class='state %s'>%s</span>%s</div>"
-              "<p><small>Pro mode and 8GB Mode follow the enabled patches of each game. 8GB Mode returns to the original "
-              "memory when the game closes.</small></p><b>Game running</b><ul>%s</ul></div>"
+              "<div style='margin-top:6px'>120 Hz mode <span class='state %s'>%s</span></div>"
+              "<p><small>Pro mode, 8GB Mode and 120 Hz mode follow the enabled patches of each game. 8GB Mode and 120 Hz mode "
+              "return to their original state when the game closes.</small></p><b>Game running</b><ul>%s</ul></div>"
               "<div class=card><h2>Game patches</h2><p>%s</p><small>Downloads the patches from the NeoEnabler repository "
               "into " PS_DIR ". Changed files are backed up to " PS_BACKUP_ROOT " first.</small>"
               "<form method=post>%s<button formaction=/patches/update>Update Patches</button></form></div>"
@@ -667,6 +668,7 @@ static void page_status(sbuf *b, int legacy) {
               memory.state == MB_8GIB ? "on" : "off",
               memory.state == MB_8GIB ? "enabled" : !fw_raw_version() ? "firmware unavailable" : !memory_supported() ? "not supported" : !mem_ok ? "unavailable" : "ready",
               memory_community_report() ? "<br><small>Firmware 13.60: Bloodborne 4K with 8GB Mode reported working; more test reports welcome</small>" : "",
+              hz120 == 1 ? "on" : "off", hz120 == 1 ? "enabled" : hz120 == 0 ? "ready" : "unavailable",
               running, patches_esc, hid, hid,
               hid, !force_neo, force_neo ? "on" : "off", force_neo ? "on" : "off", force_neo ? "Turn off" : "Turn on",
               hid, !force_8gib, force_8gib && mem_ok ? "on" : "off",
@@ -1292,6 +1294,9 @@ static void build_report(sbuf *b) {
     mb_snapshot m; memory_check(&m);
     sb_printf(b, "8GB Mode: %s (requested %s): %s\n", m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
               memory_target ? "on" : "off", m.detail);
+    { int hz = video_120hz_state();
+      sb_printf(b, "120 Hz mode: %s%s%s\n", hz == 1 ? "enabled" : hz == 0 ? "disabled" : "unavailable",
+                hz_launch.active ? ", turned on for launch of " : "", hz_launch.active ? hz_launch.tid : ""); }
     sb_printf(b, "GPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", gpu_state_text(), gpu.target,
               gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
     sb_printf(b, "patches: %s\n", patches_message);
@@ -1954,7 +1959,7 @@ int main(void) {
         } else if (!strcmp(path, "/status")) {
             shell_t s; int st = hook_state(&s);
             char games[1024]; games_text(games, sizeof(games), 0);
-            char body[3200];mb_snapshot memory;memory_check(&memory);gpu_refresh();
+            char body[3600];mb_snapshot memory;memory_check(&memory);gpu_refresh();
             snprintf(body, sizeof(body), "build: " VERSION "\nmemory_8gib: %s\nmemory_requested: %s\nmemory_detail: %s\nmemory_last_result: %s\nhook: %s\nv4 hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
                      memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled",
                      memory_target?"enabled":"disabled",memory.detail,memory_message,
@@ -1967,8 +1972,10 @@ int main(void) {
             used = strlen(body);
             snprintf(body + used, sizeof body - used,
                      "force_neo: %d\nforce_8gib: %d\nlaunch_questions: %s\nlast_question: %u\n8gib_for_launch: %s\n"
-                     "attr_detected: %s 0x%x\n",
+                     "video_120hz: %s\n120hz_for_launch: %s\nattr_detected: %s 0x%x\n",
                      force_neo, force_8gib, live_ok ? "enabled" : "unavailable", last_seq, auto8.active ? auto8.tid : "none",
+                     video_120hz_state() == 1 ? "enabled" : video_120hz_state() == 0 ? "disabled" : "unavailable",
+                     hz_launch.active ? hz_launch.tid : "none",
                      last_attr.tid[0] ? last_attr.tid : "none", last_attr.offset);
             used = strlen(body);
             bm_mailbox mail = {0}; int mail_ok = !bm_mail(&mail);
