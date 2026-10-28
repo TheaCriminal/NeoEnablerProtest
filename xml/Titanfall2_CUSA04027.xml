@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA04027</ID>
+    <ID>CUSA04013</ID>
+  </TitleID>
+  <Metadata Title="Titanfall 2" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="Native 2880x1620 render and output in PS4 Pro mode instead of 2560x1440, with the dynamic resolution turned off so the image stays at full size. Enable only one resolution entry. Requires NEO Enabler 0.6.0 or newer." Author="gasb07" PatchVer="1.0" AppVer="01.13" AppElf="engine.prx">
+    <PatchList>
+      <Line Type="bytes" Address="0x170408" Value="400b0000" />
+      <Line Type="bytes" Address="0x170412" Value="54060000" />
+      <Line Type="bytes" Address="0x17041f" Value="54060000" />
+      <Line Type="bytes" Address="0x170427" Value="400b0000" />
+      <Line Type="bytes" Address="0x5a7c8" Value="4c8d3d0b2c0900" Module="materialsystem_ps4.prx" />
+      <Line Type="bytes" Address="0x5a820" Value="488d1591020900" Module="materialsystem_ps4.prx" />
+      <Line Type="bytes" Address="0x39334b0" Value="0000000000000000" Module="materialsystem_ps4.prx" />
+      <Line Type="bytes" Address="0x3933540" Value="0000803f01000000" Module="materialsystem_ps4.prx" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Titanfall 2" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="Native 3200x1800 render and output in PS4 Pro mode instead of 2560x1440, with the dynamic resolution turned off so the image stays at full size. Enable only one resolution entry. Requires NEO Enabler 0.6.0 or newer." Author="gasb07" PatchVer="1.0" AppVer="01.13" AppElf="engine.prx">
+    <PatchList>
+      <Line Type="bytes" Address="0x170408" Value="800c0000" />
+      <Line Type="bytes" Address="0x170412" Value="08070000" />
+      <Line Type="bytes" Address="0x17041f" Value="08070000" />
+      <Line Type="bytes" Address="0x170427" Value="800c0000" />
+      <Line Type="bytes" Address="0x5a7c8" Value="4c8d3d0b2c0900" Module="materialsystem_ps4.prx" />
+      <Line Type="bytes" Address="0x5a820" Value="488d1591020900" Module="materialsystem_ps4.prx" />
+      <Line Type="bytes" Address="0x39334b0" Value="0000000000000000" Module="materialsystem_ps4.prx" />
+      <Line Type="bytes" Address="0x3933540" Value="0000803f01000000" Module="materialsystem_ps4.prx" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Titanfall 2" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="Native 3840x2160 render and output in PS4 Pro mode instead of 2560x1440, with the dynamic resolution turned off so the image stays at full size. Enable only one resolution entry. Requires NEO Enabler 0.6.0 or newer." Author="gasb07" PatchVer="1.0" AppVer="01.13" AppElf="engine.prx">
+    <PatchList>
+      <Line Type="bytes" Address="0x170408" Value="000f0000" />
+      <Line Type="bytes" Address="0x170412" Value="70080000" />
+      <Line Type="bytes" Address="0x17041f" Value="70080000" />
+      <Line Type="bytes" Address="0x170427" Value="000f0000" />
+      <Line Type="bytes" Address="0x5a7c8" Value="4c8d3d0b2c0900" Module="materialsystem_ps4.prx" />
+      <Line Type="bytes" Address="0x5a820" Value="488d1591020900" Module="materialsystem_ps4.prx" />
+      <Line Type="bytes" Address="0x39334b0" Value="0000000000000000" Module="materialsystem_ps4.prx" />
+      <Line Type="bytes" Address="0x3933540" Value="0000803f01000000" Module="materialsystem_ps4.prx" />
+    </PatchList>
+  </Metadata>
+</Patch>
