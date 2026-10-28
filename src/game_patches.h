@@ -16,6 +16,7 @@
 typedef struct {
     char name[160];
     char note[640];
+    char author[96];            /* Author attribute of the entry ("" when missing) */
     char hash[9];
     char elf[64];               /* AppElf: the executable the entry patches (eboot.bin when missing) */
     char title[160];
@@ -144,6 +145,7 @@ static int gp_list(const char *xml, size_t len, const char *file, const char *ve
         gp_attr(xml, &b, "AppElf", elf, sizeof elf);
         gp_attr(xml, &b, "NeoRequires", req, sizeof req);
         gp_attr(xml, &b, "Note", p->note, sizeof p->note);
+        gp_attr(xml, &b, "Author", p->author, sizeof p->author);
         snprintf(p->name, sizeof p->name, "%s", name);
         snprintf(p->title, sizeof p->title, "%s", title);
         snprintf(p->elf, sizeof p->elf, "%s", elf[0] ? elf : "eboot.bin");   /* missing: the main executable */

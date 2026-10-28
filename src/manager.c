@@ -588,6 +588,7 @@ static const char page_head[] =
     ".patch input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--blue)}"
     ".patch:has(input:checked){border-color:var(--blue)}.patch:has(input:disabled){opacity:.5;cursor:default}"
     ".patch i{display:block;color:var(--muted);font-size:13px;margin-top:2px}"
+    ".patch .author{float:right;margin-left:12px}"
     ".tag{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;"
     "color:var(--amber);border:1px solid rgba(242,189,93,.45);vertical-align:1px}"
     ".state{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--surface-2)}"
@@ -736,6 +737,7 @@ static const char legacy_head[] =
     ".patch{margin:0 0 8px;padding:10px 12px;border:1px solid #263145;border-radius:10px;background:#171f2d}"
     ".patch.on{border-color:#55a7ff}.patch label{display:block;cursor:pointer}.patch input{margin:0 10px 0 0}"
     ".patch i{display:block;color:#95a2b8;font-size:13px;margin:2px 0 0 28px}"
+    ".patch .author{float:right;margin-left:12px}"
     ".tag{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:bold;"
     "color:#f2bd5d;border:1px solid #6b5a33}"
     ".state{display:inline-block;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:bold;background:#171f2d}"
@@ -807,7 +809,7 @@ static void serve_legacy_patches(int fd, const char *tid, const char *q, const c
     for (int k = 0; k < x->count; k++) {
         const gp_patch *p = &x->patches[k];
         char text[2048];
-        snprintf(text, sizeof text, "%s %s", p->name, p->note);
+        snprintf(text, sizeof text, "%s %s %s", p->name, p->author, p->note);
         if (!words_match(text, q)) continue;
         shown++;
         int on = gp_setting(settings, sl, p->hash) == 1, blocked = p->needs_8gib && !mem_ok && !on;
@@ -815,9 +817,12 @@ static void serve_legacy_patches(int fd, const char *tid, const char *q, const c
                       "<input type=hidden name=hash value=%s><input type=hidden name=on value=%d><input type=hidden name=q value='",
                   on ? " on" : "", x->tid, p->hash, !on);
         sb_esc(&b, q);
-        sb_printf(&b, "'><label><input type=checkbox onclick='this.form.submit()'%s%s><b>", on ? " checked" : "", blocked ? " disabled" : "");
+        sb_printf(&b, "'><label>");
+        if (p->author[0]) { sb_printf(&b, "<span class=author>"); sb_esc(&b, p->author); sb_printf(&b, "</span>"); }
+        sb_printf(&b, "<input type=checkbox onclick='this.form.submit()'%s%s><b>", on ? " checked" : "", blocked ? " disabled" : "");
         sb_esc(&b, p->name);
-        sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
+        sb_printf(&b, "</b>");
+        sb_printf(&b, "%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
         int main_i = gp_main_entry(x->patches, x->count, k);
         if (main_i >= 0) { sb_printf(&b, "<span class=tag>Needs a "); sb_esc(&b, x->patches[main_i].title); sb_printf(&b, " resolution</span>"); }
         if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }
@@ -879,12 +884,17 @@ static void serve_page(int fd, const char *msg) {
             sb_printf(&b, "<li data-search='");
             sb_esc(&b, p->name);
             sb_printf(&b, " ");
+            sb_esc(&b, p->author);
+            sb_printf(&b, " ");
             sb_esc(&b, p->note);
             sb_printf(&b, "'><label class=patch><input type=checkbox data-tid=%s data-hash=%s", g[i].tid, p->hash);
             if (p->resolution) { sb_printf(&b, " data-res='"); sb_esc(&b, p->elf); sb_printf(&b, "'"); }
-            sb_printf(&b, "%s%s><span><b>", on ? " checked" : "", blocked ? " disabled" : "");
+            sb_printf(&b, "%s%s><span>", on ? " checked" : "", blocked ? " disabled" : "");
+            if (p->author[0]) { sb_printf(&b, "<span class=author>"); sb_esc(&b, p->author); sb_printf(&b, "</span>"); }
+            sb_printf(&b, "<b>");
             sb_esc(&b, p->name);
-            sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
+            sb_printf(&b, "</b>");
+            sb_printf(&b, "%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
             int main_i = gp_main_entry(g[i].patches, g[i].count, k);
             if (main_i >= 0) { sb_printf(&b, "<span class=tag>Needs a "); sb_esc(&b, g[i].patches[main_i].title); sb_printf(&b, " resolution</span>"); }
             if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }
