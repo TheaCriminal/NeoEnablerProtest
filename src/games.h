@@ -201,7 +201,7 @@ static int game_flip(char **out, size_t *ol, const char *tid, const gp_patch *p,
     return 0;
 }
 
-/* Enables or disables one patch of a game. Enabling a NeoEnabler resolution entry disables the other NeoEnabler
+/* Enables or disables one patch of a game. Enabling a frame rate entry (fps) disables the other frame rate entries of the same AppElf. Enabling a NeoEnabler resolution entry disables the other NeoEnabler
    resolution entries of that game for the same AppElf, so at most one is on per executable (a collection gets one per
    game it contains); other patches are not affected. In a collection the title ID starts in eboot.bin, which sets
    PS4 Pro mode: enabling a resolution of another executable also enables the eboot.bin resolution with the same 8 GiB
@@ -218,12 +218,17 @@ static int game_set_patch(const char *tid, const char *hash, int on, int memory_
     if (!hit) { free(p); snprintf(msg, cap, "This patch is not available for %s %s", tid, ver); return -1; }
     if (on && hit->needs_8gib && !memory_ok) { free(p); snprintf(msg, cap, "This patch needs 8GB Mode: firmware 13.20 or 13.60 with the validated no-HV launch hook installed"); return -1; }
     size_t sl, ol; char *s = settings_read(&sl), *out = NULL;
-    int rc = gp_setting_set(s, sl, hash, on, &out, &ol), others = 0, k = (int)(hit - p), main_i = gp_main_entry(p, n, k);
+    int rc = gp_setting_set(s, sl, hash, on, &out, &ol), others = 0, fps_off = 0, k = (int)(hit - p), main_i = gp_main_entry(p, n, k);
     char extra[640] = "";
     for (int i = 0; !rc && on && hit->resolution && i < n; i++) {
         if (&p[i] == hit || !p[i].resolution || strcasecmp(p[i].elf, hit->elf) || gp_setting(out, ol, p[i].hash) != 1) continue;
         rc = game_flip(&out, &ol, tid, &p[i], 0, "one resolution per executable");
         others++;
+    }
+    for (int i = 0; !rc && on && hit->fps && i < n; i++) {
+        if (&p[i] == hit || !p[i].fps || strcasecmp(p[i].elf, hit->elf) || gp_setting(out, ol, p[i].hash) != 1) continue;
+        rc = game_flip(&out, &ol, tid, &p[i], 0, "one frame rate entry per executable");
+        fps_off++;
     }
     int main_on = 0, main_8gib = 0;
     for (int i = 0; i < n; i++)
@@ -273,7 +278,7 @@ static int game_set_patch(const char *tid, const char *hash, int on, int memory_
     else if (rc) snprintf(msg, cap, "The patch system settings file is malformed; nothing changed");
     else if (ps_write(PS_DIR, "!_settings.xml", out, ol)) { snprintf(msg, cap, "Writing the settings failed (errno %d)", errno); rc = -1; }
     else snprintf(msg, cap, "%s: %s %s%s%s", tid, hit->name, on ? "enabled" : "disabled",
-                  others ? "; the other resolution was disabled" : "", extra);
+                  others ? "; the other resolution was disabled" : fps_off ? "; the other frame rate entry was disabled" : "", extra);
     log_line("patches: %s", msg);
     free(out); free(s); free(p);
     return rc ? -1 : 0;

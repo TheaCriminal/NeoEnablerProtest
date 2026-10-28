@@ -884,6 +884,7 @@ static void serve_page(int fd, const char *msg) {
             sb_esc(&b, p->note);
             sb_printf(&b, "'><label class=patch><input type=checkbox data-tid=%s data-hash=%s", g[i].tid, p->hash);
             if (p->resolution) { sb_printf(&b, " data-res='"); sb_esc(&b, p->elf); sb_printf(&b, "'"); }
+            if (p->fps) { sb_printf(&b, " data-fps='"); sb_esc(&b, p->elf); sb_printf(&b, "'"); }
             sb_printf(&b, "%s%s><span><b>", on ? " checked" : "", blocked ? " disabled" : "");
             sb_esc(&b, p->name);
             sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");

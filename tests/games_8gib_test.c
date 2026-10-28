@@ -198,6 +198,27 @@ int main(int argc, char **argv) {
     assert(v && !strcmp(v->name, "KILLZONE SHADOW FALL") && !strcmp(v->game_ver, "01.81"));
     games_free(gs, ng);
     assert(!game_info("CUSA00190", name, sizeof name, ver, sizeof ver) && !strcmp(ver, "01.81"));
+    /* One frame rate entry per executable: enabling one turns off the other; a menu toggle and other executables stay. */
+    const char *fx = "<Patch>\n"
+        "<Metadata Title=\"F\" Name=\"60 FPS\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"F\" Name=\"120 FPS\" AppVer=\"01.00\" AppElf=\"eboot.bin\" NeoRequires=\"120hz\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"F\" Name=\"60 FPS Menu toggle\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"F\" Name=\"60 FPS\" AppVer=\"01.00\" AppElf=\"game2.elf\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"F\" Name=\"Skip intro\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n"
+        "<Metadata Title=\"F\" Name=\"1440p (PS4 Pro mode, 60fps)\" AppVer=\"01.00\" AppElf=\"eboot.bin\"><PatchList/></Metadata>\n</Patch>\n";
+    put(PS_DIR "/fps.xml", fx, strlen(fx));
+    install_game("CUSA99995", "F", "01.00", PS_DIR, "fps.xml");
+    int nf; gp_patch *f = game_patches("CUSA99995", "01.00", &nf);
+    assert(nf == 6 && f[0].fps && f[1].fps && !f[2].fps && f[3].fps && !f[4].fps && !f[5].fps && f[1].needs_120hz && !f[1].needs_pro);
+    assert(!game_set_patch("CUSA99995", f[0].hash, 1, 1, msg, sizeof msg));
+    assert(!game_set_patch("CUSA99995", f[2].hash, 1, 1, msg, sizeof msg));
+    assert(!game_set_patch("CUSA99995", f[3].hash, 1, 1, msg, sizeof msg));
+    assert(!game_set_patch("CUSA99995", f[1].hash, 1, 1, msg, sizeof msg) && strstr(msg, "other frame rate entry"));
+    s = settings_read(&sl);
+    assert(gp_setting(s, sl, f[0].hash) == 0 && gp_setting(s, sl, f[1].hash) == 1 && gp_setting(s, sl, f[2].hash) == 1 &&
+           gp_setting(s, sl, f[3].hash) == 1); free(s);
+    assert((game_needs("CUSA99995") & NEEDS_120HZ) && !(game_needs("CUSA99995") & NEEDS_PRO));
+    free(f);
     puts("PASS 8 GiB patches turned off while 8 GiB is unavailable, other patches kept, one resolution per executable");
     return 0;
 }

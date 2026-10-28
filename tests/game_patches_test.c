@@ -116,6 +116,8 @@ int main(void) {
         gp_patch pl[4]; int k = gp_list(x, strlen(x), "CUSA00001.xml", "01.00", pl, 4);
         assert(k == 2 && pl[0].needs_120hz && pl[0].needs_pro && !pl[1].needs_120hz && !pl[1].needs_pro);
     }
+    assert(gp_is_fps("60 FPS") && gp_is_fps("120fps") && gp_is_fps("60 FPS Unlock") && gp_is_fps("Unlock FPS 120fps") && gp_is_fps("60/120 FPS"));
+    assert(!gp_is_fps("60 FPS Menu toggle") && !gp_is_fps("Skip intro") && !gp_is_fps("1620p") && !gp_is_fps("Native 4K"));
     puts("PASS game patches: versions, entry hashes, requirements, resolution entries, settings read and edit");
     return 0;
 }
