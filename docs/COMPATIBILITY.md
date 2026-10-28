@@ -48,7 +48,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Watch Dogs 2 (01.18) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | Validated |
 | Thief (01.02) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 60 FPS validated; resolutions not tested yet |
 | Tomb Raider: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K | Native 4K validated; 1440p, 1620p and 1800p reach gameplay in a short test |
-| Dragon Age: Inquisition (01.12) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 1800p and 60 FPS validated; Native 4K played; 1440p and 1620p reach gameplay in a short test |
+| Dragon Age: Inquisition (01.12) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 120 FPS | 1800p, 60 FPS and 120 FPS (at 1440p) validated; Native 4K played; 1440p and 1620p reach gameplay in a short test |
 | Middle-earth: Shadow of Mordor - Game of the Year Edition (01.05) | 1440p, 1620p, 1800p, Native 4K | Native 4K and 1800p validated; 1440p and 1620p not tested yet |
 | Alien: Isolation (01.04) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 120 FPS | 1440p, 1800p and Native 4K reach clean gameplay; 1620p and SMAA T2x not tested yet; 60 FPS validated in gameplay (Native 4K about 55 fps with triple buffering); 120 FPS validated with the 120 Hz video output |
 | Spyro Reignited Trilogy (01.03) | 1620p, 1800p, Native 4K | 1800p and Native 4K validated; 1620p not tested yet |

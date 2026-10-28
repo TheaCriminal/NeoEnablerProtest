@@ -67,4 +67,14 @@
       <Line Type="bytes" Address="0x130a80d" Value="e8ee662e02" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Dragon Age: Inquisition" Name="120 FPS" NeoRequires="120hz" Note="Runs the game above 60 fps, up to 120 fps depending on the scene and resolution. The manager turns on the 120 Hz video output when you enable it, and your TV or monitor must accept 120 Hz. Works alone or with any resolution entry. Based on the 60 FPS patch by illusion, with a fix for the stutter while moving. Only one frame rate entry can be on at a time." Author="gasb07, illusion" PatchVer="1.0" AppVer="01.12" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x35f0f00" Value="c5fa100508000000c390909090909090b9fc073c" />
+      <Line Type="bytes" Address="0x15dcc1f" Value="be00000000" />
+      <Line Type="bytes" Address="0x12517d1" Value="c74420280000f042" />
+      <Line Type="bytes" Address="0x12517d9" Value="c644205201" />
+      <Line Type="bytes" Address="0x15dcc5f" Value="b800000000" />
+      <Line Type="bytes" Address="0x130a80d" Value="e8ee662e02" />
+    </PatchList>
+  </Metadata>
 </Patch>
