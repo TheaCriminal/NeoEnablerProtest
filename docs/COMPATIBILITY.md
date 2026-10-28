@@ -21,7 +21,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Battlefield Hardline (01.09) | 1440p, 1620p, 1800p, 4K | Validated |
 | Bloodborne (01.09) | 1440p, 1620p, 1800p (8GB Mode), Native 4K (8GB Mode) | Validated |
 | Dishonored Definitive Edition (01.03) | 1440p, 1800p, Native 4K, 60 FPS (triple buffering) | Validated |
-| Dishonored 2 (01.07) | 1620p, 1800p, Native 4K, 60 FPS, Skip intro videos | Validated |
+| Dishonored 2 (01.07) | 1620p, 1800p, Native 4K, 60 FPS, 120 FPS, Skip intro videos | Validated, 120 FPS with the 120 Hz video output |
 | Driveclub (01.28) | 1440p, 4K (1620p render), 4K (1800p render) | Validated |
 | Just Cause 3 (01.05) | 1440p, 4K | Validated |
 | Killzone Shadow Fall (01.81) | 1440p, 1620p, 1800p, 4K | Validated |
