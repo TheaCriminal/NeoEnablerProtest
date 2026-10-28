@@ -17,9 +17,4 @@
       <Line Type="bytes32" Address="0x018e1cb4" Value="0x42700000"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="Dragon's Dogma: Dark Arisen" Name="120 FPS" NeoRequires="120hz" Note="Runs the game above 60 fps, up to 120 fps depending on the scene and resolution. The manager turns on the 120 Hz video output when you enable it, and your TV or monitor must accept 120 Hz. Works alone or with any resolution entry. Based on the 60 FPS patch by illusion. Only one frame rate entry can be on at a time." Author="illusion" PatchVer="1.1" AppVer="01.01" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes32" Address="0x018e1cb4" Value="0x42700000"/>
-    </PatchList>
-  </Metadata>
 </Patch>
