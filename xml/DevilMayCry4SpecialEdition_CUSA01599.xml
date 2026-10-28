@@ -4,7 +4,7 @@
     <ID>CUSA01599</ID>
     <ID>CUSA01671</ID>
   </TitleID>
-  <Metadata Title="DEVIL MAY CRY 4 Special Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Criminal" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
+  <Metadata Title="DEVIL MAY CRY 4 Special Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Criminal" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x00e1adc2" Value="000a000041c785bc000000a0050000" />
       <Line Type="bytes" Address="0x00e1ae02" Value="000a0000a0050000" />
@@ -28,7 +28,7 @@
       <Line Type="bytes" Address="0x00e1b64b" Value="000a0000a0050000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="DEVIL MAY CRY 4 Special Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Criminal" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
+  <Metadata Title="DEVIL MAY CRY 4 Special Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Criminal" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x00e1adc2" Value="000f000041c785bc00000070080000" />
       <Line Type="bytes" Address="0x00e1ae02" Value="000f000070080000" />
