@@ -957,7 +957,7 @@ static void serve_gpu_page(int fd, const char *msg) {
         "<small>Applies to PS4 games in base or NEO mode. A saved target is requested on the next PS4 launch. "
         "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
         "<form method=post><input type=hidden name=view value=gpu><button formaction=/settings/save>Save Settings</button></form>"
-        "%s</div></div><p><small>GPU boost is independent of NEO and 8GB Mode. Quitting restores the captured GPU clock.<br>"
+        "%s</div></div><p><small>GPU boost is independent of NEO, 8GB Mode and the CPU boost. Quitting restores the captured GPU clock.<br>"
         VERSION "</small></p></main>"
         "<script>(function(){const r=document.getElementById('gpu-target'),o=document.getElementById('gpu-value');"
         "r.addEventListener('input',()=>o.textContent=r.value);"
