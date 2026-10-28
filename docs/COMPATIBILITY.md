@@ -45,7 +45,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | inFAMOUS Second Son (01.07) | 4K checkerboard | Validated |
 | NieR:Automata (01.06) | 1440p, 1620p, 1800p | Validated |
 | Watch Dogs (01.05) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 60 FPS (triple buffering) | Validated |
-| Watch Dogs 2 (01.18) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | Validated |
+| Watch Dogs 2 (01.18) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 120 FPS | Validated, 120 FPS with the 120 Hz video output |
 | Thief (01.02) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 60 FPS validated; resolutions not tested yet |
 | Tomb Raider: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K | Native 4K validated; 1440p, 1620p and 1800p reach gameplay in a short test |
 | Dragon Age: Inquisition (01.12) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 120 FPS | 1800p, 60 FPS and 120 FPS (at 1440p) validated; Native 4K played; 1440p and 1620p reach gameplay in a short test |
