@@ -91,11 +91,6 @@
       <Line Type="bytes" Address="0x1c922e2" Value="00000030" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Watch Dogs" Name="60 FPS" Note="Unlocks the 30 fps cap. Works in base and PS4 Pro mode, alone or with any resolution entry. The frame rate switches between 60 and 30 fps." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x1e3669a" Value="be00000000" />
-    </PatchList>
-  </Metadata>
   <Metadata Title="Watch Dogs" Name="60 FPS (triple buffering)" Note="Unlocks the 30 fps cap. The frame rate can sit between 30 and 60 fps (slight stutter). Works only together with one of the PS4 Pro mode resolution entries; do not enable it alone or with the plain 60 FPS entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1e3669a" Value="be00000000" />
