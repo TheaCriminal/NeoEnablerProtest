@@ -193,7 +193,6 @@ Frame rate entries copied from ps-patch-system (60 FPS) and their 120 FPS copies
 |---|---|---|---|
 | Batman: Arkham Knight | 60 FPS Unlock | 01.15 | `2474990d` |
 | Bloodborne | 60 FPS (With Deltatime) | 01.09 | `b84930d6` |
-| Dishonored: Definitive Edition | 120 FPS (triple buffering) | 01.03 | `85a414c8` |
 | Dragon's Dogma: Dark Arisen | 60 FPS | 01.01 | `55d58468` |
 | Driveclub | 60 FPS | 01.28 | `ffd3c4ca` |
 | Just Cause 3 | 60 FPS | 01.05 | `66794a5c` |
@@ -202,8 +201,6 @@ Frame rate entries copied from ps-patch-system (60 FPS) and their 120 FPS copies
 | Middle-earth: Shadow of Mordor - Game of the Year Edition | 120 FPS | 01.05 | `8c1cb900` |
 | Ratchet and Clank | 60 FPS Unlock | 01.09 | `59f53ca2` |
 | Ratchet and Clank | 120 FPS Unlock | 01.09 | `99d656c5` |
-| Shadow of the Colossus | 120 FPS | 01.00 | `266b0ddc` |
-| Shadow of the Colossus | 120 FPS | 01.01 | `296b0baf` |
 | Sleeping Dogs: Definitive Edition | 60 FPS Unlock | 01.01 | `03bc8bf2` |
 | Spyro Reignited Trilogy | 60 FPS | 01.03 | `69c6cbbe` |
 | The Evil Within | 60 FPS Unlock | 01.06 | `f860727b` |
@@ -211,6 +208,3 @@ Frame rate entries copied from ps-patch-system (60 FPS) and their 120 FPS copies
 | The Evil Within | 60 FPS | 01.06 | `b656f477` |
 | The Evil Within | 120 FPS | 01.06 | `bd2ea97e` |
 | The Order 1886 | 60 FPS Unlock | 01.02 | `dd73cb08` |
-| Watch Dogs | 120 FPS | 01.05 | `0b043e73` |
-| Watch Dogs | 120 FPS (triple buffering) | 01.05 | `903f1960` |
-| Yakuza 6: The Song of Life | 120 FPS | 01.05 | `741f6b0b` |

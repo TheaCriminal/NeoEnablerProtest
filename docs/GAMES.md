@@ -50,7 +50,6 @@ The 60 FPS entries below are copied from the ps-patch-system patch database with
 |---|---|---|---|
 | Batman: Arkham Knight | 60 FPS Unlock | 01.15 | illusion |
 | Bloodborne | 60 FPS (With Deltatime) | 01.09 | Lance McDonald (manfightdragon) |
-| Dishonored: Definitive Edition | 120 FPS (triple buffering) | 01.03 | gasb07, illusion |
 | Dragon's Dogma: Dark Arisen | 60 FPS | 01.01 | illusion |
 | Driveclub | 60 FPS | 01.28 | illusion, u/Charlie_Muggins |
 | Just Cause 3 | 60 FPS | 01.05 | illusion |
@@ -59,8 +58,6 @@ The 60 FPS entries below are copied from the ps-patch-system patch database with
 | Middle-earth: Shadow of Mordor - Game of the Year Edition | 120 FPS | 01.05 | Jao |
 | Ratchet and Clank | 60 FPS Unlock | 01.09 | illusion |
 | Ratchet and Clank | 120 FPS Unlock | 01.09 | illusion |
-| Shadow of the Colossus | 120 FPS | 01.00 | illusion |
-| Shadow of the Colossus | 120 FPS | 01.01 | illusion |
 | Sleeping Dogs: Definitive Edition | 60 FPS Unlock | 01.01 | illusion |
 | Spyro Reignited Trilogy | 60 FPS | 01.03 | illusion |
 | The Evil Within | 60 FPS Unlock | 01.06 | illusion |
@@ -68,8 +65,5 @@ The 60 FPS entries below are copied from the ps-patch-system patch database with
 | The Evil Within | 60 FPS | 01.06 | Jao |
 | The Evil Within | 120 FPS | 01.06 | Jao |
 | The Order 1886 | 60 FPS Unlock | 01.02 | illusion |
-| Watch Dogs | 120 FPS | 01.05 | gasb07 |
-| Watch Dogs | 120 FPS (triple buffering) | 01.05 | gasb07 |
-| Yakuza 6: The Song of Life | 120 FPS | 01.05 | gasb07 |
 
 Test results by game and firmware: [COMPATIBILITY.md](COMPATIBILITY.md).
