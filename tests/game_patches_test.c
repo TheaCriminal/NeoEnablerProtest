@@ -60,7 +60,8 @@ int main(void) {
     xml = slurp("xml/Driveclub_CUSA00093.xml", &len);
     n = gp_list(xml, len, "CUSA00093.xml", "01.28", p, 16);
     assert((q = find(p, n, "1440p (PS4 Pro mode)")) && !strcmp(q->hash, "8cdf7724") && q->needs_pro && !q->needs_8gib);
-    assert((q = find(p, n, "Native 4K (PS4 Pro mode, requires 8 GiB enabled)")) && !strcmp(q->hash, "65ba17e0") && q->needs_8gib);
+    assert((q = find(p, n, "4K, 1800p render (PS4 Pro mode)")) && !strcmp(q->hash, "37ba5d63") && q->needs_pro && !q->needs_8gib && strstr(q->note, "visual artifacts"));
+    assert(!find(p, n, "Native 4K (PS4 Pro mode, requires 8 GiB enabled)"));
     free(xml);
     xml = slurp("xml/JustCause3_CUSA01493.xml", &len);
     n = gp_list(xml, len, "CUSA01493.xml", "01.05", p, 16);
