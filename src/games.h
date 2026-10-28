@@ -151,7 +151,7 @@ static game_t *games_scan(int *count) {
             if (stat(path, &st) || game_info(x.tid, x.name, sizeof x.name, x.version, sizeof x.version)) continue;
             x.patches = game_patches(x.tid, x.version, &x.count);
             int pro = 0;
-            for (int i = 0; i < x.count; i++) pro |= x.patches[i].needs_pro;
+            for (int i = 0; i < x.count; i++) pro |= x.patches[i].needs_pro || x.patches[i].needs_120hz;
             if (!pro) { free(x.patches); continue; }
             snprintf(path, sizeof path, PATCH_DIR "/%s", x.tid);
             x.update = !stat(path, &st) && S_ISDIR(st.st_mode);
@@ -176,16 +176,18 @@ static char *settings_read(size_t *len) {
     return s;
 }
 
-/* What a launch of this title needs, from its enabled patches: bit 0 Pro mode, bit 1 8 GiB. */
-enum { NEEDS_PRO = 1, NEEDS_8GIB = 2 };
+/* What a launch of this title needs, from its enabled patches: bit 0 Pro mode, bit 1 8 GiB, bit 2 120 Hz output. */
+enum { NEEDS_PRO = 1, NEEDS_8GIB = 2, NEEDS_120HZ = 4 };
 static int game_needs(const char *tid) {
     char name[128], ver[16];
     if (!game_tid(tid) || game_info(tid, name, sizeof name, ver, sizeof ver)) return 0;
     int n, needs = 0; size_t sl;
     gp_patch *p = game_patches(tid, ver, &n);
     char *s = settings_read(&sl);
-    for (int i = 0; i < n; i++)
-        if (gp_setting(s, sl, p[i].hash) == 1) needs |= (p[i].needs_pro ? NEEDS_PRO : 0) | (p[i].needs_8gib ? NEEDS_8GIB | NEEDS_PRO : 0);
+    for (int i = 0; i < n; i++) {
+        if (gp_setting(s, sl, p[i].hash) != 1) continue;
+        needs |= (p[i].needs_pro ? NEEDS_PRO : 0) | (p[i].needs_8gib ? NEEDS_8GIB | NEEDS_PRO : 0) | (p[i].needs_120hz ? NEEDS_120HZ : 0);
+    }
     free(p); free(s);
     return needs;
 }

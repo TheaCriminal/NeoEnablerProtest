@@ -292,6 +292,25 @@ static int video_120hz_set(int on) {
     return rc;
 }
 
+/* Turns the 120 Hz video output on when an enabled entry of the game needs it. It is never turned off again: the
+   setting is the user's. Returns 1 when it was switched on now. */
+static int video_120hz_require(const char *tid, const char *why) {
+    if (!(game_needs(tid) & NEEDS_120HZ) || video_120hz_state() != 0) return 0;
+    if (video_120hz_set(1)) { log_line("120 Hz: %s needs the 120 Hz video output, could not turn it on", tid); return 0; }
+    log_line("120 Hz: %s needs the 120 Hz video output, turned on (%s)", tid, why);
+    return 1;
+}
+
+/* game_set_patch, then the 120 Hz output when the entry just enabled needs it. */
+static int patch_set(const char *tid, const char *hash, int on, char *msg, size_t cap) {
+    int rc = game_set_patch(tid, hash, on, memory_available(), msg, cap);
+    if (!rc && on && video_120hz_require(tid, "patch enabled")) {
+        size_t at = strlen(msg);
+        snprintf(msg + at, cap - at, " The 120 Hz video output was turned on; it takes effect the next time the game starts.");
+    }
+    return rc;
+}
+
 /* Returns 0 already installed, 1 installed now, <0 error. "Installed" means registered in the system
    (sceAppInstUtilAppExists) with the current param.json and icon: deleting the shortcut from the home
    screen makes the next start install it again. */
@@ -800,6 +819,7 @@ static void serve_legacy_patches(int fd, const char *tid, const char *q, const c
         sb_printf(&b, "'><label><input type=checkbox onclick='this.form.submit()'%s%s><b>", on ? " checked" : "", blocked ? " disabled" : "");
         sb_esc(&b, p->name);
         sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
+        if (p->needs_120hz) sb_printf(&b, "<span class=tag>120 Hz</span>");
         int main_i = gp_main_entry(x->patches, x->count, k);
         if (main_i >= 0) { sb_printf(&b, "<span class=tag>Needs a "); sb_esc(&b, x->patches[main_i].title); sb_printf(&b, " resolution</span>"); }
         if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }
@@ -867,6 +887,7 @@ static void serve_page(int fd, const char *msg) {
             sb_printf(&b, "%s%s><span><b>", on ? " checked" : "", blocked ? " disabled" : "");
             sb_esc(&b, p->name);
             sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
+            if (p->needs_120hz) sb_printf(&b, "<span class=tag>120 Hz</span>");
             int main_i = gp_main_entry(g[i].patches, g[i].count, k);
             if (main_i >= 0) { sb_printf(&b, "<span class=tag>Needs a "); sb_esc(&b, g[i].patches[main_i].title); sb_printf(&b, " resolution</span>"); }
             if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }
@@ -1503,6 +1524,7 @@ static void launch_poll(void) {
         pending.attr_off = launch_attr_offset(tid, info);
         patches_drop_8gib(tid);
         pending.needs = game_needs(tid);
+        video_120hz_require(tid, "launch");
         if (force_neo) pending.needs |= NEEDS_PRO;
         log_line("launch: %s needs %s%s", tid, pending.needs & NEEDS_PRO ? "Pro mode" : "base mode",
                  pending.needs & NEEDS_8GIB ? " and 8GB Mode" : "");
@@ -1812,7 +1834,7 @@ int main(void) {
             if (post && !strcmp(path, "/legacy/patches/set")) {
                 form_text(form_body, "hash", hash, sizeof hash); form_text(form_body, "on", on, sizeof on);
                 if (strcmp(on, "0") && strcmp(on, "1")) snprintf(pmsg, sizeof pmsg, "Invalid patch request");
-                else game_set_patch(tid, hash, on[0] == '1', memory_available(), pmsg, sizeof pmsg);
+                else patch_set(tid, hash, on[0] == '1', pmsg, sizeof pmsg);
             }
             serve_legacy_patches(fd, tid, q, pmsg);
             close(fd); continue;
@@ -1829,7 +1851,7 @@ int main(void) {
             if (form_value(form_body, "tid", tid, sizeof tid) || form_value(form_body, "hash", hash, sizeof hash) ||
                 form_value(form_body, "on", on, sizeof on) || (strcmp(on, "0") && strcmp(on, "1"))) {
                 reply(fd, "400 Bad Request", "text/plain", "Invalid patch request\n");
-            } else if (game_set_patch(tid, hash, on[0] == '1', memory_available(), pmsg, sizeof pmsg)) {
+            } else if (patch_set(tid, hash, on[0] == '1', pmsg, sizeof pmsg)) {
                 reply(fd, "409 Conflict", "text/plain; charset=utf-8", pmsg);
             } else {
                 /* message, then "state" and every entry of the game as hash=0/1: the panel shows what changed */

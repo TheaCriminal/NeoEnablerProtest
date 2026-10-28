@@ -106,6 +106,16 @@ int main(void) {
     free(o);
     assert(gp_setting_set("<Settings>", 10, "dddddddd", 1, &o, &ol) == -1);                     /* truncated file */
 
+    /* 120 Hz: NeoRequires="120hz" (alone or combined), else a "120 FPS" or "120 Hz" in the name. */
+    assert(gp_needs_120hz("120hz", "Anything") && gp_needs_120hz("pro,120hz", "Anything") && !gp_needs_120hz("pro", "120 FPS"));
+    assert(gp_needs_120hz("", "120 FPS") && gp_needs_120hz("", "Unlock FPS 120fps") && gp_needs_120hz("", "120Hz mode") && gp_needs_120hz("", "60/120 FPS"));
+    assert(!gp_needs_120hz("", "60 FPS") && !gp_needs_120hz("", "1200 MB pool") && !gp_needs_120hz("", "Native 4K (PS4 Pro mode)"));
+    {
+        const char *x = "<Patch>\n<Metadata Title=\"T\" Name=\"120 FPS\" AppVer=\"01.00\" NeoRequires=\"pro,120hz\"><PatchList/></Metadata>\n"
+                        "<Metadata Title=\"T\" Name=\"60 FPS\" AppVer=\"01.00\"><PatchList/></Metadata>\n</Patch>\n";
+        gp_patch pl[4]; int k = gp_list(x, strlen(x), "CUSA00001.xml", "01.00", pl, 4);
+        assert(k == 2 && pl[0].needs_120hz && pl[0].needs_pro && !pl[1].needs_120hz && !pl[1].needs_pro);
+    }
     puts("PASS game patches: versions, entry hashes, requirements, resolution entries, settings read and edit");
     return 0;
 }
