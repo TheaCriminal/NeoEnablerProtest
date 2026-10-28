@@ -120,9 +120,9 @@ Every game needs its patch from `xml/` to work in PS4 Pro mode. NeoEnabler insta
 
 Every NeoEnabler entry carries `NeoRequires="pro"` or `NeoRequires="pro,8gib"`, which tells the manager what the
 game needs at launch. `NeoRequires="120hz"` (alone or with the others, for example `pro,120hz`) marks an entry that
-runs the game at 120 fps: enabling it in the panel, or starting a game that has it enabled, turns on the 120 Hz video
-output. Entries without the attribute are also recognised when "120 FPS" or "120 Hz" is in their name. The output stays
-on until you turn it off in Advanced. ps-patch-system ignores this attribute.
+runs the game at 120 fps: starting a game that has it enabled turns on the 120 Hz video output, and closing the game
+turns it off again (unless you had turned it on yourself in Advanced). Entries without the attribute are also
+recognised when "120 FPS" or "120 Hz" is in their name. ps-patch-system ignores this attribute.
 
 Supported games, resolutions and notes: [docs/GAMES.md](docs/GAMES.md).
 

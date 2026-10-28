@@ -5,9 +5,9 @@
 - Games installed on an external drive now appear in the Games page. Before, only games on the internal drive were
   listed, so with every game on a USB drive the page was empty.
 - New patch entry flag `NeoRequires="120hz"`, alone or with the others (`pro,120hz`). Enabling such an entry in the
-  panel, or starting a game that has it enabled, turns on the 120 Hz video output. The output is never turned off
-  again by NeoEnabler. Entries named "120 FPS" or "120 Hz" are recognised without the flag, and the panel shows a
-  "120 Hz" tag on them.
+  panel, turns on the 120 Hz video output when a game that has it enabled starts, and turns it off when the game
+  closes, as 8GB Mode does. If the output was already on, it stays on. Entries named "120 FPS" or "120 Hz" are
+  recognised without the flag, and the panel shows a "120 Hz" tag on them.
 - Only one frame rate entry ("60 FPS", "120 FPS" and similar) can be on per game and executable. Enabling one turns
   off the other.
 

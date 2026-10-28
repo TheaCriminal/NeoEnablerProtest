@@ -292,23 +292,25 @@ static int video_120hz_set(int on) {
     return rc;
 }
 
-/* Turns the 120 Hz video output on when an enabled entry of the game needs it. It is never turned off again: the
-   setting is the user's. Returns 1 when it was switched on now. */
-static int video_120hz_require(const char *tid, const char *why) {
-    if (!(game_needs(tid) & NEEDS_120HZ) || video_120hz_state() != 0) return 0;
-    if (video_120hz_set(1)) { log_line("120 Hz: %s needs the 120 Hz video output, could not turn it on", tid); return 0; }
-    log_line("120 Hz: %s needs the 120 Hz video output, turned on (%s)", tid, why);
-    return 1;
-}
+/* 120 Hz video output for a launch, like 8GB Mode: turned on when the game being started has an enabled entry that
+   needs it, and turned off again once no game runs, unless it was already on (the user's own setting). */
+static struct { int active, seen_game; char tid[10]; time_t since; } hz_launch;
 
-/* game_set_patch, then the 120 Hz output when the entry just enabled needs it. */
-static int patch_set(const char *tid, const char *hash, int on, char *msg, size_t cap) {
-    int rc = game_set_patch(tid, hash, on, memory_available(), msg, cap);
-    if (!rc && on && video_120hz_require(tid, "patch enabled")) {
-        size_t at = strlen(msg);
-        snprintf(msg + at, cap - at, " The 120 Hz video output was turned on; it takes effect the next time the game starts.");
+static void hz120_launch(const char *tid, int needs) {
+    if (!(needs & NEEDS_120HZ)) {
+        if (hz_launch.active && !video_120hz_set(0)) log_line("120 Hz: %s does not need it, turned off", tid);
+        hz_launch.active = 0;
+        return;
     }
-    return rc;
+    int state = video_120hz_state();
+    if (state == 0) {
+        if (video_120hz_set(1)) { log_line("120 Hz: %s needs the 120 Hz video output, could not turn it on", tid); return; }
+        log_line("120 Hz: %s needs the 120 Hz video output, turned on for this launch", tid);
+    } else if (state < 0) { log_line("120 Hz: %s needs the 120 Hz video output, ps-patch-system settings not found", tid); return; }
+    if (state == 0 || hz_launch.active) {
+        hz_launch.active = 1; hz_launch.seen_game = 0; hz_launch.since = time(NULL);
+        snprintf(hz_launch.tid, sizeof hz_launch.tid, "%s", tid);
+    }
 }
 
 /* Returns 0 already installed, 1 installed now, <0 error. "Installed" means registered in the system
@@ -657,7 +659,7 @@ static void page_status(sbuf *b, int legacy) {
               "<span class='state %s'>%s</span><br><small>For every Pro mode launch, until turned off.</small><br>"
               "<button formaction=/advanced/memory%s>%s</button></form>"
               "<form method=post style='margin-top:12px'>%s<input type=hidden name=on value=%d><b>120 Hz video output</b> "
-              "<span class='state %s'>%s</span><br><small>Lowers input lag especially with VRR. 120 fps in some titles. Can cause issues.</small><br>"
+              "<span class='state %s'>%s</span><br><small>Lowers input lag especially with VRR. 120 fps in some titles. Can cause issues. It also turns on by itself for a game whose patch needs it and off when that game closes.</small><br>"
               "<button formaction=/advanced/hz120%s>%s</button></form></details>"
               "<small style='text-align:center'>" VERSION "</small></aside>",
               st == HOOK_ON && running_pro == 1 ? "on" : "off",
@@ -1525,7 +1527,7 @@ static void launch_poll(void) {
         pending.attr_off = launch_attr_offset(tid, info);
         patches_drop_8gib(tid);
         pending.needs = game_needs(tid);
-        video_120hz_require(tid, "launch");
+        hz120_launch(tid, pending.needs);
         if (force_neo) pending.needs |= NEEDS_PRO;
         log_line("launch: %s needs %s%s", tid, pending.needs & NEEDS_PRO ? "Pro mode" : "base mode",
                  pending.needs & NEEDS_8GIB ? " and 8GB Mode" : "");
@@ -1556,6 +1558,14 @@ static void launch_poll(void) {
 
 /* 8 GiB switched on for a launch goes back to the original budget when no game runs any more. */
 static void launch_tick(void) {
+    if (hz_launch.active) {
+        int games = mb_games();
+        if (games > 0) hz_launch.seen_game = 1;
+        else if (games == 0 && (hz_launch.seen_game || time(NULL) - hz_launch.since >= 60)) {
+            hz_launch.active = 0;
+            log_line("120 Hz: %s closed: %s", hz_launch.tid, video_120hz_set(0) ? "could not turn it off" : "turned off");
+        }
+    }
     if (!auto8.active || force_8gib) return;
     int games = mb_games();
     if (games > 0) { auto8.seen_game = 1; return; }
@@ -1835,7 +1845,7 @@ int main(void) {
             if (post && !strcmp(path, "/legacy/patches/set")) {
                 form_text(form_body, "hash", hash, sizeof hash); form_text(form_body, "on", on, sizeof on);
                 if (strcmp(on, "0") && strcmp(on, "1")) snprintf(pmsg, sizeof pmsg, "Invalid patch request");
-                else patch_set(tid, hash, on[0] == '1', pmsg, sizeof pmsg);
+                else game_set_patch(tid, hash, on[0] == '1', memory_available(), pmsg, sizeof pmsg);
             }
             serve_legacy_patches(fd, tid, q, pmsg);
             close(fd); continue;
@@ -1852,7 +1862,7 @@ int main(void) {
             if (form_value(form_body, "tid", tid, sizeof tid) || form_value(form_body, "hash", hash, sizeof hash) ||
                 form_value(form_body, "on", on, sizeof on) || (strcmp(on, "0") && strcmp(on, "1"))) {
                 reply(fd, "400 Bad Request", "text/plain", "Invalid patch request\n");
-            } else if (patch_set(tid, hash, on[0] == '1', pmsg, sizeof pmsg)) {
+            } else if (game_set_patch(tid, hash, on[0] == '1', memory_available(), pmsg, sizeof pmsg)) {
                 reply(fd, "409 Conflict", "text/plain; charset=utf-8", pmsg);
             } else {
                 /* message, then "state" and every entry of the game as hash=0/1: the panel shows what changed */
@@ -1891,7 +1901,7 @@ int main(void) {
             char on[4]; int value = !form_value(form_body, "on", on, sizeof on) && !strcmp(on, "1");
             const char *amsg;
             if (video_120hz_state() < 0) amsg = "120 Hz video output: ps-patch-system settings not found; nothing changed";
-            else if (video_120hz_set(value)) amsg = "120 Hz video output: could not write the ps-patch-system settings; nothing changed";
+            else if ((hz_launch.active = 0, video_120hz_set(value))) amsg = "120 Hz video output: could not write the ps-patch-system settings; nothing changed";
             else amsg = value ? "120 Hz video output: on" : "120 Hz video output: off";
             log_line("panel: %s", amsg);
             notify(amsg); serve_page(fd, amsg);
