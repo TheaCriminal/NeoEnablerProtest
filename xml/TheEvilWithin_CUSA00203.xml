@@ -137,4 +137,24 @@
       <Line Type="bytes" Address="0x1e5fa00" Value="81ff0040fa01721a81ff0000fe017312bf0000fe0181fe000001007305be00000100e9397e73fe814f1000000080488b47c04885c0740a818808010000000000018b470425ff070000ffc069c080080000c1e803ffc8894708e902df5cfe" />
     </PatchList>
   </Metadata>
+  <Metadata Title="The Evil Within" Name="60 FPS Unlock" Note="Unlocks the 30 fps cap. Works alone or with any resolution entry. 60 FPS patch by illusion." Author="illusion" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="byte" Address="0x00637ce3" Value="0x00"/>
+    </PatchList>
+  </Metadata>
+  <Metadata Title="The Evil Within" Name="120 FPS Unlock" NeoRequires="120hz" Note="Runs the game above 60 fps, up to 120 fps depending on the scene and resolution. The manager turns on the 120 Hz video output when you enable it, and your TV or monitor must accept 120 Hz. Works alone or with any resolution entry. Based on the 60 FPS patch by illusion. Only one frame rate entry can be on at a time." Author="illusion" PatchVer="1.0" AppVer="01.06" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="byte" Address="0x00637ce3" Value="0x00"/>
+    </PatchList>
+  </Metadata>
+  <Metadata Title="The Evil Within" Name="60 FPS" Note="Changes the engine target from 30 FPS to 60 FPS" Author="Jao" PatchVer="1.00" AppVer="01.06" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x00637ce3" Value="00"/>
+    </PatchList>
+  </Metadata>
+  <Metadata Title="The Evil Within" Name="120 FPS" NeoRequires="120hz" Note="Runs the game above 60 fps, up to 120 fps depending on the scene and resolution. The manager turns on the 120 Hz video output when you enable it, and your TV or monitor must accept 120 Hz. Works alone or with any resolution entry. Based on the 60 FPS patch by Jao. Only one frame rate entry can be on at a time." Author="Jao" PatchVer="1.00" AppVer="01.06" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x00637ce3" Value="00"/>
+    </PatchList>
+  </Metadata>
 </Patch>

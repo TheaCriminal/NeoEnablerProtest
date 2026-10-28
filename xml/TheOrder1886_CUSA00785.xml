@@ -99,4 +99,14 @@
       <Line Type="bytes" Address="0xc7b555" Value="e81dead30090" />
     </PatchList>
   </Metadata>
+  <Metadata Title="The Order 1886" Name="60 FPS Unlock" Note="Softlocks will occur in Chapter 6 and 9 during Quick Time Events.\nDisable patch to progress." Author="illusion" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="byte" Address="0x008507c4" Value="0x01"/>
+    </PatchList>
+  </Metadata>
+  <Metadata Title="The Order 1886" Name="120 FPS Unlock" NeoRequires="120hz" Note="Runs the game above 60 fps, up to 120 fps depending on the scene and resolution. The manager turns on the 120 Hz video output when you enable it, and your TV or monitor must accept 120 Hz. Works alone or with any resolution entry. Based on the 60 FPS patch by illusion. Only one frame rate entry can be on at a time. Softlocks will occur in Chapter 6 and 9 during Quick Time Events.\nDisable patch to progress." Author="illusion" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="byte" Address="0x008507c4" Value="0x01"/>
+    </PatchList>
+  </Metadata>
 </Patch>

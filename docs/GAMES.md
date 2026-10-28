@@ -42,4 +42,43 @@ and enable the patches: [Game patches](../README.md#game-patches).
 | Spyro Reignited Trilogy (01.00 disc, shown as 01.03) | 1620p, 1800p, native 4K | The game already runs in PS4 Pro mode: it renders 2560x1440 into a 1080p output. The entries output 2160p and need the PS5 video output set to 2160p; with 1080p output they render below the stock 1440p. 1620p leaves the most headroom for illusion's 60 FPS patch. |
 | Rayman Legends (01.01) | 1440p, 1620p, 1800p, native 4K | Stock memory (no 8GB Mode). |
 
+## Frame rate entries from ps-patch-system
+
+These 60 FPS entries are copied from the ps-patch-system patch database with their original authors, and each has a 120 FPS entry with the same patch lines that also turns on the 120 Hz video output (the 120 Hz mode follows the enabled patches of each game and turns off when the game closes). They were not tested by this project. Only one frame rate entry can be on at a time. Thief and Prey have no 120 FPS entry: the 120 Hz output of ps-patch-system does not reach them.
+
+| Game | Entry | Game version | Credit |
+|---|---|---|---|
+| Batman: Arkham Knight | 60 FPS Unlock | 01.15 | illusion |
+| Batman: Arkham Knight | 120 FPS Unlock | 01.15 | illusion |
+| Bloodborne | 60 FPS (With Deltatime) | 01.09 | Lance McDonald (manfightdragon) |
+| Bloodborne | 120 FPS (With Deltatime) | 01.09 | Lance McDonald (manfightdragon) |
+| Dishonored: Definitive Edition | 120 FPS (triple buffering) | 01.03 | gasb07, illusion |
+| Dragon's Dogma: Dark Arisen | 60 FPS | 01.01 | illusion |
+| Dragon's Dogma: Dark Arisen | 120 FPS | 01.01 | illusion |
+| Driveclub | 60 FPS | 01.28 | illusion, u/Charlie_Muggins |
+| Driveclub | 120 FPS | 01.28 | illusion, u/Charlie_Muggins |
+| Just Cause 3 | 60 FPS | 01.05 | illusion |
+| Just Cause 3 | 120 FPS | 01.05 | illusion |
+| Mad Max | 60 FPS Unlock | 01.06 | illusion |
+| Mad Max | 120 FPS Unlock | 01.06 | illusion |
+| Middle-earth: Shadow of Mordor - Game of the Year Edition | 60 FPS | 01.05 | Jao |
+| Middle-earth: Shadow of Mordor - Game of the Year Edition | 120 FPS | 01.05 | Jao |
+| Ratchet and Clank | 60 FPS Unlock | 01.09 | illusion |
+| Ratchet and Clank | 120 FPS Unlock | 01.09 | illusion |
+| Shadow of the Colossus | 120 FPS | 01.00 | illusion |
+| Shadow of the Colossus | 120 FPS | 01.01 | illusion |
+| Sleeping Dogs: Definitive Edition | 60 FPS Unlock | 01.01 | illusion |
+| Sleeping Dogs: Definitive Edition | 120 FPS Unlock | 01.01 | illusion |
+| Spyro Reignited Trilogy | 60 FPS | 01.03 | illusion |
+| Spyro Reignited Trilogy | 120 FPS | 01.03 | illusion |
+| The Evil Within | 60 FPS Unlock | 01.06 | illusion |
+| The Evil Within | 120 FPS Unlock | 01.06 | illusion |
+| The Evil Within | 60 FPS | 01.06 | Jao |
+| The Evil Within | 120 FPS | 01.06 | Jao |
+| The Order 1886 | 60 FPS Unlock | 01.02 | illusion |
+| The Order 1886 | 120 FPS Unlock | 01.02 | illusion |
+| Watch Dogs | 120 FPS | 01.05 | gasb07 |
+| Watch Dogs | 120 FPS (triple buffering) | 01.05 | gasb07 |
+| Yakuza 6: The Song of Life | 120 FPS | 01.05 | gasb07 |
+
 Test results by game and firmware: [COMPATIBILITY.md](COMPATIBILITY.md).

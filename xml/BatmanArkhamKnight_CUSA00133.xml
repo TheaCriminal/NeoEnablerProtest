@@ -66,4 +66,18 @@
       <Line Type="bytes32" Address="0x02b04018" Value="0x00000870" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Batman: Arkham Knight" Name="60 FPS Unlock" Note="Unlocks the 30 fps cap. Works alone or with any resolution entry. 60 FPS patch by illusion." Author="illusion" PatchVer="1.0" AppVer="01.15" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x009fa57e" Value="be00000000"/>
+      <Line Type="bytes" Address="0x009fb766" Value="41bc04000000"/>
+      <Line Type="bytes" Address="0x009fb9e1" Value="0f85a9000000"/>
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Batman: Arkham Knight" Name="120 FPS Unlock" NeoRequires="120hz" Note="Runs the game above 60 fps, up to 120 fps depending on the scene and resolution. The manager turns on the 120 Hz video output when you enable it, and your TV or monitor must accept 120 Hz. Works alone or with any resolution entry. Based on the 60 FPS patch by illusion. Only one frame rate entry can be on at a time." Author="illusion" PatchVer="1.0" AppVer="01.15" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x009fa57e" Value="be00000000"/>
+      <Line Type="bytes" Address="0x009fb766" Value="41bc04000000"/>
+      <Line Type="bytes" Address="0x009fb9e1" Value="0f85a9000000"/>
+    </PatchList>
+  </Metadata>
 </Patch>

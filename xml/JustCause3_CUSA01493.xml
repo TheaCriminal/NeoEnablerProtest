@@ -42,4 +42,16 @@
       <Line Type="mask" Address="ff 25 92 a6 5f 00 68 bc 00 00 00 e9 20 f4 ff ff ff 25 8a a6 5f 00 68 bd 00 00 00 e9 10 f4 ff ff ff 25 82 a6 5f 00" Offset="16" Value="e9231c4c0090" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Just Cause 3" Name="60 FPS" Note="Unlocks the 30 fps cap. Works alone or with any resolution entry. 60 FPS patch by illusion." Author="illusion" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x00a1f817" Value="4831c9"/>
+      <Line Type="bytes" Address="0x01ddd118" Value="41c7c403000000"/>
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Just Cause 3" Name="120 FPS" NeoRequires="120hz" Note="Runs the game above 60 fps, up to 120 fps depending on the scene and resolution. The manager turns on the 120 Hz video output when you enable it, and your TV or monitor must accept 120 Hz. Works alone or with any resolution entry. Based on the 60 FPS patch by illusion. Only one frame rate entry can be on at a time." Author="illusion" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x00a1f817" Value="4831c9"/>
+      <Line Type="bytes" Address="0x01ddd118" Value="41c7c403000000"/>
+    </PatchList>
+  </Metadata>
 </Patch>

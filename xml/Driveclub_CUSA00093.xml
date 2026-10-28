@@ -88,4 +88,18 @@
       <Line Type="bytes" Address="0xa6306e" Value="9090" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Driveclub" Name="60 FPS" Note="Patch version 2.0 features deltatime." Author="illusion, u/Charlie_Muggins" PatchVer="2.0" AppVer="01.28" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x01184800" Value="b801000000"/>
+      <Line Type="bytes" Address="0x01184725" Value="48b001"/>
+      <Line Type="bytes" Address="0x00a6306e" Value="9090"/>
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Driveclub" Name="120 FPS" NeoRequires="120hz" Note="Runs the game above 60 fps, up to 120 fps depending on the scene and resolution. The manager turns on the 120 Hz video output when you enable it, and your TV or monitor must accept 120 Hz. Works alone or with any resolution entry. Based on the 60 FPS patch by illusion, u/Charlie_Muggins. Only one frame rate entry can be on at a time. Patch version 2.0 features deltatime." Author="illusion, u/Charlie_Muggins" PatchVer="2.0" AppVer="01.28" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x01184800" Value="b801000000"/>
+      <Line Type="bytes" Address="0x01184725" Value="48b001"/>
+      <Line Type="bytes" Address="0x00a6306e" Value="9090"/>
+    </PatchList>
+  </Metadata>
 </Patch>

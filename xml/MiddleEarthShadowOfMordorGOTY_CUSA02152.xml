@@ -28,4 +28,14 @@
       <Line Type="bytes" Address="0x468890" Value="c5fa10834cc802000f1f8400000000000f1f4000" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Middle-earth: Shadow of Mordor - Game of the Year Edition" Name="60 FPS" Note="Changes the engine target from 30 FPS to 60 FPS" Author="Jao" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+    <PatchList>
+      <Line Value="00" Address="0x00463f0c" Type="bytes"/>
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Middle-earth: Shadow of Mordor - Game of the Year Edition" Name="120 FPS" NeoRequires="120hz" Note="Runs the game above 60 fps, up to 120 fps depending on the scene and resolution. The manager turns on the 120 Hz video output when you enable it, and your TV or monitor must accept 120 Hz. Works alone or with any resolution entry. Based on the 60 FPS patch by Jao. Only one frame rate entry can be on at a time." Author="Jao" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+    <PatchList>
+      <Line Value="00" Address="0x00463f0c" Type="bytes"/>
+    </PatchList>
+  </Metadata>
 </Patch>
