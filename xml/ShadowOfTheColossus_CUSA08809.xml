@@ -5,21 +5,21 @@
     <ID>CUSA08809</ID>
     <ID>CUSA08034</ID>
   </TitleID>
-  <Metadata Title="Shadow of the Colossus" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 render in PS4 Pro mode (quality mode), output stays 3840x2160. Render target pool grown from 0x23d10000 to 0x3c000000 so the larger targets fit. Stock memory, no 8GB Mode. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
+  <Metadata Title="Shadow of the Colossus" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 render in PS4 Pro mode (quality mode), output stays 3840x2160. Stock memory, no 8GB Mode. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x495d5b" Value="41bd400b0000"/>
       <Line Type="bytes" Address="0x495d76" Value="41bf54060000"/>
       <Line Type="bytes" Address="0x49b760" Value="b80000003c"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="Shadow of the Colossus" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 render in PS4 Pro mode (quality mode), output stays 3840x2160. Render target pool grown from 0x23d10000 to 0x3c000000 so the larger targets fit. Stock memory, no 8GB Mode. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
+  <Metadata Title="Shadow of the Colossus" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 render in PS4 Pro mode (quality mode), output stays 3840x2160. Stock memory, no 8GB Mode. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x495d5b" Value="41bd800c0000"/>
       <Line Type="bytes" Address="0x495d76" Value="41bf08070000"/>
       <Line Type="bytes" Address="0x49b760" Value="b80000003c"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="Shadow of the Colossus" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 render in PS4 Pro mode (quality mode), output stays 3840x2160. Render target pool grown from 0x23d10000 to 0x44800000 so the larger targets fit. Stock memory, no 8GB Mode. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
+  <Metadata Title="Shadow of the Colossus" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 render in PS4 Pro mode (quality mode), output stays 3840x2160. Stock memory, no 8GB Mode. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x495d5b" Value="41bd000f0000"/>
       <Line Type="bytes" Address="0x495d76" Value="41bf70080000"/>

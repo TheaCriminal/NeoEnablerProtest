@@ -2,8 +2,9 @@
 <Patch>
   <TitleID>
     <ID>CUSA18600</ID>
+    <ID>CUSA19120</ID>
   </TitleID>
-  <Metadata Title="DRAGON QUEST XI S" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 render in PS4 Pro mode with 3840x2160 output: the engine 4K output path is enabled and the game's screen percentage setter is fixed at 66.67%. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
+  <Metadata Title="DRAGON QUEST XI S" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 render with 3840x2160 output in PS4 Pro mode (the game renders at 1080p in Pro mode). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x20bd279" Value="eb0f"/>
       <Line Type="bytes" Address="0x609dc0" Value="c5fa5a0514160000e903160000"/>
@@ -11,7 +12,7 @@
       <Line Type="bytes" Address="0x14c135e" Value="e95d8a14ff"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="DRAGON QUEST XI S" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 render in PS4 Pro mode with 3840x2160 output: the engine 4K output path is enabled and the game's screen percentage setter is fixed at 75%. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
+  <Metadata Title="DRAGON QUEST XI S" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 render with 3840x2160 output in PS4 Pro mode (the game renders at 1080p in Pro mode). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x20bd279" Value="eb0f"/>
       <Line Type="bytes" Address="0x609dc0" Value="c5fa5a0514160000e903160000"/>
@@ -19,7 +20,7 @@
       <Line Type="bytes" Address="0x14c135e" Value="e95d8a14ff"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="DRAGON QUEST XI S" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 render in PS4 Pro mode with 3840x2160 output: the engine 4K output path is enabled and the game's screen percentage setter is fixed at 83.33%. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
+  <Metadata Title="DRAGON QUEST XI S" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 render with 3840x2160 output in PS4 Pro mode (the game renders at 1080p in Pro mode). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x20bd279" Value="eb0f"/>
       <Line Type="bytes" Address="0x609dc0" Value="c5fa5a0514160000e903160000"/>
@@ -27,7 +28,7 @@
       <Line Type="bytes" Address="0x14c135e" Value="e95d8a14ff"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="DRAGON QUEST XI S" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode: the engine 4K output path is enabled, screen percentage stays at the game's 100%. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
+  <Metadata Title="DRAGON QUEST XI S" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode (the game renders at 1080p in Pro mode). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x20bd279" Value="eb0f"/>
     </PatchList>

@@ -11,7 +11,7 @@
     <ID>CUSA03173</ID>
     <ID>CUSA03179</ID>
   </TitleID>
-  <Metadata Title="Bloodborne" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Based on Kyo's resolution patch. Enable only one resolution entry. Requires NEO Enabler." Author="Kyo (resolution), gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
+  <Metadata Title="Bloodborne" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Based on Kyo's resolution patch. Enable only one resolution entry. Requires NEO Enabler." Author="Kyo (resolution), gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
     <PatchList>
       <Line Type="mask" Address="8b 95 7c fe ff ff 44 8b 85 78 fe ff ff 45 89 f9 e8 6e ff 9a fe b9 05 00 00 00 85 c0 0f 84 97 03 00 00 44 88 a5" Offset="16" Value="e8eead4e00" />
       <Line Type="bytes" Address="0x2fc0e10" Value="4883c408e877514cfe85c074374889c248c1ea203d000087007707b800008700eb0c3d000040027305b80000400281fa000001007305ba0000010089c048c1e2204809d0e9c951b1ff" />
@@ -87,7 +87,7 @@
       <Line Type="bytes" Address="0x55289fc" Value="a0050000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Bloodborne" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro (NEO) mode. Based on Kyo's resolution patch. Enable only one resolution entry. Requires NEO Enabler." Author="Kyo (resolution), gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
+  <Metadata Title="Bloodborne" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Based on Kyo's resolution patch. Enable only one resolution entry. Requires NEO Enabler." Author="Kyo (resolution), gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
     <PatchList>
       <Line Type="mask" Address="8b 95 7c fe ff ff 44 8b 85 78 fe ff ff 45 89 f9 e8 6e ff 9a fe b9 05 00 00 00 85 c0 0f 84 97 03 00 00 44 88 a5" Offset="16" Value="e8eead4e00" />
       <Line Type="bytes" Address="0x2fc0e10" Value="4883c408e877514cfe85c074374889c248c1ea203d000087007707b800008700eb0c3d000040027305b80000400281fa000001007305ba0000010089c048c1e2204809d0e9c951b1ff" />
@@ -164,7 +164,7 @@
       <Line Type="bytes" Address="0x55289fc" Value="54060000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Bloodborne" Name="1800p (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3200x1800 output and render in PS4 Pro (NEO) mode. Based on Kyo's resolution patch. Enable only one resolution entry. Requires NEO Enabler with the 8 GiB memory budget." Author="Kyo (resolution), gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
+  <Metadata Title="Bloodborne" Name="1800p (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3200x1800 output and render in PS4 Pro mode. Based on Kyo's resolution patch. Enable only one resolution entry. Requires NEO Enabler with 8GB Mode." Author="Kyo (resolution), gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
     <PatchList>
       <Line Type="mask" Address="8b 95 7c fe ff ff 44 8b 85 78 fe ff ff 45 89 f9 e8 6e ff 9a fe b9 05 00 00 00 85 c0 0f 84 97 03 00 00 44 88 a5" Offset="16" Value="e8eead4e00" />
       <Line Type="bytes" Address="0x2fc0e10" Value="4883c408e877514cfe85c074374889c248c1ea203d000087007707b800008700eb0c3d000040027305b80000400281fa000001007305ba0000010089c048c1e2204809d0e9c951b1ff" />
@@ -241,7 +241,7 @@
       <Line Type="bytes" Address="0x55289fc" Value="08070000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Bloodborne" Name="Native 4K (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Based on Kyo's resolution patch. Enable only one resolution entry. Requires NEO Enabler with the 8 GiB memory budget." Author="Kyo (resolution), gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
+  <Metadata Title="Bloodborne" Name="Native 4K (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output and render in PS4 Pro mode. Based on Kyo's resolution patch. Enable only one resolution entry. Requires NEO Enabler with 8GB Mode." Author="Kyo (resolution), gasb07" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
     <PatchList>
       <Line Type="mask" Address="8b 95 7c fe ff ff 44 8b 85 78 fe ff ff 45 89 f9 e8 6e ff 9a fe b9 05 00 00 00 85 c0 0f 84 97 03 00 00 44 88 a5" Offset="16" Value="e8eead4e00" />
       <Line Type="bytes" Address="0x2fc0e10" Value="4883c408e877514cfe85c074374889c248c1ea203d000087007707b800008700eb0c3d000040027305b80000400281fa000001007305ba0000010089c048c1e2204809d0e9c951b1ff" />

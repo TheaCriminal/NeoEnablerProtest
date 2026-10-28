@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.3
+
+- New Advanced option: 120 Hz video output. It turns the ps-patch-system 120 Hz setting on or off from the panel.
+  It lowers input lag, mainly with VRR, and some games can reach 120 fps. Contributed by TheaCriminal.
+- GPU boost now detects a PS5 Pro and allows targets up to 2350 MHz on it. Other consoles keep the 2200 MHz limit.
+  Contributed by TheaCriminal.
+- GPU boost now re-applies the clock up to 10 times when the system resets it, instead of 3. After the boost holds
+  for a while the count starts again, so leaving to the home screen several times no longer stops it.
+
 ## 0.5.2
 
 - System dialogs, such as the save data window, open again while a game runs with 8GB Mode. Before, the game

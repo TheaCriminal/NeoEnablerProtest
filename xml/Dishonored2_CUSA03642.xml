@@ -8,21 +8,21 @@
     <ID>CUSA06680</ID>
     <ID>CUSA06794</ID>
   </TitleID>
-  <Metadata Title="Dishonored 2" Name="1620p (PS4 Pro mode)" Note="2880x1620 output in PS4 Pro mode instead of 2560x1440, dynamic resolution as in the game, sharper temporal AA (TXAA weight 0.2). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.07" AppElf="eboot.bin" NeoRequires="pro">
+  <Metadata Title="Dishonored 2" Name="1620p (PS4 Pro mode)" Note="2880x1620 output in PS4 Pro mode instead of 2560x1440, dynamic resolution as in the game and sharper anti-aliasing. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.07" AppElf="eboot.bin" NeoRequires="pro">
     <PatchList>
       <Line Type="bytes" Address="0xaecf05" Value="c7056dc04604400b0000" />
       <Line Type="bytes" Address="0xaecf0f" Value="be54060000" />
       <Line Type="bytes" Address="0xa6e422" Value="c5fa590576af6a02" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Dishonored 2" Name="1800p (PS4 Pro mode)" Note="3200x1800 output in PS4 Pro mode instead of 2560x1440, dynamic resolution as in the game, sharper temporal AA (TXAA weight 0.2). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.07" AppElf="eboot.bin" NeoRequires="pro">
+  <Metadata Title="Dishonored 2" Name="1800p (PS4 Pro mode)" Note="3200x1800 output in PS4 Pro mode instead of 2560x1440, dynamic resolution as in the game and sharper anti-aliasing. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.07" AppElf="eboot.bin" NeoRequires="pro">
     <PatchList>
       <Line Type="bytes" Address="0xaecf05" Value="c7056dc04604800c0000" />
       <Line Type="bytes" Address="0xaecf0f" Value="be08070000" />
       <Line Type="bytes" Address="0xa6e422" Value="c5fa590576af6a02" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Dishonored 2" Name="Native 4K (PS4 Pro mode)" Note="3840x2160 output in PS4 Pro mode instead of 2560x1440, native 4K render (dynamic resolution floor 1.0, GPU boost at 2200 MHz recommended), sharper temporal AA (TXAA weight 0.2). Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.07" AppElf="eboot.bin" NeoRequires="pro">
+  <Metadata Title="Dishonored 2" Name="Native 4K (PS4 Pro mode)" Note="3840x2160 output in PS4 Pro mode instead of 2560x1440, full native 4K render (no dynamic resolution) and sharper anti-aliasing. GPU boost at 2200 MHz is recommended. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.07" AppElf="eboot.bin" NeoRequires="pro">
     <PatchList>
       <Line Type="bytes" Address="0xaecf05" Value="c7056dc04604000f0000" />
       <Line Type="bytes" Address="0xaecf0f" Value="be70080000" />
@@ -30,7 +30,7 @@
       <Line Type="bytes" Address="0xa6e422" Value="c5fa590576af6a02" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Dishonored 2" Name="60 FPS" Note="60 FPS cap (the game already uses 3 display buffers). Works alone or with any resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.07" AppElf="eboot.bin">
+  <Metadata Title="Dishonored 2" Name="60 FPS" Note="Unlocks the 30 fps cap. Works alone or with any resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.07" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0xaecc87" Value="be00000000" />
       <Line Type="bytes" Address="0xaed647" Value="be00000000" />
