@@ -5,7 +5,7 @@
     <ID>CUSA00633</ID>
     <ID>CUSA00732</ID>
   </TitleID>
-  <Metadata Title="Battlefield Hardline" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
+  <Metadata Title="Battlefield Hardline" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1724221" Value="e8dabddb01" />
       <Line Type="bytes" Address="0x1724988" Value="eb4f" />
@@ -18,7 +18,7 @@
       <Line Type="bytes" Address="0x34e0000" Value="83fe027509c7070d00000031c0c38d46fc83f8017709c7070500000031c0c3e90ca98bfe000000000000000000000000000000000000000000000000000000004883ec08e8d7000000e842ee66ff4883c40885c079054189c5cd41c30000000000000000000000000000000000000000000000000000000000000000000000004c89e1c6819200000001817930000a00007531817934a005000075288b81b80000003d0000e100721b3d0000f4007314c781b80000000000f400c781bc00000000000100448bb1b8000000e97b4c24feb9000a000041894d70baa005000041895574e9401824fe000000000000000000c740100000803fc5fa104810c300000051e81a00000059c744241001000000e98cc98afe662e0f1f840000000000669051488b05a83490004885c074704531db4e8b94d8c80200004d85d274574181bab80000000000f400754a41818ab0000000000000014d8b92c80000004d85d27433418b4a1081e1ffdfff7f81f928880200752141c742102888028041c74208ffef0000418b0a81c100f0000041894a1c41894a2441ffc34183fb03729359c3" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Battlefield Hardline" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
+  <Metadata Title="Battlefield Hardline" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1724221" Value="e8dabddb01" />
       <Line Type="bytes" Address="0x1724988" Value="eb4f" />
@@ -31,7 +31,7 @@
       <Line Type="bytes" Address="0x34e0000" Value="83fe027509c7070d00000031c0c38d46fc83f8017709c7070500000031c0c3e90ca98bfe000000000000000000000000000000000000000000000000000000004883ec084181780c400b0000750841c74014800b0000e8c5000000e830ee66ff4883c40885c079054189c5cd41c30000000000000000000000000000000000004c89e1c6819200000001817930400b000075318179345406000075288b81b80000003d00c41c01721b3d00002f017314c781b800000000002f01c781bc00000000000100448bb1b8000000e97b4c24feb9400b000041894d70ba5406000041895574e9401824fe000000000000000000c740100000803fc5fa104810c300000051e81a00000059c744241001000000e98cc98afe662e0f1f840000000000669051488b05a83490004885c00f84830000004531db4e8b94d8c80200004d85d2746a4181bab800000000002f01755d41818ab00000000000000141c782a800000000e06f014d8b92c80000004d85d2743b418b4a1081e1ffdfff7f81f928880200752941c742102888028041c74208ff2a010041c742046f01f016418b0a81c1002b010041894a1c41894a2441ffc34183fb03728059c3" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Battlefield Hardline" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
+  <Metadata Title="Battlefield Hardline" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1724221" Value="e8dabddb01" />
       <Line Type="bytes" Address="0x1724988" Value="eb4f" />
@@ -44,7 +44,7 @@
       <Line Type="bytes" Address="0x34e0000" Value="83fe027509c7070d00000031c0c38d46fc83f8017709c7070500000031c0c3e90ca98bfe000000000000000000000000000000000000000000000000000000004883ec08e8d7000000e842ee66ff4883c40885c079054189c5cd41c30000000000000000000000000000000000000000000000000000000000000000000000004c89e1c6819200000001817930800c000075318179340807000075288b81b80000003d00905f01721b3d00007b017314c781b800000000007b01c781bc00000000000100448bb1b8000000e97b4c24feb9800c000041894d70ba0807000041895574e9401824fe000000000000000000c740100000803fc5fa104810c300000051e81a00000059c744241001000000e98cc98afe662e0f1f840000000000669051488b05a83490004885c074704531db4e8b94d8c80200004d85d274574181bab800000000007b01754a41818ab0000000000000014d8b92c80000004d85d27433418b4a1081e1ffdfff7f81f928880200752141c742102888028041c74208ff760100418b0a81c10077010041894a1c41894a2441ffc34183fb03729359c3" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Battlefield Hardline" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Local experiment" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
+  <Metadata Title="Battlefield Hardline" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Local experiment" PatchVer="1.0" AppVer="01.09" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1724221" Value="e8dabddb01" />
       <Line Type="bytes" Address="0x1724988" Value="eb4f" />

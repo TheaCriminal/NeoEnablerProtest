@@ -7,7 +7,7 @@
     <ID>CUSA00066</ID>
     <ID>CUSA00879</ID>
   </TitleID>
-  <Metadata Title="Driveclub" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.28" AppElf="eboot.bin">
+  <Metadata Title="Driveclub" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.28" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1953e00" Value="0f3148c1e2204809d04889c1482b0c2540bfc1024889042540bfc10248ff042548bfc10248890c2550bfc10241ba0100000041f6c501750f4881f9003fab01720641ba02000000c3" />
       <Line Type="bytes" Address="0xb461fc" Value="e8ffdbe0009090909090909090909090909090909090909090" />
@@ -31,7 +31,7 @@
       <Line Type="bytes" Address="0xf54330" Value="e9d5de9f00" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Driveclub" Name="4K, 1620p render (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output, 2880x1620 render in PS4 Pro (NEO) mode. Known issue: may show blocky artifacts in the clouds and on other surfaces. Enable only one resolution entry. Requires NEO Enabler with the 8 GiB memory budget." Author="Local experiment" PatchVer="1.0" AppVer="01.28" AppElf="eboot.bin">
+  <Metadata Title="Driveclub" Name="4K, 1620p render (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output, 2880x1620 render in PS4 Pro mode. Known issue: may show blocky artifacts in the clouds and on other surfaces. Enable only one resolution entry. Requires NEO Enabler with 8GB Mode." Author="Local experiment" PatchVer="1.0" AppVer="01.28" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1953e00" Value="0f3148c1e2204809d04889c1482b0c2540bfc1024889042540bfc10248ff042548bfc10248890c2550bfc10241ba0100000041f6c501750f4881f9003fab01720641ba02000000c3" />
       <Line Type="bytes" Address="0xb461fc" Value="e8ffdbe0009090909090909090909090909090909090909090" />
@@ -55,7 +55,7 @@
       <Line Type="bytes" Address="0xf54330" Value="e9d5de9f00" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Driveclub" Name="4K, 1800p render (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output, 3200x1800 render in PS4 Pro (NEO) mode, close to 60 fps. Known issue: may show blocky artifacts in the clouds and on other surfaces. Enable only one resolution entry. Requires NEO Enabler with the 8 GiB memory budget." Author="Local experiment" PatchVer="1.0" AppVer="01.28" AppElf="eboot.bin">
+  <Metadata Title="Driveclub" Name="4K, 1800p render (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output, 3200x1800 render in PS4 Pro mode, close to 60 fps. Known issue: may show blocky artifacts in the clouds and on other surfaces. Enable only one resolution entry. Requires NEO Enabler with 8GB Mode." Author="Local experiment" PatchVer="1.0" AppVer="01.28" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1953e00" Value="0f3148c1e2204809d04889c1482b0c2540bfc1024889042540bfc10248ff042548bfc10248890c2550bfc10241ba0100000041f6c501750f4881f9003fab01720641ba02000000c3" />
       <Line Type="bytes" Address="0xb461fc" Value="e8ffdbe0009090909090909090909090909090909090909090" />
@@ -79,7 +79,7 @@
       <Line Type="bytes" Address="0xf54330" Value="e9d5de9f00" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Driveclub" Name="Native 4K (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output and render in PS4 Pro (NEO) mode, below 60 fps in races. Known issue: snow can show inside the car. Enable only one resolution entry. Requires NEO Enabler with the 8 GiB memory budget." Author="Local experiment" PatchVer="1.0" AppVer="01.28" AppElf="eboot.bin">
+  <Metadata Title="Driveclub" Name="Native 4K (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output and render in PS4 Pro mode, below 60 fps in races. Known issue: snow can show inside the car. Enable only one resolution entry. Requires NEO Enabler with 8GB Mode." Author="Local experiment" PatchVer="1.0" AppVer="01.28" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x1953e00" Value="0f3148c1e2204809d04889c1482b0c2540bfc1024889042540bfc10248ff042548bfc10248890c2550bfc10241ba0100000041f6c501750f4881f9003fab01720641ba02000000c3" />
       <Line Type="bytes" Address="0xb461fc" Value="e8ffdbe0009090909090909090909090909090909090909090" />

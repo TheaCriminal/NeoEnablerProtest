@@ -5,7 +5,7 @@
     <ID>CUSA03840</ID>
     <ID>CUSA09846</ID>
   </TitleID>
-  <Metadata Title="RESIDENT EVIL 6" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
+  <Metadata Title="RESIDENT EVIL 6" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
     <PatchList>
       <Line Type="mask" Address="44 24 18 00 00 00 00 45 31 c0 41 b9 01 00 00 00 e8 66 dd 1e 00 49 89 c4 4c 89 e2 48 c1 ea 20 48 8d 05 a5 60 bf" Offset="16" Value="e876b03e00" />
       <Line Type="bytes" Address="0x179fd00" Value="4883c408e8e72ce0ff4889c248c1ea203d0000fe0174213d0000e100720e3d0000f0007707b80000f000eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e9374fc1ff" />
@@ -16,7 +16,7 @@
       <Line Type="mask" Address="74 0c 48 b8 00 05 00 00 d0 02 00 00 eb 0a 48 b8 80 07 00 00 38 04 00 00 49 89 85 b0 01 00 00 41 c7 85 ec 01 00 00 02 00" Offset="16" Value="000a0000a0050000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="RESIDENT EVIL 6" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode. The Capcom logo is small. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Local experiment" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
+  <Metadata Title="RESIDENT EVIL 6" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. The Capcom logo is small. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Local experiment" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin">
     <PatchList>
       <Line Type="mask" Address="44 24 18 00 00 00 00 45 31 c0 41 b9 01 00 00 00 e8 66 dd 1e 00 49 89 c4 4c 89 e2 48 c1 ea 20 48 8d 05 a5 60 bf" Offset="16" Value="e876b03e00" />
       <Line Type="bytes" Address="0x179fd00" Value="4883c408e8e72ce0ff4889c248c1ea203d0000fe0174213d0000e100720e3d0000f0007707b80000f000eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e9374fc1ff" />

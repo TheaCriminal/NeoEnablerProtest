@@ -5,7 +5,7 @@
     <ID>CUSA00113</ID>
     <ID>CUSA00156</ID>
   </TitleID>
-  <Metadata Title="Need for Speed: Rivals" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode, same fixes as 4K. Enable only one resolution entry. Requires NEO Enabler and &quot;Resolution Patch&quot; disabled." Author="Local experiment" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
+  <Metadata Title="Need for Speed: Rivals" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler and &quot;Resolution Patch&quot; disabled." Author="Local experiment" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
     <PatchList>
       <Line Type="mask" Address="18 48 83 c4 18 5b 41 5c 41 5d 41 5e 41 5f 5d c3 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 49 89 fe 48 8d" Offset="16" Value="ba01000000e9d48a530190909090" />
       <Line Type="mask" Address="41 5f 5d e9 a7 e6 fc ff 0f 1f 80 00 00 00 00 c3 66 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 48 83 ec 60 c5" Offset="16" Value="83fe020f84e8420000e9a234000090" />
@@ -27,7 +27,7 @@
       <Line Type="bytes" Address="0x2951080" Value="81f90000e100720d81f90000f0007305b90000f40041898c24a8000000e9959532fe" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Need for Speed: Rivals" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler loaded before launching the game, &quot;Resolution Patch&quot; disabled and the PS5 set to 2160p." Author="Local experiment" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
+  <Metadata Title="Need for Speed: Rivals" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler loaded before launching the game, &quot;Resolution Patch&quot; disabled and the PS5 set to 2160p." Author="Local experiment" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
     <PatchList>
       <Line Type="mask" Address="18 48 83 c4 18 5b 41 5c 41 5d 41 5e 41 5f 5d c3 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 49 89 fe 48 8d" Offset="16" Value="ba01000000e9d48a530190909090" />
       <Line Type="mask" Address="41 5f 5d e9 a7 e6 fc ff 0f 1f 80 00 00 00 00 c3 66 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 48 83 ec 60 c5" Offset="16" Value="83fe020f84e8420000e9a234000090" />
@@ -47,7 +47,7 @@
       <Line Type="bytes" Address="0x2951100" Value="488b042550c704034885c074404531db4e8b94d8900200004d85d274274d8b52504d85d2741e4d8b92b00000004d85d2741241817a1028a80200750841814a100000008041ffc34183fb0372c3e9eeeac3fe" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Need for Speed: Rivals" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode, same fixes as 4K. Enable only one resolution entry. Requires NEO Enabler and &quot;Resolution Patch&quot; disabled." Author="Local experiment" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+  <Metadata Title="Need for Speed: Rivals" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler and &quot;Resolution Patch&quot; disabled." Author="Local experiment" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
     <PatchList>
       <Line Type="mask" Address="18 48 83 c4 18 5b 41 5c 41 5d 41 5e 41 5f 5d c3 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 49 89 fe 48 8d" Offset="16" Value="ba01000000e9e409540190909090" />
       <Line Type="mask" Address="41 5f 5d e9 a7 e6 fc ff 0f 1f 80 00 00 00 00 c3 66 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 48 83 ec 60 c5" Offset="16" Value="83fe020f84e8420000e9a234000090" />
@@ -69,7 +69,7 @@
       <Line Type="bytes" Address="0x2970080" Value="81f90000e100720d81f90000f0007305b90000f40041898c24a8000000e9d55232fe" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Need for Speed: Rivals" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler loaded before launching the game, &quot;Resolution Patch&quot; disabled and the PS5 set to 2160p." Author="Local experiment" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+  <Metadata Title="Need for Speed: Rivals" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler loaded before launching the game, &quot;Resolution Patch&quot; disabled and the PS5 set to 2160p." Author="Local experiment" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
     <PatchList>
       <Line Type="mask" Address="18 48 83 c4 18 5b 41 5c 41 5d 41 5e 41 5f 5d c3 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 49 89 fe 48 8d" Offset="16" Value="ba01000000e9e409540190909090" />
       <Line Type="mask" Address="41 5f 5d e9 a7 e6 fc ff 0f 1f 80 00 00 00 00 c3 66 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 41 57 41 56 41 54 53 48 83 ec 60 c5" Offset="16" Value="83fe020f84e8420000e9a234000090" />

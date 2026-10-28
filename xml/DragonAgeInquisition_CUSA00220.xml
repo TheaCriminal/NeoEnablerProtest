@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA00220</ID>
+    <ID>CUSA00503</ID>
+    <ID>CUSA00728</ID>
+  </TitleID>
+  <Metadata Title="Dragon Age: Inquisition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x35f0000" Value="83fe027509c7070d00000031c0c38d46fc83f8017709c7070500000031c0c3e9bca65ffe000000000000000000000000000000000000000000000000000000004883ec08e8d7000000e8c22060ff4883c408c3000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c6839200000001817b30000a00007531817b34a005000075288b83b80000003d0000e100721b3d0000f4007314c783b80000000000f400c783bc000000000001008b8bb8000000448b8bbc000000e9aa09fffd0000000000b8000a000041894658b9a005000041894e5ce992c4fefd00c740100000803fc5fa104810c300000051e81a00000059c744241001000000e97cc65efe662e0f1f840000000000669051488b05107392004885c074794531db4e8b94d8e00200004d85d274604d8b52504d85d274574181bab80000000000f400754a41818ab0000000000000014d8b92c00000004d85d27433418b4a1081e1ffdfff7f81f928880200752141c742102888028041c74208ffef0000418b0a81c100f0000041894a1c41894a2441ffc34183fb03728a59c3" />
+      <Line Type="bytes" Address="0x15e0079" Value="e882ff0002" />
+      <Line Type="bytes" Address="0x15e06fb" Value="eb63" />
+      <Line Type="bytes" Address="0x15dce44" Value="e8f7310102" />
+      <Line Type="bytes" Address="0x15e0a69" Value="e912f60002909090909090909090909090909090" />
+      <Line Type="bytes" Address="0x180156b" Value="e890ebde01" />
+      <Line Type="bytes" Address="0x15dc573" Value="e9603b0102909090909090909090" />
+      <Line Type="bytes" Address="0x127dd73" Value="e878233702" />
+      <Line Type="bytes" Address="0x15ebf66" Value="08" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Dragon Age: Inquisition" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x35f0000" Value="83fe027509c7070d00000031c0c38d46fc83f8017709c7070500000031c0c3e9bca65ffe000000000000000000000000000000000000000000000000000000004883ec084181780c400b0000750841c74014800b0000e8c5000000e8b02060ff4883c408c3000000000000000000000000000000000000000000000000000000c6839200000001817b30400b00007531817b345406000075288b83b80000003d00c41c01721b3d00002f017314c783b800000000002f01c783bc000000000001008b8bb8000000448b8bbc000000e9aa09fffd0000000000b8400b000041894658b95406000041894e5ce992c4fefd00c740100000803fc5fa104810c300000051e81a00000059c744241001000000e97cc65efe662e0f1f840000000000669051488b05107392004885c00f84900000004531db4e8b94d8e00200004d85d274734d8b52504d85d2746a4181bab800000000002f01755d41818ab00000000000000141c782a800000000e06f014d8b92c00000004d85d2743b418b4a1081e1ffdfff7f81f928880200752941c742102888028041c74208ff2a010041c742046f01f016418b0a81c1002b010041894a1c41894a2441ffc34183fb030f8273ffffff59c3" />
+      <Line Type="bytes" Address="0x15e0079" Value="e882ff0002" />
+      <Line Type="bytes" Address="0x15e06fb" Value="eb63" />
+      <Line Type="bytes" Address="0x15dce44" Value="e8f7310102" />
+      <Line Type="bytes" Address="0x15e0a69" Value="e912f60002909090909090909090909090909090" />
+      <Line Type="bytes" Address="0x180156b" Value="e890ebde01" />
+      <Line Type="bytes" Address="0x15dc573" Value="e9603b0102909090909090909090" />
+      <Line Type="bytes" Address="0x127dd73" Value="e878233702" />
+      <Line Type="bytes" Address="0x15ebf66" Value="08" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Dragon Age: Inquisition" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x35f0000" Value="83fe027509c7070d00000031c0c38d46fc83f8017709c7070500000031c0c3e9bca65ffe000000000000000000000000000000000000000000000000000000004883ec08e8d7000000e8c22060ff4883c408c3000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c6839200000001817b30800c00007531817b340807000075288b83b80000003d00905f01721b3d00007b017314c783b800000000007b01c783bc000000000001008b8bb8000000448b8bbc000000e9aa09fffd0000000000b8800c000041894658b90807000041894e5ce992c4fefd00c740100000803fc5fa104810c300000051e81a00000059c744241001000000e97cc65efe662e0f1f840000000000669051488b05107392004885c074794531db4e8b94d8e00200004d85d274604d8b52504d85d274574181bab800000000007b01754a41818ab0000000000000014d8b92c00000004d85d27433418b4a1081e1ffdfff7f81f928880200752141c742102888028041c74208ff760100418b0a81c10077010041894a1c41894a2441ffc34183fb03728a59c3" />
+      <Line Type="bytes" Address="0x15e0079" Value="e882ff0002" />
+      <Line Type="bytes" Address="0x15e06fb" Value="eb63" />
+      <Line Type="bytes" Address="0x15dce44" Value="e8f7310102" />
+      <Line Type="bytes" Address="0x15e0a69" Value="e912f60002909090909090909090909090909090" />
+      <Line Type="bytes" Address="0x180156b" Value="e890ebde01" />
+      <Line Type="bytes" Address="0x15dc573" Value="e9603b0102909090909090909090" />
+      <Line Type="bytes" Address="0x127dd73" Value="e878233702" />
+      <Line Type="bytes" Address="0x15ebf66" Value="08" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Dragon Age: Inquisition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.12" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x35f0000" Value="83fe027509c7070d00000031c0c38d46fc83f8017709c7070500000031c0c3e9bca65ffe000000000000000000000000000000000000000000000000000000004883ec08e8d7000000e8c22060ff4883c408c3000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c6839200000001817b30000f00007531817b347008000075288b83b80000003d0040fa01721b3d000002027314c783b800000000000202c783bc000000000001008b8bb8000000448b8bbc000000e9aa09fffd0000000000b8000f000041894658b97008000041894e5ce992c4fefd00c740100000803fc5fa104810c300000051e81a00000059c744241001000000e97cc65efe662e0f1f840000000000669051488b05107392004885c074794531db4e8b94d8e00200004d85d274604d8b52504d85d274574181bab800000000000202754a41818ab0000000000000014d8b92c00000004d85d27433418b4a1081e1ffdfff7f81f928880200752141c742102888028041c74208fffd0100418b0a81c100fe010041894a1c41894a2441ffc34183fb03728a59c3" />
+      <Line Type="bytes" Address="0x15e0079" Value="e882ff0002" />
+      <Line Type="bytes" Address="0x15e06fb" Value="eb63" />
+      <Line Type="bytes" Address="0x15dce44" Value="e8f7310102" />
+      <Line Type="bytes" Address="0x15e0a69" Value="e912f60002909090909090909090909090909090" />
+      <Line Type="bytes" Address="0x180156b" Value="e890ebde01" />
+      <Line Type="bytes" Address="0x15dc573" Value="e9603b0102909090909090909090" />
+      <Line Type="bytes" Address="0x127dd73" Value="e878233702" />
+      <Line Type="bytes" Address="0x15ebf66" Value="08" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Dragon Age: Inquisition" Name="60 FPS" Note="Unlocks the 30 fps cap. Works alone or with any resolution entry; the frame rate varies with the resolution (Native 4K about 48 fps). 60 FPS patch by illusion, with a fix for the stutter while moving." Author="gasb07, illusion" PatchVer="1.0" AppVer="01.12" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x35f0f00" Value="c5fa100508000000c390909090909090b9fc073c" />
+      <Line Type="bytes" Address="0x15dcc1f" Value="be00000000" />
+      <Line Type="bytes" Address="0x12517d1" Value="c744202800007042" />
+      <Line Type="bytes" Address="0x12517d9" Value="c644205201" />
+      <Line Type="bytes" Address="0x15dcc5f" Value="b800000000" />
+      <Line Type="bytes" Address="0x130a80d" Value="e8ee662e02" />
+    </PatchList>
+  </Metadata>
+</Patch>

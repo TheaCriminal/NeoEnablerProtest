@@ -31,6 +31,7 @@
 static void log_line(const char *fmt, ...);
 #include "memory_control.h"
 #include "gpu_control.h"
+#include "video_settings.h"
 #include "settings.h"
 #include "http_request.h"
 #include "log_mirror.h"
@@ -210,6 +211,21 @@ static int memory_available(void) { mb_snapshot m; return memory_supported() && 
 /* GPU clock page and boost: the MP1 driver answering a clock read. */
 static int gpu_available(void) { unsigned mhz; return gpu_backend_supported() && !gpu_backend_read(&mhz); }
 
+/* Console model: PS5 Pro model numbers are CFI-7xxx (CFI-7000, CFI-7100); every regular PS5 is CFI-1xxx or CFI-2xxx.
+   The model string comes from machdep.icc.hw_model. Anything unreadable or unrecognised counts as a regular PS5,
+   so the GPU target stays capped at 2200 MHz unless a Pro is positively identified. */
+static int console_is_pro;
+static void console_detect_model(void) {
+    char model[64] = {0}; size_t n = sizeof(model) - 1;
+    if (sysctlbyname("machdep.icc.hw_model", model, &n, NULL, 0)) n = 0;
+    model[n < sizeof(model) ? n : sizeof(model) - 1] = 0;
+    for (char *p = model; *p; p++) if (*p < 32 || *p > 126) *p = ' ';
+    console_is_pro = strstr(model, "CFI-7") != NULL;
+    gpu_set_model(console_is_pro);
+    log_line("console: model \"%s\" -> %s, GPU target limit %u MHz", model[0] ? model : "unknown",
+             console_is_pro ? "PS5 Pro" : "PS5", gpu_model_max);
+}
+
 /* Advanced overrides: Pro mode for every PS4 game, and 8 GiB kept on. */
 static int force_neo, force_8gib;
 
@@ -240,6 +256,40 @@ static int settings_save(void) {
     char buf[128]; int n = neo_settings_format(&cfg, buf, sizeof(buf));
     if (n < 0 || write_file(SETTINGS_PATH ".tmp", buf, (size_t)n)) return -1;
     return rename(SETTINGS_PATH ".tmp", SETTINGS_PATH);
+}
+
+/* 120 Hz video output: a flag of ps-patch-system itself (apply_120hz_videoout in its !_settings.xml), not a NeoEnabler
+   setting, so it is read from and written to that file and nothing is kept in /data/neo-settings. Only that
+   attribute changes; the file is replaced in one step so a failed write leaves the old one. */
+static char *video_xml_read(size_t *n) {
+    size_t len = 0; char *raw = ps_read(HZ120_XML, 64 << 10, &len);
+    if (!raw) {
+        static int logged;
+        if (!logged) { logged = 1; log_line("120 Hz: cannot read %s", HZ120_XML); }
+        return NULL;
+    }
+    char *t = malloc(len + 1);
+    if (t) { memcpy(t, raw, len); t[len] = 0; }
+    free(raw); *n = len;
+    return t;
+}
+/* 1 on, 0 off, -1 unavailable (file missing/unreadable or no recognisable flag). */
+static int video_120hz_state(void) {
+    size_t n; char *t = video_xml_read(&n);
+    if (!t) return -1;
+    int r = hz120_get(t); free(t);
+    return r;
+}
+static int video_120hz_set(int on) {
+    size_t n; char *t = video_xml_read(&n);
+    if (!t) return -1;
+    size_t cap = n + 64; char *out = malloc(cap);
+    int len = out ? hz120_set(t, on, out, cap) : -1;
+    free(t);
+    int rc = -1;
+    if (len >= 0 && !write_file(HZ120_XML ".neo.tmp", out, (size_t)len)) rc = rename(HZ120_XML ".neo.tmp", HZ120_XML);
+    free(out);
+    return rc;
 }
 
 /* Returns 0 already installed, 1 installed now, <0 error. "Installed" means registered in the system
@@ -562,6 +612,7 @@ static void page_header(sbuf *b, const char *active) {
 static void page_status(sbuf *b, int legacy) {
     int mem_ok = memory_available();
     const char *hid = legacy ? "<input type=hidden name=legacy value=1>" : "";
+    int hz120 = video_120hz_state();
     shell_t s; int st = hook_state(&s);
     if (st == HOOK_OFF && v4_active(&s)) st = HOOK_ON;
     mb_snapshot memory; memory_check(&memory);
@@ -586,7 +637,10 @@ static void page_status(sbuf *b, int legacy) {
               "<button formaction=/advanced/neo>%s</button></form>"
               "<form method=post style='margin-top:12px'>%s<input type=hidden name=on value=%d><b>Keep 8GB Mode on</b> "
               "<span class='state %s'>%s</span><br><small>For every Pro mode launch, until turned off.</small><br>"
-              "<button formaction=/advanced/memory%s>%s</button></form></details>"
+              "<button formaction=/advanced/memory%s>%s</button></form>"
+              "<form method=post style='margin-top:12px'>%s<input type=hidden name=on value=%d><b>120 Hz video output</b> "
+              "<span class='state %s'>%s</span><br><small>Lowers input lag especially with VRR. 120 fps in some titles. Can cause issues.</small><br>"
+              "<button formaction=/advanced/hz120%s>%s</button></form></details>"
               "<small style='text-align:center'>" VERSION "</small></aside>",
               st == HOOK_ON && running_pro == 1 ? "on" : "off",
               st != HOOK_ON ? state_text(st) : running_pro == 1 ? "enabled" : running_pro == 0 ? "disabled" : "ready",
@@ -597,7 +651,9 @@ static void page_status(sbuf *b, int legacy) {
               hid, !force_neo, force_neo ? "on" : "off", force_neo ? "on" : "off", force_neo ? "Turn off" : "Turn on",
               hid, !force_8gib, force_8gib && mem_ok ? "on" : "off",
               !force_8gib ? "off" : mem_ok ? "on" : "requested, not available", !force_8gib && !mem_ok ? " disabled" : "",
-              force_8gib ? "Turn off" : "Turn on");
+              force_8gib ? "Turn off" : "Turn on",
+              hid, hz120 != 1, hz120 == 1 ? "on" : "off", hz120 == 1 ? "enabled" : hz120 == 0 ? "disabled" : "unavailable",
+              hz120 < 0 ? " disabled" : "", hz120 == 1 ? "Turn off" : "Turn on");
 }
 
 /* Set for a request of the legacy panel (its paths, or legacy=1 in the form): pages answer with the legacy panel. */
@@ -843,7 +899,7 @@ static void serve_gpu_status(int fd) {
         "{\"supported\":%s,\"enabled\":%s,\"applied\":%s,\"state\":\"%s\","
         "\"current_mhz\":%s,\"target_mhz\":%u,\"previous_mhz\":%s,\"max_mhz\":%u,\"detail\":\"%s\"}",
         gpu_backend_supported() ? "true" : "false", gpu.enabled ? "true" : "false",
-        gpu.applied ? "true" : "false", gpu_state_text(), current, gpu.target, previous, GPU_MAX_MHZ, detail);
+        gpu.applied ? "true" : "false", gpu_state_text(), current, gpu.target, previous, gpu_model_max, detail);
     reply(fd, "200 OK", "application/json", body);
 }
 
@@ -855,6 +911,8 @@ static void serve_gpu_page(int fd, const char *msg) {
     if (gpu.reading_valid) snprintf(current, sizeof current, "%u MHz", gpu.actual);
     if (gpu.baseline_valid) snprintf(previous, sizeof previous, "%u MHz", gpu.baseline);
     const char *dis = gpu_backend_supported() ? "" : " disabled";
+    char range[96];
+    snprintf(range, sizeof range, "%s: choose a target from %u to %u MHz.", console_is_pro ? "PS5 Pro" : "PS5", GPU_MIN_MHZ, gpu_model_max);
     sbuf hb = {0};
     page_header(&hb, "gpu");
     static char body[16384];
@@ -870,8 +928,7 @@ static void serve_gpu_page(int fd, const char *msg) {
         "<input type=range id=gpu-target name=mhz min=%u max=%u step=50 value=%u%s>"
         "<div><button formaction=/gpu/enable%s>Apply boost</button>"
         "<button formaction=/gpu/disable%s>Disable boost</button></div></form>"
-        "<p class=notice>Maximum allowed target: 2200 MHz. Short gameplay testing has passed. "
-        "Actual frequency may be lower. Power and thermal controls remain active.</p>"
+        "<p class=notice>%s Actual frequency may be lower. Power and thermal controls remain active.</p>"
         "<small>Applies to PS4 games in base or NEO mode. A saved target is requested on the next PS4 launch. "
         "Disable restores the clock captured for the running game. Use Save Settings to keep your choice.</small>"
         "<form method=post><input type=hidden name=view value=gpu><button formaction=/settings/save>Save Settings</button></form>"
@@ -889,7 +946,7 @@ static void serve_gpu_page(int fd, const char *msg) {
         "</body></html>",
         hb.p ? hb.p : "", msg ? "<p class=msg>" : "", msg ? msg : "", msg ? "</p>" : "", current,
         gpu.applied && !gpu.blocked ? "on" : gpu.enabled ? "unk" : "off", gpu_state_text(), gpu.message, previous,
-        gpu.target, GPU_MIN_MHZ, GPU_MAX_MHZ, gpu.target, dis, dis, dis,
+        gpu.target, GPU_MIN_MHZ, gpu_model_max, gpu.target, dis, dis, dis, range,
         gpu_backend_supported() ? "" : "<p>GPU clock control is unavailable.</p>");
     free(hb.p);
     reply(fd, "200 OK", "text/html; charset=utf-8", body);
@@ -1637,6 +1694,7 @@ int main(void) {
     log_line("%s started", VERSION);
     set_process_name("neo-manager.elf");
     sceUserServiceInitialize(0);
+    console_detect_model();   /* before settings_load: the saved GPU target is checked against the model limit */
     settings_load();
     log_line("settings: force_neo=%d force_8gib=%d gpu_clock_enabled=%d gpu_clock_mhz=%u",
              force_neo, force_8gib, gpu.enabled, gpu.target);
@@ -1804,12 +1862,22 @@ int main(void) {
             int saved = !settings_save();
             log_line("panel: %s%s", amsg, saved ? "" : " (settings not saved)");
             notify(amsg); log_state(); serve_page(fd, amsg);
+        } else if (post && !strcmp(path, "/advanced/hz120")) {
+            char on[4]; int value = !form_value(form_body, "on", on, sizeof on) && !strcmp(on, "1");
+            const char *amsg;
+            if (video_120hz_state() < 0) amsg = "120 Hz video output: ps-patch-system settings not found; nothing changed";
+            else if (video_120hz_set(value)) amsg = "120 Hz video output: could not write the ps-patch-system settings; nothing changed";
+            else amsg = value ? "120 Hz video output: on" : "120 Hz video output: off";
+            log_line("panel: %s", amsg);
+            notify(amsg); serve_page(fd, amsg);
         } else if (post && (!strcmp(path, "/gpu/enable") || !strcmp(path, "/gpu/disable"))) {
             int enable = !strcmp(path, "/gpu/enable"); unsigned target = gpu.target;
             if (enable && !gpu_available()) {     /* disable stays allowed: it restores the captured clock */
                 reply(fd, "404 Not Found", "text/plain", "GPU clock control is not available on this console\n");
             } else if (enable && gpu_form_mhz(form_body, &target) != 1) {
-                reply(fd, "400 Bad Request", "text/plain", "Choose a GPU target from 1800 to 2200 MHz in 50 MHz steps\n");
+                char bad[96];
+                snprintf(bad, sizeof bad, "Choose a GPU target from %u to %u MHz in 50 MHz steps\n", GPU_MIN_MHZ, gpu_model_max);
+                reply(fd, "400 Bad Request", "text/plain", bad);
             } else {
                 int rc = gpu_request(enable, target, gpu_game_pid());
                 if (rc == -1 && enable) snprintf(gpu.message, sizeof gpu.message, "GPU clock request unavailable or failed; check firmware and SMU access");

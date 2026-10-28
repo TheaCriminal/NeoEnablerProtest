@@ -5,7 +5,7 @@
     <ID>CUSA02230</ID>
     <ID>CUSA02231</ID>
   </TitleID>
-  <Metadata Title="Dishonored: Definitive Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+  <Metadata Title="Dishonored: Definitive Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x990be2" Value="e8191a7201" />
       <Line Type="bytes" Address="0x99a995" Value="e8a17c7101" />
@@ -18,7 +18,7 @@
       <Line Type="bytes" Address="0x244edb0" Value="000a0000a0050000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Dishonored: Definitive Edition" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+  <Metadata Title="Dishonored: Definitive Edition" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x990be2" Value="e8191a7201" />
       <Line Type="bytes" Address="0x99a995" Value="e8a17c7101" />
@@ -33,7 +33,7 @@
       <Line Type="bytes" Address="0x99aa4b" Value="be00000088" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Dishonored: Definitive Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+  <Metadata Title="Dishonored: Definitive Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode (the game runs at 1080p in base mode). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x990be2" Value="e8191a7201" />
       <Line Type="bytes" Address="0x99a995" Value="e8a17c7101" />
@@ -48,7 +48,7 @@
       <Line Type="bytes" Address="0x99aa4b" Value="be00000088" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Dishonored: Definitive Edition" Name="60 FPS (triple buffering)" Note="60 FPS cap with 3 display buffers, so the frame rate can sit between 30 and 60 instead of dropping to 30. Works alone or with any resolution entry. Flip rate change from the 60 FPS Unlock patch by illusion." Author="gasb07, illusion" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
+  <Metadata Title="Dishonored: Definitive Edition" Name="60 FPS (triple buffering)" Note="Unlocks the 30 fps cap. The frame rate can sit between 30 and 60 instead of dropping to 30. Works alone or with any resolution entry. Based on the 60 FPS Unlock patch by illusion." Author="gasb07, illusion" PatchVer="1.0" AppVer="01.03" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x98eb73" Value="c7436803000000" />
       <Line Type="bytes" Address="0x9919a8" Value="be00000000" />

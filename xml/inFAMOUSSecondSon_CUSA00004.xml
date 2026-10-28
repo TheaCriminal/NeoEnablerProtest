@@ -7,7 +7,7 @@
     <ID>CUSA00305</ID>
     <ID>CUSA00309</ID>
   </TitleID>
-  <Metadata Title="inFAMOUS™ Second Son" Name="4K checkerboard (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 checkerboard render in PS4 Pro (NEO) mode (the game renders 3200x1800 by default). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.07" AppElf="eboot.bin">
+  <Metadata Title="inFAMOUS™ Second Son" Name="4K checkerboard (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 checkerboard render in PS4 Pro mode (the game renders 3200x1800 by default). Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.07" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x5f012d" Value="c7430c000f0000" />
       <Line Type="bytes" Address="0x5f0134" Value="c7431070080000" />

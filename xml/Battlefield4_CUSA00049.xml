@@ -5,7 +5,7 @@
     <ID>CUSA00110</ID>
     <ID>CUSA00157</ID>
   </TitleID>
-  <Metadata Title="Battlefield 4" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.24" AppElf="eboot.bin">
+  <Metadata Title="Battlefield 4" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.24" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x135a8ab" Value="e85057ef01" />
       <Line Type="bytes" Address="0x135a3da" Value="b00090" />
@@ -18,7 +18,7 @@
       <Line Type="bytes" Address="0x3250000" Value="83fe027509c7070d00000031c0c383fe047506c6070531c0c3e912ac81fe000000000000000000000000000000000000000000000000000000000000000000004883ec08e8c7000000e8d2f96cff4883c40885c079054189c5cd41c3000000000000000000000000000000000000000000000000000000000000000000000000418b8c24a800000041817c2430000a0000752841817c2434a0050000751d81f90000e100721581f90000f400730db90000f40041898c24a8000000458b8c24ac000000e98db110fe0000000000000000b8000a00004189442458b9a005000041894c245ce9868910fe00000000000000c740100000803fc5fa104810c300000051e80a00000059e9f41481fe0f1f400051488b04256028aa034885c074794531db4e8b94d8a00200004d85d274604d8b52584d85d274574181baa80000000000f400754a41818aa0000000000000014d8b92b00000004d85d27433418b4a1081e1ffdfff7f81f928880200752141c742102888028041c74208ffef0000418b0a81c100f0000041894a1c41894a2441ffc34183fb03728a59c3" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Battlefield 4" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.24" AppElf="eboot.bin">
+  <Metadata Title="Battlefield 4" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.24" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x135a8ab" Value="e85057ef01" />
       <Line Type="bytes" Address="0x135a3da" Value="b00090" />
@@ -32,7 +32,7 @@
       <Line Type="bytes" Address="0x3250000" Value="83fe027509c7070d00000031c0c383fe047506c6070531c0c3e912ac81fe000000000000000000000000000000000000000000000000000000000000000000004883ec084181780c400b0000750841c74014800b0000e8b5000000e8c0f96cff4883c40885c079054189c5cd41c3000000000000000000000000000000000000418b8c24a800000041817c2430400b0000752841817c243454060000751d81f900c41c01721581f900002f01730db900002f0141898c24a8000000458b8c24ac000000e98db110fe0000000000000000b8400b00004189442458b95406000041894c245ce9868910fe00000000000000c740100000803fc5fa104810c300000051e80a00000059e9f41481fe0f1f400051488b04256028aa034885c00f84900000004531db4e8b94d8a00200004d85d274734d8b52584d85d2746a4181baa800000000002f01755d41818aa00000000000000141c7829800000000e06f014d8b92b00000004d85d2743b418b4a1081e1ffdfff7f81f928880200752941c742102888028041c74208ff2a010041c742046f01f016418b0a81c1002b010041894a1c41894a2441ffc34183fb030f8273ffffff59c3" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Battlefield 4" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro (NEO) mode, stable 60 fps. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.24" AppElf="eboot.bin">
+  <Metadata Title="Battlefield 4" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode, stable 60 fps. Enable only one resolution entry. Requires NEO Enabler." Author="Local experiment" PatchVer="1.0" AppVer="01.24" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x135a8ab" Value="e85057ef01" />
       <Line Type="bytes" Address="0x135a3da" Value="b00090" />
@@ -46,7 +46,7 @@
       <Line Type="bytes" Address="0x3250000" Value="83fe027509c7070d00000031c0c383fe047506c6070531c0c3e912ac81fe000000000000000000000000000000000000000000000000000000000000000000004883ec08e8c7000000e8d2f96cff4883c40885c079054189c5cd41c3000000000000000000000000000000000000000000000000000000000000000000000000418b8c24a800000041817c2430800c0000752841817c243408070000751d81f900905f01721581f900007b01730db900007b0141898c24a8000000458b8c24ac000000e98db110fe0000000000000000b8800c00004189442458b90807000041894c245ce9868910fe00000000000000c740100000803fc5fa104810c300000051e80a00000059e9f41481fe0f1f400051488b04256028aa034885c074794531db4e8b94d8a00200004d85d274604d8b52584d85d274574181baa800000000007b01754a41818aa0000000000000014d8b92b00000004d85d27433418b4a1081e1ffdfff7f81f928880200752141c742102888028041c74208ff760100418b0a81c10077010041894a1c41894a2441ffc34183fb03728a59c3" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Battlefield 4" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p. Around 49 fps." Author="Local experiment" PatchVer="1.0" AppVer="01.24" AppElf="eboot.bin">
+  <Metadata Title="Battlefield 4" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p. Around 49 fps." Author="Local experiment" PatchVer="1.0" AppVer="01.24" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x135a8ab" Value="e85057ef01" />
       <Line Type="bytes" Address="0x135a3da" Value="b00090" />

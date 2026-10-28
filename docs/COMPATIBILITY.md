@@ -31,7 +31,6 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Yakuza 6: The Song of Life (01.05) | 1440p, 1620p, 1800p, Native 4K (8GB Mode), 60 FPS | Validated |
 | Shadow of the Colossus (01.01) | 1620p, 1800p, Native 4K | Validated |
 | Dragon Quest XI S: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K | Validated |
-| Dead Island Definitive Edition (01.03) | 1440p, 1620p, 1800p, Native 4K | 1440p validated; 1620p, 1800p and Native 4K reach gameplay with a clean image |
 | Metal Gear Solid V: The Phantom Pain (01.16) | 1440p, 1620p, 1800p, Native 4K, 4K checkerboard | Validated |
 | Resident Evil 6 (01.01) | 1440p, 4K | Validated |
 | The Order: 1886 (01.02) | 4K, 4K up to 60 fps | Validated |
@@ -46,6 +45,12 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | inFAMOUS Second Son (01.07) | 4K checkerboard | Validated |
 | NieR:Automata (01.06) | 1440p, 1620p, 1800p | Validated |
 | Watch Dogs (01.05) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 60 FPS (triple buffering) | Validated |
+| Watch Dogs 2 (01.18) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | Validated |
+| Thief (01.02) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 60 FPS validated; resolutions not tested yet |
+| Tomb Raider: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K | Native 4K validated; 1440p, 1620p and 1800p reach gameplay in a short test |
+| Dragon Age: Inquisition (01.12) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 1800p and 60 FPS validated; Native 4K played; 1440p and 1620p reach gameplay in a short test |
+| Middle-earth: Shadow of Mordor - Game of the Year Edition (01.05) | 1440p, 1620p, 1800p, Native 4K | Native 4K and 1800p validated; 1440p and 1620p not tested yet |
+| Alien: Isolation (01.04) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 1440p, 1800p and Native 4K reach clean gameplay; 1620p and SMAA T2x not tested yet; 60 FPS validated in gameplay (Native 4K about 55 fps with triple buffering) |
 | Spyro Reignited Trilogy (01.03) | 1620p, 1800p, Native 4K | 1800p and Native 4K validated; 1620p not tested yet |
 
 ## GPU boost
