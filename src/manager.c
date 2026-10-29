@@ -38,7 +38,7 @@ static void log_line(const char *fmt, ...);
 #include "log_mirror.h"
 
 #define PORT 8765
-#define VERSION "NeoEnabler 0.5.3"
+#define VERSION "NeoEnabler 0.6.0"
 typedef struct {
     uint32_t app_id; uint64_t unknown1; char title_id[10]; uint32_t apptype; char unknown2[8];
     uint32_t attribute; /* param.sfo ATTRIBUTE as launched, including the hook change */
@@ -297,6 +297,27 @@ static int video_120hz_set(int on) {
     return rc;
 }
 
+/* 120 Hz video output for a launch, like 8GB Mode: turned on when the game being started has an enabled entry that
+   needs it, and turned off again once no game runs, unless it was already on (the user's own setting). */
+static struct { int active, seen_game; char tid[10]; time_t since; } hz_launch;
+
+static void hz120_launch(const char *tid, int needs) {
+    if (!(needs & NEEDS_120HZ)) {
+        if (hz_launch.active && !video_120hz_set(0)) log_line("120 Hz: %s does not need it, turned off", tid);
+        hz_launch.active = 0;
+        return;
+    }
+    int state = video_120hz_state();
+    if (state == 0) {
+        if (video_120hz_set(1)) { log_line("120 Hz: %s needs the 120 Hz video output, could not turn it on", tid); return; }
+        log_line("120 Hz: %s needs the 120 Hz video output, turned on for this launch", tid);
+    } else if (state < 0) { log_line("120 Hz: %s needs the 120 Hz video output, ps-patch-system settings not found", tid); return; }
+    if (state == 0 || hz_launch.active) {
+        hz_launch.active = 1; hz_launch.seen_game = 0; hz_launch.since = time(NULL);
+        snprintf(hz_launch.tid, sizeof hz_launch.tid, "%s", tid);
+    }
+}
+
 /* Returns 0 already installed, 1 installed now, <0 error. "Installed" means registered in the system
    (sceAppInstUtilAppExists) with the current param.json and icon: deleting the shortcut from the home
    screen makes the next start install it again. */
@@ -316,10 +337,9 @@ static int install_launcher(void) {
 
 /* Game name from the TITLE key of /system_data/priv/appmeta/<title id>/param.sfo; empty when not found. */
 static void game_name(const char *title_id, char *out, size_t cap) {
-    char path[64]; unsigned char sfo[8192]; size_t n;
+    char path[96]; unsigned char sfo[8192]; size_t n;
     out[0] = 0;
-    snprintf(path, sizeof(path), "/system_data/priv/appmeta/%.9s/param.sfo", title_id);
-    FILE *f = fopen(path, "rb");
+    FILE *f = fopen(appmeta_file(title_id, "param.sfo", path, sizeof path), "rb");
     if (!f) return;
     n = fread(sfo, 1, sizeof(sfo), f); fclose(f);
     if (n < 20 || memcmp(sfo, "\0PSF", 4)) return;
@@ -639,8 +659,9 @@ static void page_status(sbuf *b, int legacy) {
               "<div class=card><h2>Status</h2>"
               "<div>PS4 Pro mode <span class='state %s'>%s</span></div>"
               "<div style='margin-top:6px'>8GB Mode <span class='state %s'>%s</span></div>"
-              "<p><small>Pro mode and 8GB Mode follow the enabled patches of each game. 8GB Mode returns to the original "
-              "memory when the game closes.</small></p><b>Game running</b><ul>%s</ul></div>"
+              "<div style='margin-top:6px'>120 Hz mode <span class='state %s'>%s</span></div>"
+              "<p><small>Pro mode, 8GB Mode and 120 Hz mode follow the enabled patches of each game. 8GB Mode and 120 Hz mode "
+              "return to their original state when the game closes.</small></p><b>Game running</b><ul>%s</ul></div>"
               "<div class=card><h2>Game patches</h2><p>%s</p><small>Downloads the patches from the NeoEnabler repository "
               "into " PS_DIR ". Changed files are backed up to " PS_BACKUP_ROOT " first.</small>"
               "<form method=post>%s<button formaction=/patches/update>Update Patches</button></form></div>"
@@ -650,7 +671,7 @@ static void page_status(sbuf *b, int legacy) {
               "<button formaction=/logs/save>Save Logs</button><button formaction=/diagnostic/save>Save Diagnostic</button></form></div>"
               "<div class=card><h2>Advanced</h2>"
               "<form method=post>%s<input type=hidden name=on value=%d><b>120 Hz video output</b> "
-              "<span class='state %s'>%s</span><br><small>Lowers input lag especially with VRR. 120 fps in some titles. Can cause issues.</small><br>"
+              "<span class='state %s'>%s</span><br><small>Lowers input lag especially with VRR. 120 fps in some titles. Can cause issues. It also turns on by itself for a game whose patch needs it and off when that game closes.</small><br>"
               "<button formaction=/advanced/hz120%s>%s</button></form>"
               "<form method=post style='margin-top:12px'>%s<input type=hidden name=on value=%d><b>Pro mode for every PS4 game</b> "
               "<span class='state %s'>%s</span><br><small>Not recommended, it can cause issues without a dedicated patch.</small><br>"
@@ -663,6 +684,7 @@ static void page_status(sbuf *b, int legacy) {
               st != HOOK_ON ? state_text(st) : running_pro == 1 ? "enabled" : running_pro == 0 ? "disabled" : "ready",
               memory.state == MB_8GIB ? "on" : "off",
               memory.state == MB_8GIB ? "enabled" : !fw_raw_version() ? "firmware unavailable" : !memory_supported() ? "not supported" : !mem_ok ? "unavailable" : "ready",
+              hz120 == 1 ? "on" : "off", hz120 == 1 ? "enabled" : hz120 == 0 ? "ready" : "unavailable",
               running, patches_esc, hid, hid,
               hid, hz120 != 1, hz120 == 1 ? "on" : "off", hz120 == 1 ? "enabled" : hz120 == 0 ? "disabled" : "unavailable",
               hz120 < 0 ? " disabled" : "", hz120 == 1 ? "Turn off" : "Turn on",
@@ -819,8 +841,8 @@ static void serve_legacy_patches(int fd, const char *tid, const char *q, const c
         if (p->author[0]) { sb_printf(&b, "<span class=author>"); sb_esc(&b, p->author); sb_printf(&b, "</span>"); }
         sb_printf(&b, "<input type=checkbox onclick='this.form.submit()'%s%s><b>", on ? " checked" : "", blocked ? " disabled" : "");
         sb_esc(&b, p->name);
-        sb_printf(&b, "</b>");
-        sb_printf(&b, "%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
+        sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
+        if (p->needs_120hz) sb_printf(&b, "<span class=tag>120 Hz</span>");
         int main_i = gp_main_entry(x->patches, x->count, k);
         if (main_i >= 0) { sb_printf(&b, "<span class=tag>Needs a "); sb_esc(&b, x->patches[main_i].title); sb_printf(&b, " resolution</span>"); }
         if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }
@@ -887,12 +909,13 @@ static void serve_page(int fd, const char *msg) {
             sb_esc(&b, p->note);
             sb_printf(&b, "'><label class=patch><input type=checkbox data-tid=%s data-hash=%s", g[i].tid, p->hash);
             if (p->resolution) { sb_printf(&b, " data-res='"); sb_esc(&b, p->elf); sb_printf(&b, "'"); }
+            if (p->fps) { sb_printf(&b, " data-fps='"); sb_esc(&b, p->elf); sb_printf(&b, "'"); }
             sb_printf(&b, "%s%s><span>", on ? " checked" : "", blocked ? " disabled" : "");
             if (p->author[0]) { sb_printf(&b, "<span class=author>"); sb_esc(&b, p->author); sb_printf(&b, "</span>"); }
             sb_printf(&b, "<b>");
             sb_esc(&b, p->name);
-            sb_printf(&b, "</b>");
-            sb_printf(&b, "%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
+            sb_printf(&b, "</b>%s", p->needs_8gib ? "<span class=tag>8GB Mode</span>" : "");
+            if (p->needs_120hz) sb_printf(&b, "<span class=tag>120 Hz</span>");
             int main_i = gp_main_entry(g[i].patches, g[i].count, k);
             if (main_i >= 0) { sb_printf(&b, "<span class=tag>Needs a "); sb_esc(&b, g[i].patches[main_i].title); sb_printf(&b, " resolution</span>"); }
             if (p->note[0]) { sb_printf(&b, "<i>"); sb_esc(&b, p->note); sb_printf(&b, "</i>"); }
@@ -1357,6 +1380,9 @@ static void build_report(sbuf *b) {
     mb_snapshot m; memory_check(&m);
     sb_printf(b, "8GB Mode: %s (requested %s): %s\n", m.state == MB_8GIB ? "enabled" : m.state == MB_UNKNOWN ? "unavailable" : "disabled",
               memory_target ? "on" : "off", m.detail);
+    { int hz = video_120hz_state();
+      sb_printf(b, "120 Hz mode: %s%s%s\n", hz == 1 ? "enabled" : hz == 0 ? "disabled" : "unavailable",
+                hz_launch.active ? ", turned on for launch of " : "", hz_launch.active ? hz_launch.tid : ""); }
     sb_printf(b, "GPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", gpu_state_text(), gpu.target,
               gpu.reading_valid ? "" : "unavailable/last=", gpu.actual, gpu.message);
     sb_printf(b, "CPU: %s, requested %u MHz, SMU %s%u MHz: %s\n", cpu_state_text(), cpu.target,
@@ -1544,10 +1570,9 @@ static void launch_attach(int ask) {
    app info around the known offsets when the table offset is not the one found, so a report shows the layout. */
 static uint32_t launch_attr_offset(const char *tid, uint64_t info) {
     static unsigned char buf[AD_INFO_SIZE];
-    char path[64]; size_t n = 0;
+    char path[96]; size_t n = 0;
     uint32_t attr, attr2 = 0;
-    snprintf(path, sizeof path, APPMETA_DIR "/%.9s/param.sfo", tid);
-    char *sfo = ps_read(path, 64 << 10, &n);
+    char *sfo = ps_read(appmeta_file(tid, "param.sfo", path, sizeof path), 64 << 10, &n);
     int has_attr = sfo && !ad_sfo_int((unsigned char *)sfo, n, "ATTRIBUTE", &attr);
     int has_attr2 = sfo && !ad_sfo_int((unsigned char *)sfo, n, "ATTRIBUTE2", &attr2);
     free(sfo);
@@ -1605,6 +1630,7 @@ static void launch_poll(void) {
         pending.attr_off = launch_attr_offset(tid, info);
         patches_drop_8gib(tid);
         pending.needs = game_needs(tid);
+        hz120_launch(tid, pending.needs);
         if (force_neo) pending.needs |= NEEDS_PRO;
         log_line("launch: %s needs %s%s", tid, pending.needs & NEEDS_PRO ? "Pro mode" : "base mode",
                  pending.needs & NEEDS_8GIB ? " and 8GB Mode" : "");
@@ -1635,6 +1661,14 @@ static void launch_poll(void) {
 
 /* 8 GiB switched on for a launch goes back to the original budget when no game runs any more. */
 static void launch_tick(void) {
+    if (hz_launch.active) {
+        int games = mb_games();
+        if (games > 0) hz_launch.seen_game = 1;
+        else if (games == 0 && (hz_launch.seen_game || time(NULL) - hz_launch.since >= 60)) {
+            hz_launch.active = 0;
+            log_line("120 Hz: %s closed: %s", hz_launch.tid, video_120hz_set(0) ? "could not turn it off" : "turned off");
+        }
+    }
     if (!auto8.active || force_8gib) return;
     int games = mb_games();
     if (games > 0) { auto8.seen_game = 1; return; }
@@ -1669,6 +1703,10 @@ static void serve_icon(int fd, const char *tid) {
     if (!game_tid(tid)) { reply(fd, "404 Not Found", "text/plain", "not found\n"); return; }
     snprintf(path, sizeof path, "/user/appmeta/%s/icon0.png", tid);
     char *png = ps_read(path, 4 << 20, &n);
+    if (!png) {
+        snprintf(path, sizeof path, "/user/appmeta/external/%s/icon0.png", tid);
+        png = ps_read(path, 4 << 20, &n);
+    }
     if (!png) { reply(fd, "404 Not Found", "text/plain", "not found\n"); return; }
     reply_bytes(fd, "200 OK", "image/png", "max-age=86400", png, n);
     free(png);
@@ -1969,7 +2007,7 @@ int main(void) {
             char on[4]; int value = !form_value(form_body, "on", on, sizeof on) && !strcmp(on, "1");
             const char *amsg;
             if (video_120hz_state() < 0) amsg = "120 Hz video output: ps-patch-system settings not found; nothing changed";
-            else if (video_120hz_set(value)) amsg = "120 Hz video output: could not write the ps-patch-system settings; nothing changed";
+            else if ((hz_launch.active = 0, video_120hz_set(value))) amsg = "120 Hz video output: could not write the ps-patch-system settings; nothing changed";
             else amsg = value ? "120 Hz video output: on" : "120 Hz video output: off";
             log_line("panel: %s", amsg);
             notify(amsg); serve_page(fd, amsg);
@@ -2038,7 +2076,7 @@ int main(void) {
         } else if (!strcmp(path, "/status")) {
             shell_t s; int st = hook_state(&s);
             char games[1024]; games_text(games, sizeof(games), 0);
-            char body[3600];mb_snapshot memory;memory_check(&memory);gpu_refresh();cpu_refresh();
+            char body[4096];mb_snapshot memory;memory_check(&memory);gpu_refresh();cpu_refresh();
             snprintf(body, sizeof(body), "build: " VERSION "\nmemory_8gib: %s\nmemory_requested: %s\nmemory_detail: %s\nmemory_last_result: %s\nhook: %s\nv4 hook: %s\nfw: %x site: %lx target: %lx cave: %lx eh_frame: %lx-%lx attr: 0x%x four_args: %d\n%s",
                      memory.state==MB_8GIB?"enabled":memory.state==MB_UNKNOWN?"unavailable":"disabled",
                      memory_target?"enabled":"disabled",memory.detail,memory_message,
@@ -2055,8 +2093,10 @@ int main(void) {
             used = strlen(body);
             snprintf(body + used, sizeof body - used,
                      "force_neo: %d\nforce_8gib: %d\nlaunch_questions: %s\nlast_question: %u\n8gib_for_launch: %s\n"
-                     "attr_detected: %s 0x%x\n",
+                     "video_120hz: %s\n120hz_for_launch: %s\nattr_detected: %s 0x%x\n",
                      force_neo, force_8gib, live_ok ? "enabled" : "unavailable", last_seq, auto8.active ? auto8.tid : "none",
+                     video_120hz_state() == 1 ? "enabled" : video_120hz_state() == 0 ? "disabled" : "unavailable",
+                     hz_launch.active ? hz_launch.tid : "none",
                      last_attr.tid[0] ? last_attr.tid : "none", last_attr.offset);
             used = strlen(body);
             bm_mailbox mail = {0}; int mail_ok = !bm_mail(&mail);

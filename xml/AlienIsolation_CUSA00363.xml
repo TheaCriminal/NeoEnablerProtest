@@ -102,4 +102,11 @@
       <Line Type="bytes" Address="0x9711e2" Value="03" />
     </PatchList>
   </Metadata>
+  <Metadata Title="Alien: Isolation" Name="120 FPS" NeoRequires="120hz" Note="Runs the game at 120 fps. The manager turns on the 120 Hz video output when you enable it, and your TV or monitor must accept 120 Hz. Works alone or with any resolution entry. Based on the 60 FPS patch by Jao and the 120 FPS patch by Joey85. Only one frame rate entry can be on at a time." Author="Jao, Joey85" PatchVer="1.0" AppVer="01.04" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x1022c6c" Value="00" />
+      <Line Type="bytes" Address="0x9740e0" Value="31f60f1f800000000090" />
+      <Line Type="bytes" Address="0x9711e2" Value="03" />
+    </PatchList>
+  </Metadata>
 </Patch>

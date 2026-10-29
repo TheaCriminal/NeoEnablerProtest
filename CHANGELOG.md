@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.0
+
+- Games installed on an external drive now appear in the Games page. Before, only games on the internal drive were
+  listed, so with every game on a USB drive the page was empty.
+- New patch entry flag `NeoRequires="120hz"`, alone or with the others (`pro,120hz`). Starting a game that has such an
+  entry enabled turns on the 120 Hz video output, and closing the game turns it off again, as 8GB Mode does. If the
+  output was already on, it stays on. Entries named "120 FPS" or "120 Hz" are recognised without the flag, and the
+  panel shows a "120 Hz" tag on them.
+- The Status card, the status page and the logs report now show the 120 Hz mode.
+- A module patch Line can carry a Module attribute (for example Module="materialsystem_ps4.prx") to write into another
+  module of the game from the same entry. The entry waits until every module it names is loaded.
+- Only one frame rate entry ("60 FPS", "120 FPS" and similar) can be on per game and executable. Enabling one turns
+  off the other.
+
 ## 0.5.3
 
 - New Advanced option: 120 Hz video output. It turns the ps-patch-system 120 Hz setting on or off from the panel.

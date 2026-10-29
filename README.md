@@ -119,7 +119,10 @@ Every game needs its patch from `xml/` to work in PS4 Pro mode. NeoEnabler insta
 3. For 4K entries, set the PS5 video output to 2160p.
 
 Every NeoEnabler entry carries `NeoRequires="pro"` or `NeoRequires="pro,8gib"`, which tells the manager what the
-game needs at launch. ps-patch-system ignores this attribute.
+game needs at launch. `NeoRequires="120hz"` (alone or with the others, for example `pro,120hz`) marks an entry that
+runs the game at 120 fps: starting a game that has it enabled turns on the 120 Hz video output, and closing the game
+turns it off again (unless you had turned it on yourself in Advanced). Entries without the attribute are also
+recognised when "120 FPS" or "120 Hz" is in their name. ps-patch-system ignores this attribute.
 
 Supported games, resolutions and notes: [docs/GAMES.md](docs/GAMES.md).
 

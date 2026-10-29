@@ -20,7 +20,8 @@ typedef struct {
     char hash[9];
     char elf[64];               /* AppElf: the executable the entry patches (eboot.bin when missing) */
     char title[160];
-    int needs_pro, needs_8gib;
+    int needs_pro, needs_8gib, needs_120hz;
+    int fps;                    /* frame rate entry ("60 FPS", "120 FPS"): at most one per game and AppElf is enabled */
     int resolution;             /* NeoEnabler resolution entry (needs Pro mode): at most one per game and AppElf is enabled */
 } gp_patch;
 
@@ -122,6 +123,29 @@ static void gp_requirements(const char *requires, const char *name, int *pro, in
     *eight = *pro && strstr(name, "requires 8 GiB") != NULL;
 }
 
+/* NeoRequires="120hz" (alone or with pro, 8gib): the entry runs the game at 120 fps and needs the 120 Hz video output.
+   Entries without the attribute are recognised by a "120 FPS" or "120 Hz" in their name. */
+static int gp_needs_120hz(const char *requires, const char *name) {
+    if (*requires) return strstr(requires, "120hz") != NULL;
+    for (const char *s = name; *s; s++)
+        if (!strncasecmp(s, "120", 3) && (!strncasecmp(s + 3, " fps", 4) || !strncasecmp(s + 3, "fps", 3) || !strncasecmp(s + 3, " hz", 3) || !strncasecmp(s + 3, "hz", 2)))
+            return 1;
+    return 0;
+}
+
+/* Frame rate entry: a non-resolution entry with "30/60/120 fps" in its name ("60 FPS", "120fps", "60 FPS Unlock").
+   Toggles of an in-game menu are not alternatives to each other and stay out. */
+static int gp_is_fps(const char *name) {
+    if (strcasestr(name, "toggle")) return 0;
+    for (const char *s = name; *s; s++) {
+        if (strncmp(s, "30", 2) && strncmp(s, "60", 2) && strncmp(s, "120", 3)) continue;
+        const char *e = s + (*s == '1' ? 3 : 2);
+        if (*e == ' ') e++;
+        if (!strncasecmp(e, "fps", 3)) return 1;
+    }
+    return 0;
+}
+
 /* Entries of a title ID file (file = "CUSA00785.xml") that apply to version ver; returns how many were stored. */
 static int gp_list(const char *xml, size_t len, const char *file, const char *ver, gp_patch *out, int cap) {
     int n = 0; xm_block b;
@@ -152,7 +176,9 @@ static int gp_list(const char *xml, size_t len, const char *file, const char *ve
         uint32_t h = gp_sid(GP_FOLDER) ^ gp_sid(file) ^ gp_sid(name) ^ gp_sid(title) ^ gp_sid(elf) ^ gp_sid(matched);
         snprintf(p->hash, sizeof p->hash, "%08x", h);
         gp_requirements(req, name, &p->needs_pro, &p->needs_8gib);
+        p->needs_120hz = gp_needs_120hz(req, name);
         p->resolution = p->needs_pro;
+        p->fps = !p->resolution && gp_is_fps(name);
     }
     return n;
 }

@@ -21,12 +21,13 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Battlefield Hardline (01.09) | 1440p, 1620p, 1800p, 4K | Validated |
 | Bloodborne (01.09) | 1440p, 1620p, 1800p (8GB Mode), Native 4K (8GB Mode) | Validated |
 | Dishonored Definitive Edition (01.03) | 1440p, 1800p, Native 4K, 60 FPS (triple buffering) | Validated |
-| Dishonored 2 (01.07) | 1620p, 1800p, Native 4K, 60 FPS, Skip intro videos | Validated |
+| Dishonored 2 (01.07) | 1620p, 1800p, Native 4K, 60 FPS, 120 FPS, Skip intro videos | Validated, 120 FPS with the 120 Hz video output |
 | Driveclub (01.28) | 1440p, 4K (1620p render), 4K (1800p render) | Validated |
 | Just Cause 3 (01.05) | 1440p, 4K | Validated |
 | Killzone Shadow Fall (01.81) | 1440p, 1620p, 1800p, 4K | Validated |
 | Need for Speed Rivals (01.04, 01.03) | 1440p, 4K | Validated |
 | Prey (01.12) | 1620p, 1800p, Native 4K, 60 FPS, Skip intro videos | 1800p, Native 4K, 60 FPS and Skip intro videos validated; 1620p not tested yet |
+| Titanfall 2 (01.13) | 1620p, 1800p, Native 4K | Validated in gameplay (Native 4K through the opening cutscene and campaign) |
 | Ratchet & Clank (01.09) | 1728p, 1872p, Native 4K | Validated |
 | Yakuza 6: The Song of Life (01.05) | 1440p, 1620p, 1800p, Native 4K (8GB Mode), 60 FPS | Validated |
 | Shadow of the Colossus (01.01) | 1620p, 1800p, Native 4K | Validated |
@@ -44,13 +45,13 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Mad Max (01.06) | 1440p, 1800p, Native 4K | Native 4K validated; 1440p and 1800p reach gameplay |
 | inFAMOUS Second Son (01.07) | 4K checkerboard | Validated |
 | NieR:Automata (01.06) | 1440p, 1620p, 1800p | Validated |
-| Watch Dogs (01.05) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 60 FPS (triple buffering) | Validated |
-| Watch Dogs 2 (01.18) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | Validated |
+| Watch Dogs (01.05) | 1440p, 1620p, 1800p, Native 4K, 60 FPS (triple buffering) | Validated |
+| Watch Dogs 2 (01.18) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 120 FPS | Validated, 120 FPS with the 120 Hz video output |
 | Thief (01.02) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 60 FPS validated; resolutions not tested yet |
 | Tomb Raider: Definitive Edition (01.01) | 1440p, 1620p, 1800p, Native 4K | Native 4K validated; 1440p, 1620p and 1800p reach gameplay in a short test |
-| Dragon Age: Inquisition (01.12) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 1800p and 60 FPS validated; Native 4K played; 1440p and 1620p reach gameplay in a short test |
+| Dragon Age: Inquisition (01.12) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 120 FPS | 1800p, 60 FPS and 120 FPS (at 1440p) validated; Native 4K played; 1440p and 1620p reach gameplay in a short test |
 | Middle-earth: Shadow of Mordor - Game of the Year Edition (01.05) | 1440p, 1620p, 1800p, Native 4K | Native 4K and 1800p validated; 1440p and 1620p not tested yet |
-| Alien: Isolation (01.04) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 1440p, 1800p and Native 4K reach clean gameplay; 1620p and SMAA T2x not tested yet; 60 FPS validated in gameplay (Native 4K about 55 fps with triple buffering) |
+| Alien: Isolation (01.04) | 1440p, 1620p, 1800p, Native 4K, 60 FPS, 120 FPS | 1440p, 1800p and Native 4K reach clean gameplay; 1620p and SMAA T2x not tested yet; 60 FPS validated in gameplay (Native 4K about 55 fps with triple buffering); 120 FPS validated with the 120 Hz video output |
 | Spyro Reignited Trilogy (01.03) | 1620p, 1800p, Native 4K | 1800p and Native 4K validated; 1620p not tested yet |
 | Rayman Legends (01.01) | 1440p, 1620p, 1800p, Native 4K | All validated |
 
