@@ -18,6 +18,12 @@ int main(void) {
     assert(l[1].offset == 0x10 && l[1].len == 4 && l[1].data[0] == 0x34 && l[1].data[1] == 0x12 && !l[1].data[2]);
     float f; memcpy(&f, l[2].data, 4); assert(l[2].len == 4 && f == 1.0f);
     assert(l[3].len == 2 && !memcmp(l[3].data, "ab", 2));
+    assert(!l[0].module[0]);
+    free(l);
+    const char *y = "<Metadata AppElf=\"engine.prx\"><PatchList><Line Type=\"bytes\" Address=\"0x10\" Value=\"01\"/>"
+                    "<Line Type=\"bytes\" Address=\"0x20\" Value=\"02\" Module=\"materialsystem_ps4.prx\"/></PatchList></Metadata>";
+    l = mp_lines(y, y + strlen(y), &n);
+    assert(l && n == 2 && !l[0].module[0] && !strcmp(l[1].module, "materialsystem_ps4.prx") && l[1].offset == 0x20);
     free(l);
     const char *bad[] = {"<Line Type=\"mask\" Address=\"0\" Value=\"00\"/>", "<Line Type=\"bytes\" Address=\"0\" Value=\"123\"/>",
                          "<Line Type=\"bytes\" Address=\"zz\" Value=\"00\"/>"};

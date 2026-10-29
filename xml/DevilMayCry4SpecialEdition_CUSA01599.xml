@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA01599</ID>
+    <ID>CUSA01671</ID>
+  </TitleID>
+  <Metadata Title="DEVIL MAY CRY 4 Special Edition" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Criminal" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x00e1adc2" Value="000a000041c785bc000000a0050000" />
+      <Line Type="bytes" Address="0x00e1ae02" Value="000a0000a0050000" />
+      <Line Type="bytes" Address="0x00da3ddb" Value="e8206b5400" />
+      <Line Type="bytes" Address="0x00da3e64" Value="e8076b5400" />
+      <Line Type="bytes" Address="0x00da3ee8" Value="e8f36a5400" />
+      <Line Type="bytes" Address="0x00da548f" Value="e8bc555400" />
+      <Line Type="bytes" Address="0x00dc82de" Value="e8dd275200" />
+      <Line Type="bytes" Address="0x00dc85dd" Value="e84e255200" />
+      <Line Type="bytes" Address="0x012ea900" Value="4883c408e8274ecaff4889c248c1ea203d0000fe0174363d0000e100720e3d0000f0007707b80000f000eb213d0040fa01720e3d0000fe017707b80000fe01eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e97894abff" />
+      <Line Type="bytes" Address="0x012ea970" Value="4883c408e8b74dcaff4889c248c1ea203d0000fe0174363d0000e100720e3d0000f0007707b80000f000eb213d0040fa01720e3d0000fe017707b80000fe01eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e99194abff" />
+      <Line Type="bytes" Address="0x012ea9e0" Value="4883c408e8474dcaff4889c248c1ea203d0000fe0174363d0000e100720e3d0000f0007707b80000f000eb213d0040fa01720e3d0000fe017707b80000fe01eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e9a594abff" />
+      <Line Type="bytes" Address="0x012eaa50" Value="4883c408e8d74ccaff4889c248c1ea203d0000fe0174363d0000e100720e3d0000f0007707b80000f000eb213d0040fa01720e3d0000fe017707b80000fe01eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e9dca9abff" />
+      <Line Type="bytes" Address="0x012eaac0" Value="4883c408e8674ccaff4889c248c1ea203d0000fe0174363d0000e100720e3d0000f0007707b80000f000eb213d0040fa01720e3d0000fe017707b80000fe01eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e9bbd7adff" />
+      <Line Type="bytes" Address="0x012eab30" Value="4883c408e8f74bcaff4889c248c1ea203d0000fe0174363d0000e100720e3d0000f0007707b80000f000eb213d0040fa01720e3d0000fe017707b80000fe01eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e94adaadff" />
+      <Line Type="bytes" Address="0x010b0fa0" Value="e95b9c230090" />
+      <Line Type="bytes" Address="0x012eac00" Value="505351525657415041514152415341544155415641579c4189fc4989f54989d64181fc000400000f87f100000031db4439e30f83e60000004d8b44dd00458b0c9e41c1e9024d85c00f84c900000031c94439c90f83be000000418b048889c2c1ea1e83fa027504ffc1ebe583fa030f85a30000004189c241c1ea104181e2ff3f00004183c202428d14114439ca0f87840000004189c341c1eb084181e3ff0000004183fb697568418b7c880481e7ffff0000448d5902448d79024139d3735083ff10750a43812498ffffffdfeb3a89f82d1803000083f878732e83f80f720583e80febf683f805751f4539fb741a438b049883e01f83f80a740583f80c750943814c98fc00000080ffc741ffc3ebab4401d1e939ffffffffc3e911ffffff0faef89d415f415e415d415c415b415a415941585f5e5a595b58ff2425180c5701" />
+      <Line Type="bytes" Address="0x00e1bafd" Value="000a0000" />
+      <Line Type="bytes" Address="0x00e1bb07" Value="a0050000" />
+      <Line Type="bytes" Address="0x00e121b0" Value="000a0000a0050000" />
+      <Line Type="bytes" Address="0x00e1b64b" Value="000a0000a0050000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="DEVIL MAY CRY 4 Special Edition" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Criminal" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x00e1adc2" Value="000f000041c785bc00000070080000" />
+      <Line Type="bytes" Address="0x00e1ae02" Value="000f000070080000" />
+      <Line Type="bytes" Address="0x00da3ddb" Value="e8206b5400" />
+      <Line Type="bytes" Address="0x00da3e64" Value="e8076b5400" />
+      <Line Type="bytes" Address="0x00da3ee8" Value="e8f36a5400" />
+      <Line Type="bytes" Address="0x00da548f" Value="e8bc555400" />
+      <Line Type="bytes" Address="0x00dc82de" Value="e8dd275200" />
+      <Line Type="bytes" Address="0x00dc85dd" Value="e84e255200" />
+      <Line Type="bytes" Address="0x012ea900" Value="4883c408e8274ecaff4889c248c1ea203d0000fe0174363d0000e100720e3d0000f0007707b80000f000eb213d0040fa01720e3d0000fe017707b80000fe01eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e97894abff" />
+      <Line Type="bytes" Address="0x012ea970" Value="4883c408e8b74dcaff4889c248c1ea203d0000fe0174363d0000e100720e3d0000f0007707b80000f000eb213d0040fa01720e3d0000fe017707b80000fe01eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e99194abff" />
+      <Line Type="bytes" Address="0x012ea9e0" Value="4883c408e8474dcaff4889c248c1ea203d0000fe0174363d0000e100720e3d0000f0007707b80000f000eb213d0040fa01720e3d0000fe017707b80000fe01eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e9a594abff" />
+      <Line Type="bytes" Address="0x012eaa50" Value="4883c408e8d74ccaff4889c248c1ea203d0000fe0174363d0000e100720e3d0000f0007707b80000f000eb213d0040fa01720e3d0000fe017707b80000fe01eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e9dca9abff" />
+      <Line Type="bytes" Address="0x012eaac0" Value="4883c408e8674ccaff4889c248c1ea203d0000fe0174363d0000e100720e3d0000f0007707b80000f000eb213d0040fa01720e3d0000fe017707b80000fe01eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e9bbd7adff" />
+      <Line Type="bytes" Address="0x012eab30" Value="4883c408e8f74bcaff4889c248c1ea203d0000fe0174363d0000e100720e3d0000f0007707b80000f000eb213d0040fa01720e3d0000fe017707b80000fe01eb0c3d00807f007512b80000870081fa000001007305ba0000010089c048c1e2204809d0e94adaadff" />
+      <Line Type="bytes" Address="0x010b0fa0" Value="e95b9c230090" />
+      <Line Type="bytes" Address="0x012eac00" Value="505351525657415041514152415341544155415641579c4189fc4989f54989d64181fc000400000f87f100000031db4439e30f83e60000004d8b44dd00458b0c9e41c1e9024d85c00f84c900000031c94439c90f83be000000418b048889c2c1ea1e83fa027504ffc1ebe583fa030f85a30000004189c241c1ea104181e2ff3f00004183c202428d14114439ca0f87840000004189c341c1eb084181e3ff0000004183fb697568418b7c880481e7ffff0000448d5902448d79024139d3735083ff10750a43812498ffffffdfeb3a89f82d1803000083f878732e83f80f720583e80febf683f805751f4539fb741a438b049883e01f83f80a740583f80c750943814c98fc00000080ffc741ffc3ebab4401d1e939ffffffffc3e911ffffff0faef89d415f415e415d415c415b415a415941585f5e5a595b58ff2425180c5701" />
+      <Line Type="bytes" Address="0x00e1bafd" Value="000f0000" />
+      <Line Type="bytes" Address="0x00e1bb07" Value="70080000" />
+      <Line Type="bytes" Address="0x00e121b0" Value="000f000070080000" />
+      <Line Type="bytes" Address="0x00e1b64b" Value="000f000070080000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="DEVIL MAY CRY 4 Special Edition" Name="120 FPS" Note="Must enable 120 hz output in advanced settings." Author="Criminal" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x00604d57" Value="b90200000090" /> 
+      <Line Type="bytes" Address="0x00604d2e" Value="0000f042" />
+    </PatchList>
+  </Metadata>
+</Patch>

@@ -87,10 +87,10 @@ Anyone on your local network can open the panel.
 
 ![GPU clock tab](docs/panel-gpu.jpg)
 
-Open **GPU clock** in the panel, select a target from **1800 to 2200 MHz** in 50 MHz steps, and use
+Open **GPU clock** in the panel, select a target from **1800 to 2350 MHz** in 50 MHz steps, and use
 **Apply boost**. The current clock reported by the SMU updates every two seconds. The target and enable flag
-are saved with **Save Settings** and requested again when a PS4 game starts. This works independently of NEO and
-8 GiB, including PS4 base mode.
+are saved with **Save Settings** and requested again when a PS4 game starts. 2350 MHz is for the PS5 Pro, 2200 MHz is the maximum for the standard PS5.
+This works independently of NEO and 8 GiB, including PS4 base mode.
 
 GPU boost is **off by default**, with 2200 MHz selected. It is confirmed working on **firmware 13.20 and 13.60** and uses the stock
 `/dev/mp1` driver, without patching the kernel or needing a hypervisor exploit. The sustained frequency may be
@@ -119,7 +119,10 @@ Every game needs its patch from `xml/` to work in PS4 Pro mode. NeoEnabler insta
 3. For 4K entries, set the PS5 video output to 2160p.
 
 Every NeoEnabler entry carries `NeoRequires="pro"` or `NeoRequires="pro,8gib"`, which tells the manager what the
-game needs at launch. ps-patch-system ignores this attribute.
+game needs at launch. `NeoRequires="120hz"` (alone or with the others, for example `pro,120hz`) marks an entry that
+runs the game at 120 fps: starting a game that has it enabled turns on the 120 Hz video output, and closing the game
+turns it off again (unless you had turned it on yourself in Advanced). Entries without the attribute are also
+recognised when "120 FPS" or "120 Hz" is in their name. ps-patch-system ignores this attribute.
 
 Supported games, resolutions and notes: [docs/GAMES.md](docs/GAMES.md).
 
@@ -148,6 +151,40 @@ Test results by game and firmware: [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md
 | --- | --- | --- |
 | Bloodborne: Resolution Patch WxH, base of the NEO 1440p/1620p entries | [Kyo](https://github.com/Kyoskii) | [shadps4-emu/ps4_cheats](https://github.com/shadps4-emu/ps4_cheats/blob/main/PATCHES/Bloodborne.xml) |
 | The Order: 1886: 60 FPS Unlock, used by the Native 4K 60fps entry | [illusion](https://github.com/illusionyy) | PS-Game-Patch, `patches/xml/TheOrder1886-Orbis.xml` |
+| Batman: Arkham Knight: 1620p, 1800p, Native 4K resolution patches | gasb07 | |
+| Battlefield 4: 1440p, 1620p, 1800p, Native 4K resolution patches | Local experiment | |
+| Battlefield Hardline: 1440p, 1620p, 1800p, Native 4K resolution patches | Local experiment | |
+| Bloodborne: 1440p, 1620p, 1800p, Native 4K resolution patches; 1800p/4K require 8 GiB mode | [Kyo](https://github.com/Kyoskii), gasb07 | |
+| Dark Souls III: The Fire Fades Edition: 1440p, 1620p, 1800p, Native 4K resolution patches; 4K requires 8 GiB mode | DanielSvoboda, gasb07 | |
+| Dead Island - Definitive Edition: 1440p, 1620p, 1800p, Native 4K resolution patches | gasb07 | |
+| DEVIL MAY CRY 4 Special Edition: 1440p, Native 4K resolution patches, 120 FPS patch | [Criminal](https://github.com/TheaCriminal) | |
+| Dishonored 2: 1620p, 1800p, Native 4K resolution patches, 60 FPS cap, skip intro videos | gasb07 | |
+| Dishonored: Definitive Edition: 1440p, 1800p, Native 4K resolution patches, 60 FPS patch with triple buffering | gasb07, [illusion](https://github.com/illusionyy) | |
+| DmC Devil May Cry: Definitive Edition: 1440p, 1800p, Native 4K resolution patches | [Criminal](https://github.com/TheaCriminal) | |
+| DRAGON QUEST XI S: 1440p, 1620p, 1800p, Native 4K resolution patches | gasb07 | |
+| Dragon's Dogma: Dark Arisen: Native 4K resolution patch | gasb07 | |
+| Driveclub: 1440p resolution patch; 4K output with 1620p/1800p rendering | Local experiment | |
+| Just Cause 3: 1440p and Native 4K resolution patches, offline mode patch to skip online login | Local experiment | |
+| KILLZONE SHADOW FALL: 1440p, 1620p, 1800p, Native 4K resolution patches | Local experiment | |
+| Mad Max: 1440p, 1800p, Native 4K resolution patches | gasb07 | |
+| METAL GEAR SOLID V: THE PHANTOM PAIN: 1440p, 1620p, 1800p, Native 4K, 4K checkerboard resolution patches | gasb07 | |
+| Need for Speed: Rivals: 1440p and Native 4K resolution patches | Local experiment | |
+| NieR:Automata: 1440p, 1620p, 1800p resolution patches | gasb07 | |
+| Prey: 1620p, 1800p, Native 4K resolution patches, 60 FPS cap, skip intro videos | gasb07 | |
+| Ratchet and Clank: 1728p, 1872p, Native 4K resolution patches | gasb07 | |
+| RESIDENT EVIL 6: 1440p and Native 4K resolution patches | Local experiment | |
+| Shadow of the Colossus: 1620p, 1800p, Native 4K resolution patches, debug menu, skip splash logo/demo screens, 60 FPS patch | gasb07, [illusion](https://github.com/illusionyy) | |
+| Sleeping Dogs: Definitive Edition: 1440p, 1620p, 1800p, Native 4K resolution patches; 60 FPS variants for each resolution | Local experiment, [illusion](https://github.com/illusionyy), gasb07 | |
+| Spyro Reignited Trilogy: 1620p, 1800p, Native 4K resolution patches | Shane O'Reilly | |
+| The Evil Within 2: 1620p, 1800p, Native 4K resolution patches; 4K requires 8 GiB mode | gasb07 | |
+| The Evil Within: 1440p, 1800p, Native 4K resolution patches; 4K requires 8 GiB mode | gasb07 | |
+| The Order 1886: Native 4K resolution patch, Native 4K 60 FPS patch | Local experiment, [illusion](https://github.com/illusionyy), gasb07 | |
+| Uncharted: Drake's Fortune Remastered: 1440p, 1620p, 1800p, Native 4K resolution patches; 4K options with standard or full texture quality (8 GiB mode) | gasb07 | |
+| Uncharted 2: Among Thieves Remastered: 1440p, 1620p, 1800p, Native 4K resolution patches; 4K options with standard or full texture quality (8 GiB mode) | gasb07 | |
+| Uncharted 3: Drake's Deception Remastered: 1440p, 1620p, 1800p, Native 4K resolution patches; 4K options with standard or full texture quality (8 GiB mode) | gasb07 | |
+| Watch Dogs: 1440p, 1620p, 1800p, Native 4K resolution patches, 60 FPS patch, 60 FPS patch with triple buffering | gasb07 | |
+| Yakuza 6: The Song of Life: 1440p, 1620p, 1800p, Native 4K resolution patches; 60 FPS patch; 4K requires 8 GiB mode | gasb07 | |
+| inFAMOUS Second Son: 4K checkerboard resolution patch | gasb07 | |
 
 Entries with author "Local experiment" (Pro mode, resolutions, JC3 offline mode) and the NEO fixes inside the
 Bloodborne resolution entries were made in this project.

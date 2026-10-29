@@ -11,6 +11,9 @@
 #ifndef APPMETA_DIR
 #define APPMETA_DIR "/system_data/priv/appmeta"
 #endif
+#ifndef APPMETA_EXT_DIR
+#define APPMETA_EXT_DIR APPMETA_DIR "/external"   /* games installed on an external drive */
+#endif
 #ifndef APP_DIR
 #define APP_DIR "/user/app"
 #endif
@@ -34,11 +37,18 @@ static int game_tid(const char *s) {
            strspn(s + 4, "0123456789") == 5;
 }
 
+/* Path of a metadata file of a game: the internal appmeta folder, else the one of games on an external drive. */
+static const char *appmeta_file(const char *tid, const char *file, char *path, size_t cap) {
+    struct stat st;
+    snprintf(path, cap, APPMETA_DIR "/%.9s/%s", tid, file);
+    if (stat(path, &st)) snprintf(path, cap, APPMETA_EXT_DIR "/%.9s/%s", tid, file);
+    return path;
+}
+
 /* Name and version (the one ps-patch-system matches) of an installed game; 0 when its param.sfo is readable. */
 static int game_info(const char *tid, char *name, size_t name_cap, char *ver, size_t ver_cap) {
     char path[96]; size_t n;
-    snprintf(path, sizeof path, APPMETA_DIR "/%.9s/param.sfo", tid);
-    char *sfo = ps_read(path, 64 << 10, &n);
+    char *sfo = ps_read(appmeta_file(tid, "param.sfo", path, sizeof path), 64 << 10, &n);
     if (!sfo) return -1;
     char app[16], version[16];
     gp_sfo((unsigned char *)sfo, n, "TITLE", name, name_cap);
@@ -81,8 +91,7 @@ static int game_pkg_version(const char *path, char *ver, size_t cap) {
 static void game_versions(game_t *g) {
     char path[96]; size_t n;
     g->game_ver[0] = g->update_ver[0] = 0;
-    snprintf(path, sizeof path, APPMETA_DIR "/%.9s/param.sfo", g->tid);
-    char app[16] = "", master[16] = "", *sfo = ps_read(path, 64 << 10, &n);
+    char app[16] = "", master[16] = "", *sfo = ps_read(appmeta_file(g->tid, "param.sfo", path, sizeof path), 64 << 10, &n);
     if (sfo) {
         gp_sfo((unsigned char *)sfo, n, "APP_VER", app, sizeof app);
         gp_sfo((unsigned char *)sfo, n, "VERSION", master, sizeof master);
@@ -122,33 +131,40 @@ static int game_cmp(const void *a, const void *b) {
 /* Installed games that have at least one patch needing Pro mode for their version, sorted by name. */
 static game_t *games_scan(int *count) {
     *count = 0;
-    DIR *d = opendir(APPMETA_DIR);
-    if (!d) return NULL;
-    int cap = 32, n = 0; struct dirent *e;
+    int cap = 32, n = 0;
     game_t *g = malloc(sizeof(game_t) * (size_t)cap);
-    if (!g) { closedir(d); return NULL; }
-    while ((e = readdir(d))) {
-        if (!game_tid(e->d_name)) continue;
-        game_t x = {0};
-        snprintf(x.tid, sizeof x.tid, "%.9s", e->d_name);
-        char path[96]; struct stat st;
-        snprintf(path, sizeof path, PS_DIR "/%s.xml", x.tid);
-        if (stat(path, &st) || game_info(x.tid, x.name, sizeof x.name, x.version, sizeof x.version)) continue;
-        x.patches = game_patches(x.tid, x.version, &x.count);
-        int pro = 0;
-        for (int i = 0; i < x.count; i++) pro |= x.patches[i].needs_pro;
-        if (!pro) { free(x.patches); continue; }
-        snprintf(path, sizeof path, PATCH_DIR "/%s", x.tid);
-        x.update = !stat(path, &st) && S_ISDIR(st.st_mode);
-        game_versions(&x);
-        if (n == cap) {
-            game_t *bigger = realloc(g, sizeof(game_t) * (size_t)(cap *= 2));
-            if (!bigger) { free(x.patches); break; }
-            g = bigger;
+    if (!g) return NULL;
+    const char *dirs[] = { APPMETA_DIR, APPMETA_EXT_DIR };
+    for (int di = 0; di < 2; di++) {
+        DIR *d = opendir(dirs[di]);
+        struct dirent *e;
+        if (!d) continue;
+        while ((e = readdir(d))) {
+            if (!game_tid(e->d_name)) continue;
+            int dup = 0;
+            for (int i = 0; i < n; i++) dup |= !strcmp(g[i].tid, e->d_name);
+            if (dup) continue;
+            game_t x = {0};
+            snprintf(x.tid, sizeof x.tid, "%.9s", e->d_name);
+            char path[96]; struct stat st;
+            snprintf(path, sizeof path, PS_DIR "/%s.xml", x.tid);
+            if (stat(path, &st) || game_info(x.tid, x.name, sizeof x.name, x.version, sizeof x.version)) continue;
+            x.patches = game_patches(x.tid, x.version, &x.count);
+            int pro = 0;
+            for (int i = 0; i < x.count; i++) pro |= x.patches[i].needs_pro || x.patches[i].needs_120hz;
+            if (!pro) { free(x.patches); continue; }
+            snprintf(path, sizeof path, PATCH_DIR "/%s", x.tid);
+            x.update = !stat(path, &st) && S_ISDIR(st.st_mode);
+            game_versions(&x);
+            if (n == cap) {
+                game_t *bigger = realloc(g, sizeof(game_t) * (size_t)(cap *= 2));
+                if (!bigger) { free(x.patches); break; }
+                g = bigger;
+            }
+            g[n++] = x;
         }
-        g[n++] = x;
+        closedir(d);
     }
-    closedir(d);
     qsort(g, (size_t)n, sizeof(game_t), game_cmp);
     *count = n;
     return g;
@@ -160,16 +176,18 @@ static char *settings_read(size_t *len) {
     return s;
 }
 
-/* What a launch of this title needs, from its enabled patches: bit 0 Pro mode, bit 1 8 GiB. */
-enum { NEEDS_PRO = 1, NEEDS_8GIB = 2 };
+/* What a launch of this title needs, from its enabled patches: bit 0 Pro mode, bit 1 8 GiB, bit 2 120 Hz output. */
+enum { NEEDS_PRO = 1, NEEDS_8GIB = 2, NEEDS_120HZ = 4 };
 static int game_needs(const char *tid) {
     char name[128], ver[16];
     if (!game_tid(tid) || game_info(tid, name, sizeof name, ver, sizeof ver)) return 0;
     int n, needs = 0; size_t sl;
     gp_patch *p = game_patches(tid, ver, &n);
     char *s = settings_read(&sl);
-    for (int i = 0; i < n; i++)
-        if (gp_setting(s, sl, p[i].hash) == 1) needs |= (p[i].needs_pro ? NEEDS_PRO : 0) | (p[i].needs_8gib ? NEEDS_8GIB | NEEDS_PRO : 0);
+    for (int i = 0; i < n; i++) {
+        if (gp_setting(s, sl, p[i].hash) != 1) continue;
+        needs |= (p[i].needs_pro ? NEEDS_PRO : 0) | (p[i].needs_8gib ? NEEDS_8GIB | NEEDS_PRO : 0) | (p[i].needs_120hz ? NEEDS_120HZ : 0);
+    }
     free(p); free(s);
     return needs;
 }
@@ -183,7 +201,7 @@ static int game_flip(char **out, size_t *ol, const char *tid, const gp_patch *p,
     return 0;
 }
 
-/* Enables or disables one patch of a game. Enabling a NeoEnabler resolution entry disables the other NeoEnabler
+/* Enables or disables one patch of a game. Enabling a frame rate entry (fps) disables the other frame rate entries of the same AppElf. Enabling a NeoEnabler resolution entry disables the other NeoEnabler
    resolution entries of that game for the same AppElf, so at most one is on per executable (a collection gets one per
    game it contains); other patches are not affected. In a collection the title ID starts in eboot.bin, which sets
    PS4 Pro mode: enabling a resolution of another executable also enables the eboot.bin resolution with the same 8 GiB
@@ -200,12 +218,17 @@ static int game_set_patch(const char *tid, const char *hash, int on, int memory_
     if (!hit) { free(p); snprintf(msg, cap, "This patch is not available for %s %s", tid, ver); return -1; }
     if (on && hit->needs_8gib && !memory_ok) { free(p); snprintf(msg, cap, "This patch needs 8GB Mode: firmware 13.20 or 13.60 with the validated no-HV launch hook installed"); return -1; }
     size_t sl, ol; char *s = settings_read(&sl), *out = NULL;
-    int rc = gp_setting_set(s, sl, hash, on, &out, &ol), others = 0, k = (int)(hit - p), main_i = gp_main_entry(p, n, k);
+    int rc = gp_setting_set(s, sl, hash, on, &out, &ol), others = 0, fps_off = 0, k = (int)(hit - p), main_i = gp_main_entry(p, n, k);
     char extra[640] = "";
     for (int i = 0; !rc && on && hit->resolution && i < n; i++) {
         if (&p[i] == hit || !p[i].resolution || strcasecmp(p[i].elf, hit->elf) || gp_setting(out, ol, p[i].hash) != 1) continue;
         rc = game_flip(&out, &ol, tid, &p[i], 0, "one resolution per executable");
         others++;
+    }
+    for (int i = 0; !rc && on && hit->fps && i < n; i++) {
+        if (&p[i] == hit || !p[i].fps || strcasecmp(p[i].elf, hit->elf) || gp_setting(out, ol, p[i].hash) != 1) continue;
+        rc = game_flip(&out, &ol, tid, &p[i], 0, "one frame rate entry per executable");
+        fps_off++;
     }
     int main_on = 0, main_8gib = 0;
     for (int i = 0; i < n; i++)
@@ -255,7 +278,7 @@ static int game_set_patch(const char *tid, const char *hash, int on, int memory_
     else if (rc) snprintf(msg, cap, "The patch system settings file is malformed; nothing changed");
     else if (ps_write(PS_DIR, "!_settings.xml", out, ol)) { snprintf(msg, cap, "Writing the settings failed (errno %d)", errno); rc = -1; }
     else snprintf(msg, cap, "%s: %s %s%s%s", tid, hit->name, on ? "enabled" : "disabled",
-                  others ? "; the other resolution was disabled" : "", extra);
+                  others ? "; the other resolution was disabled" : fps_off ? "; the other frame rate entry was disabled" : "", extra);
     log_line("patches: %s", msg);
     free(out); free(s); free(p);
     return rc ? -1 : 0;

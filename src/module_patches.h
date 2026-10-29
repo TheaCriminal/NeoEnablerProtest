@@ -2,7 +2,8 @@
    so an entry whose AppElf is a module the game loads itself (AppElf ending in .prx or .sprx, for example
    PreyDll.prx) never applies. The manager applies those: when a new PS4 game process appears, it reads the enabled
    module entries of its title ID and waits for each module to be loaded, then writes the lines at the module base
-   plus Address (Address is an offset in the module) and reads them back.
+   plus Address (Address is an offset in the module) and reads them back. A Line with a Module attribute is written
+   into that module instead of the AppElf one, so one entry can patch several modules (it waits for all of them).
    Line types: bytes, byte, bytes16, bytes32, bytes64, float32, float64, utf8. An entry with another type (mask
    searches) is skipped. Needs games.h and log_line(); the parsing part has no device access. */
 #pragma once
@@ -14,7 +15,7 @@
 
 #define MP_MAX_LINE 256        /* bytes of one line */
 
-typedef struct { uint64_t offset; size_t len; unsigned char data[MP_MAX_LINE]; } mp_line;
+typedef struct { uint64_t offset; size_t len; char module[64]; unsigned char data[MP_MAX_LINE]; } mp_line;   /* module: Module attribute, "" = the AppElf of the entry */
 
 /* 1 for an AppElf the game loads as a module. */
 static int mp_is_module(const char *elf) {
@@ -79,6 +80,7 @@ static mp_line *mp_lines(const char *s, const char *e, int *n) {
         gp_attr(s, &b, "Address", addr, sizeof addr);
         gp_attr(s, &b, "Value", val, sizeof val);
         char *end; mp_line *l = &out[*n];
+        gp_attr(s, &b, "Module", l->module, sizeof l->module);
         l->offset = strtoull(addr, &end, 16);
         if (!addr[0] || *end || mp_value(type, val, l)) { free(out); *n = 0; return NULL; }
         ++*n; p = t;
@@ -127,19 +129,30 @@ static void mp_load(pid_t pid, const char *tid) {
 }
 
 /* Writes the entries of every module that is loaded now; an entry is dropped once written (or failed). */
+static int mp_module(pid_t pid, const char *name, dynlib_obj_t *o) {
+    uint32_t h; memset(o, 0, sizeof *o);
+    return kernel_dynlib_handle(pid, name, &h) || kernel_dynlib_obj(pid, h, o) || !o->mapbase;
+}
+
 static void mp_apply(void) {
     for (int i = 0; i < mp.count;) {
-        uint32_t h; dynlib_obj_t o = {0};
-        if (kernel_dynlib_handle(mp.pid, mp.e[i].elf, &h) || kernel_dynlib_obj(mp.pid, h, &o) || !o.mapbase) { i++; continue; }
-        int bad = 0;
+        int ready = 1;
+        for (int k = 0; k < mp.e[i].n && ready; k++) {
+            dynlib_obj_t o;
+            ready = !mp_module(mp.pid, mp.e[i].lines[k].module[0] ? mp.e[i].lines[k].module : mp.e[i].elf, &o);
+        }
+        if (!ready) { i++; continue; }
+        int bad = 0; unsigned long base0 = 0;
         for (int k = 0; k < mp.e[i].n && !bad; k++) {
-            mp_line *l = &mp.e[i].lines[k]; unsigned char back[MP_MAX_LINE];
+            mp_line *l = &mp.e[i].lines[k]; unsigned char back[MP_MAX_LINE]; dynlib_obj_t o;
+            if (mp_module(mp.pid, l->module[0] ? l->module : mp.e[i].elf, &o)) { bad = k + 1; break; }
+            if (!k) base0 = o.mapbase;
             intptr_t at = (intptr_t)(o.mapbase + l->offset);
             bad = l->offset + l->len > o.mapsize || kernel_proc_copyin(mp.pid, l->data, at, l->len) ||
                   kernel_proc_copyout(mp.pid, at, back, l->len) || memcmp(back, l->data, l->len) ? k + 1 : 0;
         }
-        if (bad) log_line("modules: %s: %s: line %d failed (base 0x%lx)", mp.e[i].elf, mp.e[i].name, bad, o.mapbase);
-        else log_line("modules: %s: %s: %d lines written (base 0x%lx)", mp.e[i].elf, mp.e[i].name, mp.e[i].n, o.mapbase);
+        if (bad) log_line("modules: %s: %s: line %d failed (base 0x%lx)", mp.e[i].elf, mp.e[i].name, bad, base0);
+        else log_line("modules: %s: %s: %d lines written (base 0x%lx)", mp.e[i].elf, mp.e[i].name, mp.e[i].n, base0);
         free(mp.e[i].lines);
         mp.e[i] = mp.e[--mp.count];
     }

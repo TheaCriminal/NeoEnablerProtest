@@ -85,8 +85,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     var kv = pair.split('='), other = document.querySelector('input[data-tid="' + box.dataset.tid + '"][data-hash="' + kv[0] + '"]');
                     if (!other || other.checked === (kv[1] === '1')) return;
                     other.checked = kv[1] === '1';
-                    var sameGroup = other.dataset.res !== undefined && box.dataset.res !== undefined &&
-                        other.dataset.res.toLowerCase() === box.dataset.res.toLowerCase();
+                    var sameGroup = (other.dataset.res !== undefined && box.dataset.res !== undefined &&
+                        other.dataset.res.toLowerCase() === box.dataset.res.toLowerCase()) ||
+                        (other.dataset.fps !== undefined && box.dataset.fps !== undefined &&
+                        other.dataset.fps.toLowerCase() === box.dataset.fps.toLowerCase());
                     if (other !== box && !(sameGroup && !other.checked)) notice = true;
                 });
                 if (notice) alert(lines.join('\n'));

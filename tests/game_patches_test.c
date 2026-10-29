@@ -51,7 +51,7 @@ int main(void) {
        against !_settings.xml on a console). */
     size_t len; char *xml = slurp("xml/TheOrder1886_CUSA00785.xml", &len);
     gp_patch p[16]; int n = gp_list(xml, len, "CUSA00785.xml", "01.02", p, 16);
-    assert(n == 2);
+    assert(n == 3);   /* two resolutions and the copied 60 FPS Unlock */
     const gp_patch *q = find(p, n, "Native 4K (PS4 Pro mode, 60fps)");
     assert(q && !strcmp(q->hash, "d753e8d4") && q->needs_pro && !q->needs_8gib && strstr(q->note, "without tearing"));
     assert((q = find(p, n, "Native 4K (PS4 Pro mode)")) && !strcmp(q->hash, "6378fc73"));
@@ -60,7 +60,8 @@ int main(void) {
     xml = slurp("xml/Driveclub_CUSA00093.xml", &len);
     n = gp_list(xml, len, "CUSA00093.xml", "01.28", p, 16);
     assert((q = find(p, n, "1440p (PS4 Pro mode)")) && !strcmp(q->hash, "8cdf7724") && q->needs_pro && !q->needs_8gib);
-    assert((q = find(p, n, "Native 4K (PS4 Pro mode, requires 8 GiB enabled)")) && !strcmp(q->hash, "65ba17e0") && q->needs_8gib);
+    assert((q = find(p, n, "4K, 1800p render (PS4 Pro mode)")) && !strcmp(q->hash, "37ba5d63") && q->needs_pro && !q->needs_8gib && strstr(q->note, "visual artifacts"));
+    assert(!find(p, n, "Native 4K (PS4 Pro mode, requires 8 GiB enabled)"));
     free(xml);
     xml = slurp("xml/JustCause3_CUSA01493.xml", &len);
     n = gp_list(xml, len, "CUSA01493.xml", "01.05", p, 16);
@@ -105,6 +106,18 @@ int main(void) {
     free(o);
     assert(gp_setting_set("<Settings>", 10, "dddddddd", 1, &o, &ol) == -1);                     /* truncated file */
 
+    /* 120 Hz: NeoRequires="120hz" (alone or combined), else a "120 FPS" or "120 Hz" in the name. */
+    assert(gp_needs_120hz("120hz", "Anything") && gp_needs_120hz("pro,120hz", "Anything") && !gp_needs_120hz("pro", "120 FPS"));
+    assert(gp_needs_120hz("", "120 FPS") && gp_needs_120hz("", "Unlock FPS 120fps") && gp_needs_120hz("", "120Hz mode") && gp_needs_120hz("", "60/120 FPS"));
+    assert(!gp_needs_120hz("", "60 FPS") && !gp_needs_120hz("", "1200 MB pool") && !gp_needs_120hz("", "Native 4K (PS4 Pro mode)"));
+    {
+        const char *x = "<Patch>\n<Metadata Title=\"T\" Name=\"120 FPS\" AppVer=\"01.00\" NeoRequires=\"pro,120hz\"><PatchList/></Metadata>\n"
+                        "<Metadata Title=\"T\" Name=\"60 FPS\" AppVer=\"01.00\"><PatchList/></Metadata>\n</Patch>\n";
+        gp_patch pl[4]; int k = gp_list(x, strlen(x), "CUSA00001.xml", "01.00", pl, 4);
+        assert(k == 2 && pl[0].needs_120hz && pl[0].needs_pro && !pl[1].needs_120hz && !pl[1].needs_pro);
+    }
+    assert(gp_is_fps("60 FPS") && gp_is_fps("120fps") && gp_is_fps("60 FPS Unlock") && gp_is_fps("Unlock FPS 120fps") && gp_is_fps("60/120 FPS"));
+    assert(!gp_is_fps("60 FPS Menu toggle") && !gp_is_fps("Skip intro") && !gp_is_fps("1620p") && !gp_is_fps("Native 4K"));
     puts("PASS game patches: versions, entry hashes, requirements, resolution entries, settings read and edit");
     return 0;
 }

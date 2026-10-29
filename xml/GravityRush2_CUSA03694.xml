@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA00547</ID>
+    <ID>CUSA03694</ID>
+    <ID>CUSA04934</ID>
+    <ID>CUSA04943</ID>
+  </TitleID>
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Criminal" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000f00" />
+      <Line Type="bytes32" Address="0x0142aa10" Value="0x00000870" />
+      <Line Type="bytes32" Address="0x0142aa21" Value="0x00000f00" />
+      <Line Type="bytes32" Address="0x0142aa2c" Value="0x00000870" />
+      <Line Type="bytes" Address="0x0142ac41" Value="90909090" />
+      <Line Type="bytes" Address="0x0142b9a5" Value="90909090" />
+      <Line Type="bytes" Address="0x0142ba8e" Value="90909090" />
+      <Line Type="bytes32" Address="0x0189e630" Value="0x45700000" />
+      <Line Type="bytes32" Address="0x0189e634" Value="0x45070000" />
+      <Line Type="bytes32" Address="0x0189e638" Value="0x39888889" />
+      <Line Type="bytes32" Address="0x0189e63c" Value="0x39f2b9d6" />
+      <Line Type="bytes" Address="0x01432191" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01432448" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01433823" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01434099" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143487e" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01439cff" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f602" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f7ed" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142e8aa" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142aba7" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142ad0e" Value="4839e40f1f4000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="60 FPS" Note="Do not enable 120 Hz output while using this patch." Author="illusion" PatchVer="4.0" AppVer="01.11" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x00854ac5" Value="c605bc656a0100" />
+      <Line Type="bytes32" Address="0x018c7374" Value="0x41f00000" />
+      <Line Type="bytes" Address="0x00846980" Value="be00000000" />
+      <Line Type="bytes" Address="0x0084dda4" Value="bf46100000" />
+      <Line Type="bytes" Address="0x0084dda9" Value="eb08" />
+      <Line Type="bytes" Address="0x0085e9cc" Value="e8cd43fa00" />
+      <Line Type="bytes32" Address="0x01802d90" Value="0x49742400" />
+      <Line Type="bytes64" Address="0x01802d94" Value="0x000000000001046b" />
+      <Line Type="bytes" Address="0x01802d9e" Value="4889150b533000" />
+      <Line Type="bytes" Address="0x01802da5" Value="48893d0c533000" />
+      <Line Type="bytes" Address="0x01802dac" Value="488b3de1ffffff" />
+      <Line Type="bytes" Address="0x01802db3" Value="488d15b6523000" />
+      <Line Type="bytes" Address="0x01802dba" Value="48393d07587500" />
+      <Line Type="bytes" Address="0x01802dc1" Value="771c" />
+      <Line Type="bytes" Address="0x01802dc3" Value="803a01" />
+      <Line Type="bytes" Address="0x01802dc6" Value="7417" />
+      <Line Type="bytes" Address="0x01802dc8" Value="803a03" />
+      <Line Type="bytes" Address="0x01802dcb" Value="7412" />
+      <Line Type="bytes" Address="0x01802dcd" Value="c5222a1df3577500" />
+      <Line Type="bytes" Address="0x01802dd5" Value="c5a25e0db3ffffff" />
+      <Line Type="bytes" Address="0x01802ddd" Value="eb08" />
+      <Line Type="bytes" Address="0x01802ddf" Value="c5fa100d3d836f00" />
+      <Line Type="bytes" Address="0x01802de7" Value="488b15c2523000" />
+      <Line Type="bytes" Address="0x01802dee" Value="488b3dc3523000" />
+      <Line Type="bytes" Address="0x01802df5" Value="c3" />
+      <Line Type="bytes32" Address="0x018c4934" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x013e46e8" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c491c" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c4964" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3aa0" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3aa4" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3aa8" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3aac" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3ab0" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3ab4" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3ab8" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3abc" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3ac0" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3ac8" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3ad0" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3ad8" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3adc" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3ae0" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3ae4" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3afc" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3b04" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3b08" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3b0c" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3b10" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3b14" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3b18" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3b3c" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3b40" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3b50" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3b60" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3bc4" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3bc8" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3bd0" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3be8" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3bec" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3bf0" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3c08" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3c14" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3c18" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3c20" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3f1c" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3f20" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3f38" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3f40" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3f44" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3f5c" Value="0x3c888889" />
+      <Line Type="bytes32" Address="0x018c3f60" Value="0x3c888889" />
+      <Line Type="bytes" Address="0x013c8f2f" Value="e8479e4300" />
+      <Line Type="bytes" Address="0x013c8f34" Value="eb1b" />
+      <Line Type="bytes" Address="0x01802d7b" Value="c605ee52300003" />
+      <Line Type="bytes" Address="0x01802d82" Value="c3" />
+      <Line Type="bytes" Address="0x013c8f8e" Value="ebca" />
+      <Line Type="bytes" Address="0x013c8f5a" Value="e9249e4300" />
+      <Line Type="bytes" Address="0x01802d83" Value="c605e652300002" />
+      <Line Type="bytes" Address="0x01802d8a" Value="c3" />
+      <Line Type="bytes" Address="0x011bb6cc" Value="e9647a6400" />
+      <Line Type="bytes" Address="0x01802d10" Value="646d30365f303330303000" />
+      <Line Type="bytes" Address="0x01803135" Value="488d3dd4fbffff" />
+      <Line Type="bytes" Address="0x0180313c" Value="4889de" />
+      <Line Type="bytes" Address="0x0180313f" Value="e8dc25ffff" />
+      <Line Type="bytes" Address="0x01803144" Value="83f800" />
+      <Line Type="bytes" Address="0x01803147" Value="7507" />
+      <Line Type="bytes" Address="0x01803149" Value="c605204f300003" />
+      <Line Type="bytes" Address="0x01803150" Value="4889df" />
+      <Line Type="bytes" Address="0x01803153" Value="e82825ffff" />
+      <Line Type="bytes" Address="0x01803158" Value="4989c4" />
+      <Line Type="bytes" Address="0x0180315b" Value="e977859bff" />
+    </PatchList>
+  </Metadata>
+</Patch>

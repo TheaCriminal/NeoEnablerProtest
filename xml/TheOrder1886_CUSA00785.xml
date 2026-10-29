@@ -8,7 +8,7 @@
     <ID>CUSA00100</ID>
     <ID>CUSA00670</ID>
   </TitleID>
-  <Metadata Title="The Order 1886" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro (NEO) mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Local experiment" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
+  <Metadata Title="The Order 1886" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Local experiment" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x410234" Value="0d00000000" />
       <Line Type="bytes" Address="0xc30736" Value="be00000000" />
@@ -97,6 +97,11 @@
       <Line Type="bytes" Address="0xc780d9" Value="e8291ed4009090" />
       <Line Type="bytes" Address="0xc7820d" Value="e85c1dd4009090" />
       <Line Type="bytes" Address="0xc7b555" Value="e81dead30090" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="The Order 1886" Name="60 FPS Unlock" Note="Softlocks will occur in Chapter 6 and 9 during Quick Time Events.\nDisable patch to progress." Author="illusion" PatchVer="1.0" AppVer="01.02" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="byte" Address="0x008507c4" Value="0x01"/>
     </PatchList>
   </Metadata>
 </Patch>

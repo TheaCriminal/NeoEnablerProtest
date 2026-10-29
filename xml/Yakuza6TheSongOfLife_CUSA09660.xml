@@ -4,7 +4,7 @@
     <ID>CUSA09660</ID>
     <ID>CUSA09032</ID>
   </TitleID>
-  <Metadata Title="Yakuza 6: The Song of Life" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Light tile grid and the tiled lighting row stride scaled to the target size (hook rewrites six fixed shader pool sites), save screenshot texture left at its original size. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Yakuza 6: The Song of Life" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x124f033" Value="000a0000"/>
       <Line Type="bytes" Address="0x124f03e" Value="a0050000"/>
@@ -149,7 +149,7 @@
       <Line Type="bytes" Address="0x10abade" Value="e8edb8c901"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="Yakuza 6: The Song of Life" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Light tile grid and the tiled lighting row stride scaled to the target size (hook rewrites six fixed shader pool sites), save screenshot texture left at its original size. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Yakuza 6: The Song of Life" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x124f033" Value="400b0000"/>
       <Line Type="bytes" Address="0x124f03e" Value="54060000"/>
@@ -294,7 +294,7 @@
       <Line Type="bytes" Address="0x10abade" Value="e8edb8c901"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="Yakuza 6: The Song of Life" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Light tile grid and the tiled lighting row stride scaled to the target size (hook rewrites six fixed shader pool sites), save screenshot texture left at its original size. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Yakuza 6: The Song of Life" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x124f033" Value="800c0000"/>
       <Line Type="bytes" Address="0x124f03e" Value="08070000"/>
@@ -439,7 +439,7 @@
       <Line Type="bytes" Address="0x10abade" Value="e8edb8c901"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="Yakuza 6: The Song of Life" Name="Native 4K (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output and render in PS4 Pro mode, direct memory pool +768 MiB. Light tile grid and the tiled lighting row stride scaled to the target size (hook rewrites six fixed shader pool sites), save screenshot texture left at its original size. Enable only one resolution entry. Requires NeoEnabler 0.5.2 or later with 8GB Mode (older versions hang when the save window opens)." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Yakuza 6: The Song of Life" Name="Native 4K (PS4 Pro mode, requires 8 GiB enabled)" NeoRequires="pro,8gib" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NeoEnabler 0.5.2 or later with 8GB Mode (older versions hang when the save window opens)." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x124f033" Value="000f0000"/>
       <Line Type="bytes" Address="0x124f03e" Value="70080000"/>
@@ -585,7 +585,12 @@
       <Line Type="bytes" Address="0x1444309" Value="000000ac"/>
     </PatchList>
   </Metadata>
-  <Metadata Title="Yakuza 6: The Song of Life" Name="60 FPS" Note="Unlocks the 30 fps cap (flip rate 0). Works alone or with any resolution entry; the frame rate varies with the resolution." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="Yakuza 6: The Song of Life" Name="60 FPS" Note="Unlocks the 30 fps cap. Works alone or with any resolution entry; the frame rate varies with the resolution." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes" Address="0x146bf24" Value="31f690"/>
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Yakuza 6: The Song of Life" Name="120 FPS" NeoRequires="120hz" Note="Runs the game above 60 fps, up to 120 fps depending on the scene and resolution. The manager turns on the 120 Hz video output when you enable it, and your TV or monitor must accept 120 Hz. Works alone or with any resolution entry. Based on the 60 FPS patch by gasb07. Only one frame rate entry can be on at a time. Unlocks the 30 fps cap. Works alone or with any resolution entry; the frame rate varies with the resolution." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x146bf24" Value="31f690"/>
     </PatchList>

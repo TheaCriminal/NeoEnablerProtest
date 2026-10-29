@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.6.0
+
+- Games installed on an external drive now appear in the Games page. Before, only games on the internal drive were
+  listed, so with every game on a USB drive the page was empty.
+- New patch entry flag `NeoRequires="120hz"`, alone or with the others (`pro,120hz`). Starting a game that has such an
+  entry enabled turns on the 120 Hz video output, and closing the game turns it off again, as 8GB Mode does. If the
+  output was already on, it stays on. Entries named "120 FPS" or "120 Hz" are recognised without the flag, and the
+  panel shows a "120 Hz" tag on them.
+- The Status card, the status page and the logs report now show the 120 Hz mode.
+- A module patch Line can carry a Module attribute (for example Module="materialsystem_ps4.prx") to write into another
+  module of the game from the same entry. The entry waits until every module it names is loaded.
+- Only one frame rate entry ("60 FPS", "120 FPS" and similar) can be on per game and executable. Enabling one turns
+  off the other.
+- New CPU clock page: CPU boost holds every CPU core at its fastest state (3200 MHz) while a PS4 game runs and puts
+  back any core the system lowers. Disable and Quit restore the clock captured for the game. The choice can be saved
+  with the other settings. (Contributed by TheaCriminal.)
+- Each patch entry now shows its author in the panel, and the patch search also matches the author.
+- The Advanced card is always open, and 120 Hz video output is its first option.
+- Disabling GPU boost when it was not applied now shows "GPU boost disabled" instead of the old status.
+- Removed the firmware 13.60 community note from the 8GB Mode status; 8GB Mode is confirmed on 13.60.
+
+## 0.5.3
+
+- New Advanced option: 120 Hz video output. It turns the ps-patch-system 120 Hz setting on or off from the panel.
+  It lowers input lag, mainly with VRR, and some games can reach 120 fps. Contributed by TheaCriminal.
+- GPU boost now detects a PS5 Pro and allows targets up to 2350 MHz on it. Other consoles keep the 2200 MHz limit.
+  Contributed by TheaCriminal.
+- GPU boost now re-applies the clock up to 10 times when the system resets it, instead of 3. After the boost holds
+  for a while the count starts again, so leaving to the home screen several times no longer stops it.
+
 ## 0.5.2
 
 - System dialogs, such as the save data window, open again while a game runs with 8GB Mode. Before, the game
