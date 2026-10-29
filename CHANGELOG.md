@@ -20,6 +20,8 @@
 - The Advanced card is always open, and 120 Hz video output is its first option.
 - Disabling GPU boost when it was not applied now shows "GPU boost disabled" instead of the old status.
 - Removed the firmware 13.60 community note from the 8GB Mode status; 8GB Mode is confirmed on 13.60.
+- Experimental 8GB Mode on firmware 12.70. It is not tested on a console yet: if you are on 12.70, please report
+  whether it works with the Test result form. (Contributed by jinxcase000.)
 
 ## 0.5.3
 
