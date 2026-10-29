@@ -131,7 +131,13 @@ static int gpu_poll(int pid){
 static int gpu_request(int enable,unsigned mhz,int pid){
  if(enable&&(!gpu_target_valid(mhz)||!gpu_backend_supported()))return -1;
  gpu_owner_changed(pid);
- if(!enable){gpu.enabled=0;return gpu_restore();}
+ if(!enable){
+  gpu.enabled=0;
+  int had_baseline=gpu.baseline_valid;
+  int rc=gpu_restore();
+  if(!rc&&!had_baseline)snprintf(gpu.message,sizeof gpu.message,"GPU boost disabled");
+  return rc;
+ }
  if(gpu.restore_pending){snprintf(gpu.message,sizeof gpu.message,"Retry Disable to restore the previous clock first");return -3;}
  gpu.enabled=1;gpu.target=mhz;gpu.blocked=0;gpu.applied=0;gpu.reset_samples=0;gpu.recoveries=0;gpu.stable_samples=0;
  return gpu_poll(pid);
