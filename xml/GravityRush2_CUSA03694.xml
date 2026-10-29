@@ -6,6 +6,84 @@
     <ID>CUSA04934</ID>
     <ID>CUSA04943</ID>
   </TitleID>
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Criminal (4K), gasb07" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000a00" />
+      <Line Type="bytes32" Address="0x0142aa10" Value="0x000005a0" />
+      <Line Type="bytes32" Address="0x0142aa21" Value="0x00000a00" />
+      <Line Type="bytes32" Address="0x0142aa2c" Value="0x000005a0" />
+      <Line Type="bytes" Address="0x0142ac41" Value="90909090" />
+      <Line Type="bytes" Address="0x0142b9a5" Value="90909090" />
+      <Line Type="bytes" Address="0x0142ba8e" Value="90909090" />
+      <Line Type="bytes32" Address="0x0189e630" Value="0x45200000" />
+      <Line Type="bytes32" Address="0x0189e634" Value="0x44b40000" />
+      <Line Type="bytes32" Address="0x0189e638" Value="0x39cccccd" />
+      <Line Type="bytes32" Address="0x0189e63c" Value="0x3a360b61" />
+      <Line Type="bytes" Address="0x01432191" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01432448" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01433823" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01434099" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143487e" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01439cff" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f602" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f7ed" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142e8aa" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142aba7" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142ad0e" Value="4839e40f1f4000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Criminal (4K), gasb07" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000b40" />
+      <Line Type="bytes32" Address="0x0142aa10" Value="0x00000654" />
+      <Line Type="bytes32" Address="0x0142aa21" Value="0x00000b40" />
+      <Line Type="bytes32" Address="0x0142aa2c" Value="0x00000654" />
+      <Line Type="bytes" Address="0x0142ac41" Value="90909090" />
+      <Line Type="bytes" Address="0x0142b9a5" Value="90909090" />
+      <Line Type="bytes" Address="0x0142ba8e" Value="90909090" />
+      <Line Type="bytes32" Address="0x0189e630" Value="0x45340000" />
+      <Line Type="bytes32" Address="0x0189e634" Value="0x44ca8000" />
+      <Line Type="bytes32" Address="0x0189e638" Value="0x39b60b61" />
+      <Line Type="bytes32" Address="0x0189e63c" Value="0x3a21d13a" />
+      <Line Type="bytes" Address="0x01432191" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01432448" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01433823" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01434099" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143487e" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01439cff" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f602" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f7ed" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142e8aa" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142aba7" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142ad0e" Value="4839e40f1f4000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Criminal (4K), gasb07" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000c80" />
+      <Line Type="bytes32" Address="0x0142aa10" Value="0x00000708" />
+      <Line Type="bytes32" Address="0x0142aa21" Value="0x00000c80" />
+      <Line Type="bytes32" Address="0x0142aa2c" Value="0x00000708" />
+      <Line Type="bytes" Address="0x0142ac41" Value="90909090" />
+      <Line Type="bytes" Address="0x0142b9a5" Value="90909090" />
+      <Line Type="bytes" Address="0x0142ba8e" Value="90909090" />
+      <Line Type="bytes32" Address="0x0189e630" Value="0x45480000" />
+      <Line Type="bytes32" Address="0x0189e634" Value="0x44e10000" />
+      <Line Type="bytes32" Address="0x0189e638" Value="0x39a3d70a" />
+      <Line Type="bytes32" Address="0x0189e63c" Value="0x3a11a2b4" />
+      <Line Type="bytes" Address="0x01432191" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01432448" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01433823" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01434099" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143487e" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01439cff" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f602" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f7ed" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142e8aa" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142aba7" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142ad0e" Value="4839e40f1f4000" />
+    </PatchList>
+  </Metadata>
   <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Criminal" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000f00" />
