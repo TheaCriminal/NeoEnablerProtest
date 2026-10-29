@@ -236,6 +236,7 @@ static inline int cpu_request(int enable,unsigned mhz,int pid){
    snprintf(cpu.message,sizeof cpu.message,"Could not restore the CPU clock (core %d, errno %d); boost state cleared. The clock returns to normal at the next game launch.",cpu_fail_core,cpu_fail_errno);
    return 0;
   }
+  if(!rc)snprintf(cpu.message,sizeof cpu.message,"CPU boost disabled");
   return rc;
  }
  if(cpu.restore_pending){snprintf(cpu.message,sizeof cpu.message,"Retry Disable to restore the previous clock first");return -3;}
