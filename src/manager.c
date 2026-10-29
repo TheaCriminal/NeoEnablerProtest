@@ -527,19 +527,24 @@ static int gpu_game_pid(void) {
     while (off + sizeof(struct kinfo_proc) <= n) {
         struct kinfo_proc *ki = (void *)(buf + off);
         if (ki->ki_structsize < (int)sizeof(*ki) || (size_t)ki->ki_structsize > n - off) { valid = 0; break; }
-        if (game_proc(ki)) {
+        if (ki->ki_pid != getpid() && game_proc(ki)) {
             app_info_t info = {0}; uint32_t h = 0;
-            if (sceKernelGetAppInfo(ki->ki_pid, &info) || !info.title_id[0]) valid = 0;
-            else {
-                if (!first[0]) snprintf(first, sizeof(first), "%.9s", info.title_id);
+            int is_elf = strcmp(ki->ki_comm, "eboot.bin") != 0;
+            int have_info = !sceKernelGetAppInfo(ki->ki_pid, &info) && info.title_id[0];
+            /* Only a process with a title ID and a PS4 graphics driver counts. Payloads (payload.elf, kstuff.elf, ...)
+             * and system .elf processes (NPXS titles) match the name test but are not games and must not take part
+             * in the title comparison below. */
+            int ps4 = have_info &&
+                (!kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverForNeoMode.sprx", &h) ||
+                 !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriver.sprx", &h) ||
+                 !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverCompat1.sprx", &h));
+            if (ps4) {
+                if (!first[0]) snprintf(first, sizeof first, "%.9s", info.title_id);
                 else if (strncmp(first, info.title_id, 9)) valid = 0;   /* two different titles open */
-                int is_elf = strcmp(ki->ki_comm, "eboot.bin") != 0;
-                if (!kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverForNeoMode.sprx", &h) ||
-                    !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriver.sprx", &h) ||
-                    !kernel_dynlib_handle(ki->ki_pid, "libSceGnmDriverCompat1.sprx", &h)) {
-                    if (!candidate || (is_elf && !candidate_elf)) { candidate = ki->ki_pid; candidate_elf = is_elf; }
-                    else if (is_elf == candidate_elf) valid = 0;        /* two game processes of the same kind */
-                }
+                if (!candidate || (is_elf && !candidate_elf)) { candidate = ki->ki_pid; candidate_elf = is_elf; }
+                else if (is_elf == candidate_elf) valid = 0;            /* two game processes of the same kind */
+            } else if (!is_elf && !have_info) {
+                valid = 0;      /* an eboot.bin we cannot identify is still ambiguous */
             }
         }
         off += (size_t)ki->ki_structsize;
