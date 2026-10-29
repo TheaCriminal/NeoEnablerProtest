@@ -6,7 +6,7 @@
     <ID>CUSA04934</ID>
     <ID>CUSA04943</ID>
   </TitleID>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Criminal (4K), gasb07" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry." Author="Criminal (4K), gasb07" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000a00" />
       <Line Type="bytes32" Address="0x0142aa10" Value="0x000005a0" />
@@ -32,7 +32,7 @@
       <Line Type="bytes" Address="0x0142ad0e" Value="4839e40f1f4000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Criminal (4K), gasb07" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Enable only one resolution entry." Author="Criminal (4K), gasb07" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000b40" />
       <Line Type="bytes32" Address="0x0142aa10" Value="0x00000654" />
@@ -58,7 +58,7 @@
       <Line Type="bytes" Address="0x0142ad0e" Value="4839e40f1f4000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="Criminal (4K), gasb07" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Enable only one resolution entry." Author="Criminal (4K), gasb07" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000c80" />
       <Line Type="bytes32" Address="0x0142aa10" Value="0x00000708" />
@@ -84,7 +84,7 @@
       <Line Type="bytes" Address="0x0142ad0e" Value="4839e40f1f4000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Criminal" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires the PS5 set to 2160p." Author="Criminal" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000f00" />
       <Line Type="bytes32" Address="0x0142aa10" Value="0x00000870" />

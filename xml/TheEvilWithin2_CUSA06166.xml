@@ -6,13 +6,13 @@
     <ID>CUSA08974</ID>
     <ID>CUSA08975</ID>
   </TitleID>
-  <Metadata Title="The Evil Within® 2" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="The Evil Within® 2" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 render in PS4 Pro mode. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x112d97e" Value="ba1500000090" />
       <Line Type="bytes" Address="0x112d0be" Value="8d9100030000" />
     </PatchList>
   </Metadata>
-  <Metadata Title="The Evil Within® 2" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
+  <Metadata Title="The Evil Within® 2" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 render in PS4 Pro mode. Enable only one resolution entry." Author="gasb07" PatchVer="1.0" AppVer="01.05" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes" Address="0x112d97e" Value="ba1400000090" />
       <Line Type="bytes" Address="0x112d0be" Value="8d9100030000" />
