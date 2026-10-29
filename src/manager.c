@@ -205,7 +205,7 @@ static uint32_t fw_raw_version(void) {
     sysctlbyname("machdep.upd_version", &v, &n, NULL, 0);
     return v;
 }
-static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != NULL; }
+static int memory_supported(void) { uint32_t fw = fw_raw_version(); return mb_find_layout(fw) != NULL || mbd_find_layout(fw) != NULL; }
 /* Availability also requires a ready memory backend; an idle game is not required. */
 static int memory_available(void) { mb_snapshot m; return memory_supported() && !memory_check(&m); }
 /* GPU clock page and boost: the MP1 driver answering a clock read. */
@@ -1549,7 +1549,7 @@ static void drop_8gib_request(void) {
     if (!force_8gib || memory_available()) return;
     force_8gib = 0;
     int saved = !settings_save();
-    log_line("Keep 8GB Mode on: cleared, 8GB Mode is not available (needs firmware 13.20 or 13.60 with a validated memory launch hook)%s",
+    log_line("Keep 8GB Mode on: cleared, 8GB Mode is not available (needs firmware 13.20 or 13.60, 12.70 experimental, with a validated memory launch hook)%s",
              saved ? "" : " (settings not saved)");
 }
 
@@ -1994,7 +1994,7 @@ int main(void) {
                 force_neo = value; launch_attach(1);
                 amsg = value ? "Pro mode for every PS4 game: on" : "Pro mode for every PS4 game: off (follows the game patches)";
             } else if (value && !memory_available()) {
-                amsg = "8GB Mode needs firmware 13.20 or 13.60 with a validated memory launch hook enabled; nothing changed";
+                amsg = "8GB Mode needs firmware 13.20 or 13.60 (12.70 experimental) with a validated memory launch hook enabled; nothing changed";
             } else {
                 force_8gib = value;
                 if (value) memory_request(1); else if (!auto8.active) memory_request(0);

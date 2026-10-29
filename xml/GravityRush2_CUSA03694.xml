@@ -6,7 +6,85 @@
     <ID>CUSA04934</ID>
     <ID>CUSA04943</ID>
   </TitleID>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires NEO Enabler and the PS5 set to 2160p." Author="Criminal" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="1440p (PS4 Pro mode)" NeoRequires="pro" Note="2560x1440 output and render in PS4 Pro mode. Enable only one resolution entry." Author="Criminal (4K), gasb07" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000a00" />
+      <Line Type="bytes32" Address="0x0142aa10" Value="0x000005a0" />
+      <Line Type="bytes32" Address="0x0142aa21" Value="0x00000a00" />
+      <Line Type="bytes32" Address="0x0142aa2c" Value="0x000005a0" />
+      <Line Type="bytes" Address="0x0142ac41" Value="90909090" />
+      <Line Type="bytes" Address="0x0142b9a5" Value="90909090" />
+      <Line Type="bytes" Address="0x0142ba8e" Value="90909090" />
+      <Line Type="bytes32" Address="0x0189e630" Value="0x45200000" />
+      <Line Type="bytes32" Address="0x0189e634" Value="0x44b40000" />
+      <Line Type="bytes32" Address="0x0189e638" Value="0x39cccccd" />
+      <Line Type="bytes32" Address="0x0189e63c" Value="0x3a360b61" />
+      <Line Type="bytes" Address="0x01432191" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01432448" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01433823" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01434099" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143487e" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01439cff" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f602" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f7ed" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142e8aa" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142aba7" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142ad0e" Value="4839e40f1f4000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="1620p (PS4 Pro mode)" NeoRequires="pro" Note="2880x1620 output and render in PS4 Pro mode. Enable only one resolution entry." Author="Criminal (4K), gasb07" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000b40" />
+      <Line Type="bytes32" Address="0x0142aa10" Value="0x00000654" />
+      <Line Type="bytes32" Address="0x0142aa21" Value="0x00000b40" />
+      <Line Type="bytes32" Address="0x0142aa2c" Value="0x00000654" />
+      <Line Type="bytes" Address="0x0142ac41" Value="90909090" />
+      <Line Type="bytes" Address="0x0142b9a5" Value="90909090" />
+      <Line Type="bytes" Address="0x0142ba8e" Value="90909090" />
+      <Line Type="bytes32" Address="0x0189e630" Value="0x45340000" />
+      <Line Type="bytes32" Address="0x0189e634" Value="0x44ca8000" />
+      <Line Type="bytes32" Address="0x0189e638" Value="0x39b60b61" />
+      <Line Type="bytes32" Address="0x0189e63c" Value="0x3a21d13a" />
+      <Line Type="bytes" Address="0x01432191" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01432448" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01433823" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01434099" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143487e" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01439cff" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f602" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f7ed" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142e8aa" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142aba7" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142ad0e" Value="4839e40f1f4000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="1800p (PS4 Pro mode)" NeoRequires="pro" Note="3200x1800 output and render in PS4 Pro mode. Enable only one resolution entry." Author="Criminal (4K), gasb07" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
+    <PatchList>
+      <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000c80" />
+      <Line Type="bytes32" Address="0x0142aa10" Value="0x00000708" />
+      <Line Type="bytes32" Address="0x0142aa21" Value="0x00000c80" />
+      <Line Type="bytes32" Address="0x0142aa2c" Value="0x00000708" />
+      <Line Type="bytes" Address="0x0142ac41" Value="90909090" />
+      <Line Type="bytes" Address="0x0142b9a5" Value="90909090" />
+      <Line Type="bytes" Address="0x0142ba8e" Value="90909090" />
+      <Line Type="bytes32" Address="0x0189e630" Value="0x45480000" />
+      <Line Type="bytes32" Address="0x0189e634" Value="0x44e10000" />
+      <Line Type="bytes32" Address="0x0189e638" Value="0x39a3d70a" />
+      <Line Type="bytes32" Address="0x0189e63c" Value="0x3a11a2b4" />
+      <Line Type="bytes" Address="0x01432191" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01432448" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01433823" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01434099" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143487e" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x01439cff" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f602" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0143f7ed" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142e8aa" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142aba7" Value="4839e40f1f4000" />
+      <Line Type="bytes" Address="0x0142ad0e" Value="4839e40f1f4000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Native 4K (PS4 Pro mode)" NeoRequires="pro" Note="3840x2160 output and render in PS4 Pro mode. Enable only one resolution entry. Requires the PS5 set to 2160p." Author="Criminal" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
     <PatchList>
       <Line Type="bytes32" Address="0x0142aa0b" Value="0x00000f00" />
       <Line Type="bytes32" Address="0x0142aa10" Value="0x00000870" />
@@ -126,179 +204,6 @@
       <Line Type="bytes" Address="0x01803153" Value="e82825ffff" />
       <Line Type="bytes" Address="0x01803158" Value="4989c4" />
       <Line Type="bytes" Address="0x0180315b" Value="e977859bff" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Boot with loose files exclusively" Note="Work in Progress, you will not be able to boot game without raw files extracted to `/data/GoldHEN/AFR/(title id)/`!!." Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x008501da" Value="2f617070" />
-      <Line Type="bytes" Address="0x0086c7da" Value="2f617070" />
-      <Line Type="bytes" Address="0x0086c8b6" Value="2f617070" />
-      <Line Type="bytes" Address="0x0086cb23" Value="2f617070" />
-      <Line Type="bytes" Address="0x0086cbdc" Value="2f617070" />
-      <Line Type="bytes" Address="0x0086cfca" Value="2f617070" />
-      <Line Type="bytes" Address="0x014ce352" Value="2f617070" />
-      <Line Type="bytes" Address="0x014e0b7a" Value="2f617070" />
-      <Line Type="bytes" Address="0x01515f92" Value="2f617070" />
-      <Line Type="bytes" Address="0x0151caf1" Value="2f617070" />
-      <Line Type="bytes" Address="0x018ce7de" Value="2f617070" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Remove DLC Requirement for loading save data" Note="Removes CE-33678-7 error message when loading save that used DLC previously." Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x0095de96" Value="909090909090" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Infinite Gravity Energy" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x00901c26" Value="c5fa10058a68fb00" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Infinite Special Attck" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x009009b6" Value="c7c100000000" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Invincible Player" Author="illusion" PatchVer="2.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x00907e20" Value="c3" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Unlock All Costumes" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x0124d1a2" Value="48e9b1000000" />
-      <Line Type="bytes" Address="0x0124d664" Value="c6402101" />
-      <Line Type="bytes" Address="0x0124d668" Value="48e922ffffff" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Unlock All Gestures" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x017157c8" Value="48b001" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Raise Stasis Field Limit to 15" Note="WIP, need to find another check to go above 15 items" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x0092ae04" Value="c7c164000000" />
-      <Line Type="bytes" Address="0x0092ae18" Value="9090" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Print+DebugPrint Fixes" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes32" Address="0x018c591c" Value="0x3f000000" />
-      <Line Type="bytes32" Address="0x018a12a4" Value="0x3f000000" />
-      <Line Type="bytes" Address="0x0139d614" Value="488d35d54b1700" />
-      <Line Type="bytes" Address="0x013c15c7" Value="488d35220c1500" />
-      <Line Type="bytes" Address="0x013c157d" Value="488d356c0c1500" />
-      <Line Type="bytes" Address="0x017e25b1" Value="488d35584cfafe" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Demo Timer Never Expires" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x0171ef33" Value="b800000000" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Unlock All DLC" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="utf8" Address="0x00430a63" Value="CROW" />
-      <Line Type="utf8" Address="0x00430a68" Value="DENGEKI" />
-      <Line Type="utf8" Address="0x00430a70" Value="KIT17" />
-      <Line Type="utf8" Address="0x00430a76" Value="KIT19" />
-      <Line Type="utf8" Address="0x00430a7c" Value="NIER" />
-      <Line Type="utf8" Address="0x00430a81" Value="PSO2" />
-      <Line Type="bytes" Address="0x00866037" Value="e9f840f900" />
-      <Line Type="bytes" Address="0x017fa134" Value="488d3d2869c3fe" />
-      <Line Type="bytes" Address="0x017fa13b" Value="31f6" />
-      <Line Type="bytes" Address="0x017fa13d" Value="31d2" />
-      <Line Type="bytes" Address="0x017fa13f" Value="e8ecc406ff" />
-      <Line Type="bytes" Address="0x017fa144" Value="488d3d1d69c3fe" />
-      <Line Type="bytes" Address="0x017fa14b" Value="31f6" />
-      <Line Type="bytes" Address="0x017fa14d" Value="31d2" />
-      <Line Type="bytes" Address="0x017fa14f" Value="e8dcc406ff" />
-      <Line Type="bytes" Address="0x017fa154" Value="488d3d1569c3fe" />
-      <Line Type="bytes" Address="0x017fa15b" Value="31f6" />
-      <Line Type="bytes" Address="0x017fa15d" Value="31d2" />
-      <Line Type="bytes" Address="0x017fa15f" Value="e8ccc406ff" />
-      <Line Type="bytes" Address="0x017fa164" Value="488d3d0b69c3fe" />
-      <Line Type="bytes" Address="0x017fa16b" Value="31f6" />
-      <Line Type="bytes" Address="0x017fa16d" Value="31d2" />
-      <Line Type="bytes" Address="0x017fa16f" Value="e8bcc406ff" />
-      <Line Type="bytes" Address="0x017fa174" Value="488d3d0169c3fe" />
-      <Line Type="bytes" Address="0x017fa17b" Value="31f6" />
-      <Line Type="bytes" Address="0x017fa17d" Value="31d2" />
-      <Line Type="bytes" Address="0x017fa17f" Value="e8acc406ff" />
-      <Line Type="bytes" Address="0x017fa184" Value="488d3df668c3fe" />
-      <Line Type="bytes" Address="0x017fa18b" Value="31f6" />
-      <Line Type="bytes" Address="0x017fa18d" Value="31d2" />
-      <Line Type="bytes" Address="0x017fa18f" Value="e89cc406ff" />
-      <Line Type="bytes" Address="0x017fa194" Value="0fb60588574e00" />
-      <Line Type="bytes" Address="0x017fa19b" Value="e99ebe06ff" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Unlock All Photo Items" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x010e87e0" Value="b001c3" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Load hidden Levels (ENABLE FIRST)" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x00845e5f" Value="488d1d02222c01" />
-      <Line Type="bytes" Address="0x00845e66" Value="4889de" />
-      <Line Type="utf8" Address="0x01b08068" Value="-enter_world LaunchScript root" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Load hidden Level test_hud_select" Note="Needs 'Print+DebugPrint Fixes' patch for working menu" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="utf8" Address="0x001b08075" Value="Test test_hud_select" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Load hidden Level test_sound" Note="Needs 'Print+DebugPrint Fixes' patch for working menu" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="utf8" Address="0x001b08075" Value="TestSound test_sound" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Load hidden Level root_E3" Note="Needs 'Print+DebugPrint Fixes' patch for working menu" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="utf8" Address="0x001b08075" Value="LaunchScript root_E3" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Force Region (ENABLE FIRST)" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes" Address="0x00845f32" Value="c705cc98490101000000" />
-      <Line Type="bytes" Address="0x00845f3c" Value="e944030000" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Force Region (Japan)" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes32" Address="0x00845f38" Value="0x00000001" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Force Region (America)" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes32" Address="0x00845f38" Value="0x00000002" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Force Region (Europe)" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes32" Address="0x00845f38" Value="0x00000003" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Force Region (G)" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes32" Address="0x00845f38" Value="0x00000004" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Force Region (Asia)" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes32" Address="0x00845f38" Value="0x00000005" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Force Region (C)" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes32" Address="0x00845f38" Value="0x00000006" />
-    </PatchList>
-  </Metadata>
-  <Metadata Title="Gravity Rush 2 (Gravity Daze 2)" Name="Force Region (Free)" Author="illusion" PatchVer="1.0" AppVer="01.11" AppElf="eboot.bin">
-    <PatchList>
-      <Line Type="bytes32" Address="0x00845f38" Value="0x00000000" />
     </PatchList>
   </Metadata>
 </Patch>
