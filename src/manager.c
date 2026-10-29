@@ -417,6 +417,13 @@ static int games_text(char *out, size_t cap, int html) {
                 if (ps4 && len < (int)cap - 400) {
                     char name[128], esc[384];
                     game_name(info.title_id, name, sizeof(name));
+                    /* A title that starts its own executables (DMC HD Collection: dmc1/2/3.elf) shares one title ID and one
+                       name; show which executable is running. */
+                    if (strcmp(ki->ki_comm, "eboot.bin")) {
+                        size_t l = strlen(name), c = strlen(ki->ki_comm);
+                        if (c > 4 && !strcmp(ki->ki_comm + c - 4, ".elf")) c -= 4;   /* dmc3.elf -> dmc3 */
+                        snprintf(name + l, sizeof(name) - l, "%s(%.*s)", l ? " " : "", (int)(c < 40 ? c : 40), ki->ki_comm);
+                    }
                     if (html) html_escape(name, esc, sizeof(esc)); else snprintf(esc, sizeof(esc), "%s", name);
                     games++;
                     char memory[80]="DMEM query unavailable";int dmib[24];size_t dc=23,bytes=8;uint64_t dmem=0;
