@@ -13,6 +13,13 @@
   module of the game from the same entry. The entry waits until every module it names is loaded.
 - Only one frame rate entry ("60 FPS", "120 FPS" and similar) can be on per game and executable. Enabling one turns
   off the other.
+- New CPU clock page: CPU boost holds every CPU core at its fastest state (3200 MHz) while a PS4 game runs and puts
+  back any core the system lowers. Disable and Quit restore the clock captured for the game. The choice can be saved
+  with the other settings. (Contributed by TheaCriminal.)
+- Each patch entry now shows its author in the panel, and the patch search also matches the author.
+- The Advanced card is always open, and 120 Hz video output is its first option.
+- Disabling GPU boost when it was not applied now shows "GPU boost disabled" instead of the old status.
+- Removed the firmware 13.60 community note from the 8GB Mode status; 8GB Mode is confirmed on 13.60.
 
 ## 0.5.3
 
