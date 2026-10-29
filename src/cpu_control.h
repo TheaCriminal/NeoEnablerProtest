@@ -1,6 +1,6 @@
 /* GPL-3.0-only. PS4-only CPU boost using the stock MP1 driver. Runs in the manager's HTTP thread.
  *
- * Boost = every core at pstate 0, the fastest state the driver offers (3200 MHz on a PS5 Pro in PS4 mode; the driver
+ * Boost = every core at pstate 0, the fastest state the driver offers (3200 MHz on a PS5 in PS4 mode; the driver
  * has no state above it). The policy applies on request or new game, puts any core the system lowers back, and on
  * Disable writes the captured pstates back (never leaving a core slower than it started).
  *   GET 0xc00cae1e  struct{u32 core; u32 pstate; u32 live_mhz}   pstate 0 = fastest, live_mhz = core clock
@@ -14,9 +14,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#define CPU_MIN_MHZ 2850U       /* lowest selectable target: 2.85 GHz (every target selects the fastest pstate) */
-#define CPU_MAX_MHZ 3500U       /* upper bound accepted for a saved/typed target */
-#define CPU_DEFAULT_MHZ 3000U
+#define CPU_MIN_MHZ 2850U       
+#define CPU_MAX_MHZ 3500U       
+#define CPU_DEFAULT_MHZ 3200U
 #define CPU_MAX_RECOVERIES 60U  /* automatic re-applies allowed before giving up */
 #define CPU_STABLE_POLLS 10U    /* polls with every core fast before the recovery budget is refunded */
 #define CPU_RESET_POLLS 1U      /* consecutive polls with a slowed core before it is put back (2 s per poll) */
