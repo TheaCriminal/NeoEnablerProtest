@@ -205,7 +205,7 @@ static uint32_t fw_raw_version(void) {
     sysctlbyname("machdep.upd_version", &v, &n, NULL, 0);
     return v;
 }
-static int memory_supported(void) { return mb_find_layout(fw_raw_version()) != NULL; }
+static int memory_supported(void) { uint32_t fw = fw_raw_version(); return mb_find_layout(fw) != NULL || mbd_find_layout(fw) != NULL; }
 /* Availability also requires a ready memory backend; an idle game is not required. */
 static int memory_available(void) { mb_snapshot m; return memory_supported() && !memory_check(&m); }
 /* GPU clock page and boost: the MP1 driver answering a clock read. */
