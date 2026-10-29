@@ -160,7 +160,7 @@ Test results by game and firmware: [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md
 | DmC Devil May Cry: Definitive Edition: 1440p, 1800p, Native 4K resolution patches | [Criminal](https://github.com/TheaCriminal) | |
 | DRAGON QUEST XI S: 1440p, 1620p, 1800p, Native 4K resolution patches | gasb07 | |
 | Dragon's Dogma: Dark Arisen: Native 4K resolution patch | gasb07 | |
-| Driveclub: 1440p resolution patch; 4K output with 1620p/1800p rendering; Native 4K patch; higher-resolution options require 8 GiB mode | Local experiment | |
+| Driveclub: 1440p resolution patch; 4K output with 1620p/1800p rendering | Local experiment | |
 | Just Cause 3: 1440p and Native 4K resolution patches, offline mode patch to skip online login | Local experiment | |
 | KILLZONE SHADOW FALL: 1440p, 1620p, 1800p, Native 4K resolution patches | Local experiment | |
 | Mad Max: 1440p, 1800p, Native 4K resolution patches | gasb07 | |

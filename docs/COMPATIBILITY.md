@@ -22,7 +22,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Bloodborne (01.09) | 1440p, 1620p, 1800p (8GB Mode), Native 4K (8GB Mode) | Validated |
 | Dishonored Definitive Edition (01.03) | 1440p, 1800p, Native 4K, 60 FPS (triple buffering) | Validated |
 | Dishonored 2 (01.07) | 1620p, 1800p, Native 4K, 60 FPS, Skip intro videos | Validated |
-| Driveclub (01.28) | 1440p, 4K (1620p render), 4K (1800p render), Native 4K (8 GiB) | Validated |
+| Driveclub (01.28) | 1440p, 4K (1620p render), 4K (1800p render) | Validated |
 | Just Cause 3 (01.05) | 1440p, 4K | Validated |
 | Killzone Shadow Fall (01.81) | 1440p, 1620p, 1800p, 4K | Validated |
 | Need for Speed Rivals (01.04, 01.03) | 1440p, 4K | Validated |
@@ -52,6 +52,7 @@ All entries below are validated by the maintainer on firmware 13.20. Notes and f
 | Middle-earth: Shadow of Mordor - Game of the Year Edition (01.05) | 1440p, 1620p, 1800p, Native 4K | Native 4K and 1800p validated; 1440p and 1620p not tested yet |
 | Alien: Isolation (01.04) | 1440p, 1620p, 1800p, Native 4K, 60 FPS | 1440p, 1800p and Native 4K reach clean gameplay; 1620p and SMAA T2x not tested yet; 60 FPS validated in gameplay (Native 4K about 55 fps with triple buffering) |
 | Spyro Reignited Trilogy (01.03) | 1620p, 1800p, Native 4K | 1800p and Native 4K validated; 1620p not tested yet |
+| Rayman Legends (01.01) | 1440p, 1620p, 1800p, Native 4K | All validated |
 
 ## GPU boost
 
@@ -63,7 +64,7 @@ report did not specify target or measured clocks. Other firmwares remain unteste
 
 Pro mode is supported from 4.00 to 13.60, and the no-HV 8 GiB budget has profiles for 13.20 and 13.60. Community reports are listed below; one successful report does not validate every game or launch.
 
-| Firmware | Pro mode patches | 8 GiB entries (Bloodborne Native 4K, Driveclub Native 4K) |
+| Firmware | Pro mode patches | 8 GiB entries (Bloodborne Native 4K) |
 | --- | --- | --- |
 | 4.00 - 13.00 | Untested | Not supported |
 | 13.60 | Reported: Bloodborne Native 4K | Reported: Bloodborne reached gameplay; panel showed 8 GiB enabled. Other games untested |

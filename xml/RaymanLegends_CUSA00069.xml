@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <TitleID>
+    <ID>CUSA00069</ID>
+  </TitleID>
+  <Metadata Title="Rayman Legends" Name="1440p (PS4 Pro mode)" Note="2560x1440 native render and output in PS4 Pro mode instead of 1920x1080. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x1897000" Value="415b4c891c254038a90148893c254838a901e879d834ff488b3c254838a901814f10000000808b4f0481e1ff070000ffc169c900060000c1e903ffc9894f084889c148c1e92081f9000001007305b90000010048c1e1203d0000f0007305b80000f0004809c8488904255038a901ff04251438a901ff34254038a901c3415b4c891c255838a901448b5c240844891c252438a901c744240801000000e8bf93abffff04252038a90185c0740eff04251838a9018904251c38a901ff34255838a901c357564883ec08e8d3fd34ff4883c4085e5ff7461000000080740e814f1800000001ff04252838a901c33b34253038a90176078934253038a9013b14253438a90176078914253438a9018b04253838a90183f820731dc1e00489b00039a90189900439a9014489800839a9014489880c39a901ff04253838a901e950d734ff" />
+      <Line Type="bytes" Address="0x90f56a" Value="e8917af800" />
+      <Line Type="bytes" Address="0x90f637" Value="e8c479f800" />
+      <Line Type="bytes" Address="0xbe8680" Value="e9f8e9ca00" />
+      <Line Type="bytes" Address="0x90f4a8" Value="be000a0000" />
+      <Line Type="bytes" Address="0x90f4ad" Value="baa0050000" />
+      <Line Type="bytes" Address="0x914a39" Value="e98426f800" />
+      <Line Type="bytes" Address="0xbe4a86" Value="31c090" />
+      <Line Type="bytes" Address="0xbd5cfc" Value="660f1f440000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Rayman Legends" Name="1620p (PS4 Pro mode)" Note="2880x1620 native render and output in PS4 Pro mode instead of 1920x1080. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x1897000" Value="415b4c891c254038a90148893c254838a901e879d834ff488b3c254838a901814f10000000808b4f0481e1ff070000ffc169c980060000c1e903ffc9894f084889c148c1e92081f9000001007305b90000010048c1e1203d008024017305b8008024014809c8488904255038a901ff04251438a901ff34254038a901c3415b4c891c255838a901448b5c240844891c252438a901c744240801000000e8bf93abffff04252038a90185c0740eff04251838a9018904251c38a901ff34255838a901c357564883ec08e8d3fd34ff4883c4085e5ff7461000000080740e814f1800000001ff04252838a901c33b34253038a90176078934253038a9013b14253438a90176078914253438a9018b04253838a90183f820731dc1e00489b00039a90189900439a9014489800839a9014489880c39a901ff04253838a901e950d734ff" />
+      <Line Type="bytes" Address="0x90f56a" Value="e8917af800" />
+      <Line Type="bytes" Address="0x90f637" Value="e8c479f800" />
+      <Line Type="bytes" Address="0xbe8680" Value="e9f8e9ca00" />
+      <Line Type="bytes" Address="0x90f4a8" Value="be400b0000" />
+      <Line Type="bytes" Address="0x90f4ad" Value="ba54060000" />
+      <Line Type="bytes" Address="0x914a39" Value="e98426f800" />
+      <Line Type="bytes" Address="0xbe4a86" Value="31c090" />
+      <Line Type="bytes" Address="0xbd5cfc" Value="660f1f440000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Rayman Legends" Name="1800p (PS4 Pro mode)" Note="3200x1800 native render and output in PS4 Pro mode instead of 1920x1080. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x1897000" Value="415b4c891c254038a90148893c254838a901e879d834ff488b3c254838a901814f10000000808b4f0481e1ff070000ffc169c980070000c1e903ffc9894f084889c148c1e92081f9000001007305b90000010048c1e1203d000077017305b8000077014809c8488904255038a901ff04251438a901ff34254038a901c3415b4c891c255838a901448b5c240844891c252438a901c744240801000000e8bf93abffff04252038a90185c0740eff04251838a9018904251c38a901ff34255838a901c357564883ec08e8d3fd34ff4883c4085e5ff7461000000080740e814f1800000001ff04252838a901c33b34253038a90176078934253038a9013b14253438a90176078914253438a9018b04253838a90183f820731dc1e00489b00039a90189900439a9014489800839a9014489880c39a901ff04253838a901e950d734ff" />
+      <Line Type="bytes" Address="0x90f56a" Value="e8917af800" />
+      <Line Type="bytes" Address="0x90f637" Value="e8c479f800" />
+      <Line Type="bytes" Address="0xbe8680" Value="e9f8e9ca00" />
+      <Line Type="bytes" Address="0x90f4a8" Value="be800c0000" />
+      <Line Type="bytes" Address="0x90f4ad" Value="ba08070000" />
+      <Line Type="bytes" Address="0x914a39" Value="e98426f800" />
+      <Line Type="bytes" Address="0xbe4a86" Value="31c090" />
+      <Line Type="bytes" Address="0xbd5cfc" Value="660f1f440000" />
+    </PatchList>
+  </Metadata>
+  <Metadata Title="Rayman Legends" Name="Native 4K (PS4 Pro mode)" Note="3840x2160 native render and output in PS4 Pro mode instead of 1920x1080. Enable only one resolution entry. Requires NEO Enabler." Author="gasb07" PatchVer="1.0" AppVer="01.01" AppElf="eboot.bin" NeoRequires="pro">
+    <PatchList>
+      <Line Type="bytes" Address="0x1897000" Value="415b4c891c254038a90148893c254838a901e879d834ff488b3c254838a901814f10000000808b4f0481e1ff070000ffc169c980080000c1e903ffc9894f084889c148c1e92081f9000001007305b90000010048c1e1203d000040027305b8000040024809c8488904255038a901ff04251438a901ff34254038a901c3415b4c891c255838a901448b5c240844891c252438a901c744240801000000e8bf93abffff04252038a90185c0740eff04251838a9018904251c38a901ff34255838a901c357564883ec08e8d3fd34ff4883c4085e5ff7461000000080740e814f1800000001ff04252838a901c33b34253038a90176078934253038a9013b14253438a90176078914253438a9018b04253838a90183f820731dc1e00489b00039a90189900439a9014489800839a9014489880c39a901ff04253838a901e950d734ff" />
+      <Line Type="bytes" Address="0x90f56a" Value="e8917af800" />
+      <Line Type="bytes" Address="0x90f637" Value="e8c479f800" />
+      <Line Type="bytes" Address="0xbe8680" Value="e9f8e9ca00" />
+      <Line Type="bytes" Address="0x90f4a8" Value="be000f0000" />
+      <Line Type="bytes" Address="0x90f4ad" Value="ba70080000" />
+      <Line Type="bytes" Address="0x914a39" Value="e98426f800" />
+      <Line Type="bytes" Address="0xbe4a86" Value="31c090" />
+      <Line Type="bytes" Address="0xbd5cfc" Value="660f1f440000" />
+    </PatchList>
+  </Metadata>
+</Patch>
