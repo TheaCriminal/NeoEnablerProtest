@@ -11,7 +11,7 @@ and enable the patches: [Game patches](../README.md#game-patches).
 | Just Cause 3 (01.05) | 1440p, 4K | Also enable "Offline mode", or the game keeps trying to log in. |
 | Battlefield 4 (01.24) | 1440p, 1620p, 1800p, 4K | 1800p holds 60 fps. 4K runs around 49 fps. |
 | Battlefield Hardline (01.09) | 1440p, 1620p, 1800p, 4K | |
-| Killzone Shadow Fall (01.81) | 1440p, 1620p, 1800p, 4K | Some surfaces are slightly darker from 1440p to 1800p. 4K is clean but below 60 fps. |
+| Killzone Shadow Fall (01.81) | 1440p, 1620p, 1800p, 4K | 4K is below 60 fps. |
 | The Order: 1886 (01.02) | 4K, 4K up to 60 fps | Small sparkles may appear on edges while moving. Native 4K 60fps uses triple buffering: no tearing, slight stutter. |
 | Dark Souls III: The Fire Fades Edition (01.03) | 1440p, 1620p, 1800p, native 4K | The game already runs in PS4 Pro mode. Native 4K needs 8GB Mode. **Tested on firmware 13.20 only.** |
 | Batman: Arkham Knight (01.15) | 1620p, 1800p, native 4K | |
