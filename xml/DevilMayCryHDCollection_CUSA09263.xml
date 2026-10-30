@@ -59,6 +59,8 @@
         <Line Type="bytes" Address="0x007819DA" Value="0000003f"/>
         <Line Type="bytes" Address="0x006AD62E" Value="0fb60574465700c1e015050000003f4189066690"/>
         <Line Type="bytes" Address="0x006B110C" Value="0fb605960b5700c1e015050000003f4189066690"/>
+        <Line Type="bytes" Address="0x004286A5" Value="78"/>
+        <Line Type="bytes" Address="0x004286B1" Value="78"/>
     </PatchList>
   </Metadata>
 </Patch>
