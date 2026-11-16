@@ -13,16 +13,24 @@ so NeoEnabler is only useful for the games listed below.
 You pick the patches in the NeoEnabler panel. A game starts in Pro mode, and gets the 8 GiB memory budget, only
 when one of its enabled patches needs it; every other game starts as usual.
 
-Version 0.3.5 supports the 8 GiB memory budget without an HV unlock on firmware 13.20 and 13.60.
+Version 0.3.5 supports the 8 GiB memory budget without an HV unlock on firmware 13.20 and 13.60 with 10.01 and 12.70 being experimental.
 See [validation and limitations](docs/8GB-NO-HV-1360.md): 13.20 has a Bloodborne gameplay and restoration test;
 13.60 has community reports of Bloodborne 4K gameplay with 8 GiB enabled and a successful launch after the availability fix.
-Version 0.6.0 adds **experimental** 8 GiB support on firmware 12.70: it is not tested on a console yet. If you are on
-12.70, please report whether it works with the
+8 GiB support on firmware 10.01, 12.20 and 12.70 is **experimental**. On 12.20, one console test of Bloodborne
+(CUSA00900) confirmed 8 GiB on launch and restoration of the stock DATA extension after closing the game.
+10.01 and 12.70 each have one community report of Bloodborne running with 8 GiB enabled.
+If you are on one of these firmwares, please report whether it works with the
 [Test result form](https://github.com/gasb07/NeoEnabler/issues/new?template=test-result.yml).
+
+PS4 Pro Mode + High Resolution + 120 HZ = FW 4.00 to 13.60
+
+8 GiB Memory Support = FW 10.01, 12.70, 13.20, 13.60
+
+Most patches do not require 8 GiB
 
 ## What you need
 
-- A jailbroken PS5 on firmware 4.00 to 13.60 (tested on 13.20) with an ELF loader, such as etaHEN or elfldr.
+- A jailbroken PS5 on firmware 4.00 to 13.60 (tested on 13.20 and 13.60) with an ELF loader, such as etaHEN or elfldr.
 - [ps-patch-system](https://github.com/illusionyy/ps-patch-system), loaded **before** NeoEnabler.
 
 > [!IMPORTANT]
@@ -43,8 +51,8 @@ Version 0.6.0 adds **experimental** 8 GiB support on firmware 12.70: it is not t
 The **8 GiB PS4 Pro memory budget** follows patches marked "8 GiB" in the panel.
 This mode requires:
 
-- **Firmware 13.20** (Bloodborne gameplay and automatic restoration checked) or **13.60** (community-reported Bloodborne 4K gameplay with 8 GiB enabled).
-  **12.70 is experimental and untested**: the manager refuses the 8 GiB launch if the firmware does not match what it
+- **Firmware 13.20** or **13.60**.
+  **10.01, 12.20 and 12.70 are experimental**: the manager refuses the 8 GiB launch if the firmware does not match what it
   expects, but a wrong value could still freeze the console.
 - A running NeoEnabler manager and the validated ShellCore launch hook. The DATA path does **not** require an HV
   unlock and does not read or patch kernel TEXT.
@@ -88,14 +96,14 @@ A failed kernel-write recovery of the memory budget requires a console reboot be
 
 Anyone on your local network can open the panel.
 
-### GPU clock tab (0.3.0)
+### GPU clock tab
 
 ![GPU clock tab](docs/panel-gpu.jpg)
 
 Open **GPU clock** in the panel, select a target from **1800 to 2350 MHz** in 50 MHz steps, and use
 **Apply boost**. The current clock reported by the SMU updates every two seconds. The target and enable flag
 are saved with **Save Settings** and requested again when a PS4 game starts. 2350 MHz is for the PS5 Pro, 2200 MHz is the maximum for the standard PS5.
-This works independently of NEO and 8 GiB, including PS4 base mode.
+This works independently of CPU boost, NEO and 8 GiB, including PS4 base mode.
 
 GPU boost is **off by default**, with 2200 MHz selected. It is confirmed working on **firmware 13.20 and 13.60** and uses the stock
 `/dev/mp1` driver, without patching the kernel or needing a hypervisor exploit. The sustained frequency may be
@@ -109,6 +117,23 @@ panel shows the error and stops retrying: use Disable to retry the restoration b
 
 Boost does not change CPU clocks, thermal or power limits, memory bandwidth or ROPs. On other firmwares, or when
 the MP1 driver does not answer, the GPU clock tab is not shown.
+
+### CPU clock tab 
+
+![GPU clock tab](docs/panel-cpu.jpg)
+
+Open CPU clock in the panel and use Apply boost. While a PS4 game runs, boost holds every core at the fastest CPU state (P-state 0) and puts back any core the system lowers. The current clock shows the slowest core, read live from the SMU, and updates every two seconds. Power and thermal controls remain active. The enable flag is saved with Save Settings and applied again when the next PS4 game starts. Until then the panel shows Enabled; waiting for a PS4 game, with the previous clock listed as Not captured. It applies to PS4 games in base or NEO mode.  This works independently of NEO, 8 GiB mode and the GPU boost.
+
+The standard clock speed when running ps4 games on PS4 is 2.84 Ghz. Boost will force the CPU to run at a minimum of 3.2 GHz and maximum of 3.5 GHz. There is no way to know for sure what the CPU is running at because the SMU keeps it a secret but the Kernel does know what P state the CPU is in and it has 3.2 ghz as the reference for P-state 0. 
+
+CPU boost is **off by default**. It is confirmed working on firmware 13.20 and 13.60 and uses the stock /dev/mp1 driver, without patching the kernel or needing a hypervisor exploit. The sustained frequency may be lower than P-state 0 because power and thermal controls remain active. A short gameplay test read [measured clock]. FPS gains and long-term stability have not been established.
+
+Disable boost and Quit restore the CPU clock captured for the running game. When the game closes, the system manages the clocks again, and the next PS4 launch captures a new baseline. If a request or restoration fails, the
+panel shows the error and stops retrying: use Disable to retry the restoration before enabling again.
+
+Boost does not change GPU clocks, thermal, or power limits. On other firmwares, or when
+the MP1 driver does not answer, the GPU clock tab is not shown.
+
 
 ## Game patches
 
@@ -154,42 +179,62 @@ Test results by game and firmware: [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md
 
 | Patch | Author | Source |
 | --- | --- | --- |
-| Bloodborne: Resolution Patch WxH, base of the NEO 1440p/1620p entries | [Kyo](https://github.com/Kyoskii) | [shadps4-emu/ps4_cheats](https://github.com/shadps4-emu/ps4_cheats/blob/main/PATCHES/Bloodborne.xml) |
-| The Order: 1886: 60 FPS Unlock, used by the Native 4K 60fps entry | [illusion](https://github.com/illusionyy) | PS-Game-Patch, `patches/xml/TheOrder1886-Orbis.xml` |
+| Alien: Isolation: 1440p, 1620p, 1800p, Native 4K resolution patches, 60 FPS, 120 FPS | gasb07 | |
 | Batman: Arkham Knight: 1620p, 1800p, Native 4K resolution patches | gasb07 | |
 | Battlefield 4: 1440p, 1620p, 1800p, Native 4K resolution patches | gasb07 | |
 | Battlefield Hardline: 1440p, 1620p, 1800p, Native 4K resolution patches | gasb07 | |
+| Bayonetta: Native 4k resolution patch | [Criminal](https://github.com/TheaCriminal) | |
+| Bloodborne: Resolution Patch WxH, base of the NEO 1440p/1620p entries | [Kyo](https://github.com/Kyoskii) | [shadps4-emu/ps4_cheats](https://github.com/shadps4-emu/ps4_cheats/blob/main/PATCHES/Bloodborne.xml) |
 | Bloodborne: 1440p, 1620p, 1800p, Native 4K resolution patches; 1800p/4K require 8 GiB mode | [Kyo](https://github.com/Kyoskii), gasb07 | |
 | Dark Souls III: The Fire Fades Edition: 1440p, 1620p, 1800p, Native 4K resolution patches; 4K requires 8 GiB mode | DanielSvoboda, gasb07 | |
 | Dead Island - Definitive Edition: 1440p, 1620p, 1800p, Native 4K resolution patches | gasb07 | |
 | DEVIL MAY CRY 4 Special Edition: 1440p, Native 4K resolution patches, 120 FPS patch | [Criminal](https://github.com/TheaCriminal) | |
-| Dishonored 2: 1620p, 1800p, Native 4K resolution patches, 60 FPS cap, skip intro videos | gasb07 | |
+| Devil May Cry HD Collection: 4K patches for all three games, 120 FPS patch for DMC3 | [Criminal](https://github.com/TheaCriminal) | |
 | Dishonored: Definitive Edition: 1440p, 1800p, Native 4K resolution patches, 60 FPS patch with triple buffering | gasb07, [illusion](https://github.com/illusionyy) | |
+| Dishonored 2: 1620p, 1800p, Native 4K resolution patches, 60 FPS cap, skip intro videos | gasb07 | |
 | DmC Devil May Cry: Definitive Edition: 1440p, 1800p, Native 4K resolution patches | [Criminal](https://github.com/TheaCriminal) | |
-| DRAGON QUEST XI S: 1440p, 1620p, 1800p, Native 4K resolution patches | gasb07 | |
+| Dragon Age: Inquisition: 1440p, 1620p, 1800p, Native 4K resolution patches, 60 FPS, 120 FPS | gasb07, [illusion](https://github.com/illusionyy) | |
 | Dragon's Dogma: Dark Arisen: Native 4K resolution patch | gasb07 | |
+| DRAGON QUEST XI S: 1440p, 1620p, 1800p, Native 4K resolution patches | gasb07 | |
 | Driveclub: 1440p resolution patch; 4K output with 1620p/1800p rendering | gasb07 | |
+| The Evil Within: 1440p, 1800p, Native 4K resolution patches; 4K requires 8 GiB mode | gasb07 | |
+| The Evil Within 2: 1620p, 1800p, Native 4K resolution patches; 4K requires 8 GiB mode | gasb07 | |
+| Final Fantasy XV: 1440p and 1944p resolution patches, 60 FPS High/Steady mode | [Criminal](https://github.com/TheaCriminal) | |
+| God of War III: 1440p, 1800p, Native 4K resolution patches, 120 FPS | ibraaaaa2792 (resolution sites: kvicken + cuesta4) | |
+| Gravity Rush Remastered: 1440p and 4K resolution patches, 120 FPS | [Criminal](https://github.com/TheaCriminal), [Junmin Lee](https://github.com/junminlee2004) | gasb07 Neo Findings |
+| Gravity Rush 2: 1440p, 1620p, 1800p, Native 4K resolution patches, 60 FPS | [Criminal](https://github.com/TheaCriminal), gasb07, [illusion](https://github.com/illusionyy) | |
+| inFAMOUS Second Son: 4K checkerboard resolution patch | gasb07 | |
 | Just Cause 3: 1440p and Native 4K resolution patches, offline mode patch to skip online login | gasb07 | |
 | KILLZONE SHADOW FALL: 1440p, 1620p, 1800p, Native 4K resolution patches | gasb07 | |
 | Mad Max: 1440p, 1800p, Native 4K resolution patches | gasb07 | |
+| MediEvil: 1440p, 1800p, 120HZ, Native 4K patches | [Criminal](https://github.com/TheaCriminal) | |
 | METAL GEAR SOLID V: THE PHANTOM PAIN: 1440p, 1620p, 1800p, Native 4K, 4K checkerboard resolution patches | gasb07 | |
+| Middle-earth: Shadow of Mordor - Game of the Year Edition: 1440p, 1620p, 1800p, Native 4K resolution patches | gasb07 | |
 | Need for Speed: Rivals: 1440p and Native 4K resolution patches | gasb07 | |
 | NieR:Automata: 1440p, 1620p, 1800p resolution patches | gasb07 | |
+| The Order: 1886: 60 FPS Unlock, used by the Native 4K 60fps entry | [illusion](https://github.com/illusionyy) | PS-Game-Patch, `patches/xml/TheOrder1886-Orbis.xml` |
+| The Order 1886: Native 4K resolution patch, Native 4K 60 FPS patch | gasb07, [illusion](https://github.com/illusionyy), gasb07 | |
 | Prey: 1620p, 1800p, Native 4K resolution patches, 60 FPS cap, skip intro videos | gasb07 | |
 | Ratchet and Clank: 1728p, 1872p, Native 4K resolution patches | gasb07 | |
+| Rayman Legends: 1440p, 1620p, 1800p, Native 4K resolution patches | gasb07 | |
+| Red Dead Redemption 2: 4k, 60 FPS, Skip Intro | [Criminal](https://github.com/TheaCriminal), Illusion, Jao  | PS Game Patch |
+| RESIDENT EVIL 5: 1440p and Native 4K resolution patches + 120 FPS | [Criminal](https://github.com/TheaCriminal) | |
 | RESIDENT EVIL 6: 1440p and Native 4K resolution patches | gasb07 | |
+| Rise of the Tomb Raider: 1440p, 1800p, 4k, 120FPS | [Criminal](https://github.com/TheaCriminal) | |
+| Senran Kagura Estival Versus: 1440p and Native 4K resolution patches | [Criminal](https://github.com/TheaCriminal) | |
+| Senran Kagura Peach Beach Splash: 1440p and Native 4K resolution patches | [Criminal](https://github.com/TheaCriminal) | |
 | Shadow of the Colossus: 1620p, 1800p, Native 4K resolution patches, debug menu, skip splash logo/demo screens, 60 FPS patch | gasb07, [illusion](https://github.com/illusionyy) | |
-| Sleeping Dogs: Definitive Edition: 1440p, 1620p, 1800p, Native 4K resolution patches; 60 FPS variants for each resolution | gasb07, [illusion](https://github.com/illusionyy), gasb07 | |
+| Sleeping Dogs: Definitive Edition: 1440p, 1620p, 1800p, Native 4K resolution patches; 60 FPS variants for each resolution | gasb07, [illusion](https://github.com/illusionyy) | |
 | Spyro Reignited Trilogy: 1620p, 1800p, Native 4K resolution patches | Shane O'Reilly | |
-| The Evil Within 2: 1620p, 1800p, Native 4K resolution patches; 4K requires 8 GiB mode | gasb07 | |
-| The Evil Within: 1440p, 1800p, Native 4K resolution patches; 4K requires 8 GiB mode | gasb07 | |
-| The Order 1886: Native 4K resolution patch, Native 4K 60 FPS patch | gasb07, [illusion](https://github.com/illusionyy), gasb07 | |
+| Thief: 1440p, 1620p, 1800p, Native 4K resolution patches, 60 FPS | gasb07 | |
+| Titanfall 2: 1620p, 1800p, Native 4K resolution patches | gasb07 | |
+| Tomb Raider: Definitive Edition: 1440p, 1620p, 1800p, Native 4K resolution patches | gasb07 | |
 | Uncharted: Drake's Fortune Remastered: 1440p, 1620p, 1800p, Native 4K resolution patches; 4K options with standard or full texture quality (8 GiB mode) | gasb07 | |
 | Uncharted 2: Among Thieves Remastered: 1440p, 1620p, 1800p, Native 4K resolution patches; 4K options with standard or full texture quality (8 GiB mode) | gasb07 | |
 | Uncharted 3: Drake's Deception Remastered: 1440p, 1620p, 1800p, Native 4K resolution patches; 4K options with standard or full texture quality (8 GiB mode) | gasb07 | |
 | Watch Dogs: 1440p, 1620p, 1800p, Native 4K resolution patches, 60 FPS patch, 60 FPS patch with triple buffering | gasb07 | |
+| Watch Dogs 2: 1440p, 1620p, 1800p, Native 4K resolution patches, 60 FPS, 120 FPS | gasb07 | |
 | Yakuza 6: The Song of Life: 1440p, 1620p, 1800p, Native 4K resolution patches; 60 FPS patch; 4K requires 8 GiB mode | gasb07 | |
-| inFAMOUS Second Son: 4K checkerboard resolution patch | gasb07 | |
 
 Entries with author "gasb07" (Pro mode, resolutions, JC3 offline mode) and the NEO fixes inside the
 Bloodborne resolution entries were made in this project.

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.2
+
+- 8GB Mode on firmware 10.01 (PS5 Pro), experimental. (Contributed by squallsama, who tested it with Bloodborne
+  and other games.)
+- 8GB Mode now works on firmware 10.01 and 12.70 together with ShadowMount+ and kstuff (12.70 confirmed with
+  Bloodborne by jinxcase000). Before, it refused to start when another payload already used part of the memory
+  area it needs; it now takes a free part of that area and leaves the other payload's part untouched.
+- The Play button no longer refuses to start a game because a payload running under a system app (for example
+  NPXS45093) was taken for an open game.
+
 ## 0.6.0
 
 - Games installed on an external drive now appear in the Games page. Before, only games on the internal drive were
